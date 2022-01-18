@@ -4,3 +4,6 @@ data
 
 # macOS system files
 .DS_Store
+
+# Python packaging files
+*.egg-info
