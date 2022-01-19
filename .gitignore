@@ -7,3 +7,6 @@ data
 
 # Python packaging files
 *.egg-info
+
+# pycache
+__pycache__
