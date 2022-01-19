@@ -21,24 +21,31 @@ class FieldSelector():
         fields = set(self.df_field.loc[self.df_field['main_category'] == category_id, 'field_id'])
         fields.update(self.df_recommended.loc[self.df_recommended['category_id'] == category_id, 'field_id'])
 
-        return fields
+        return list(fields)
 
     def get_fields_from_categories(self, category_ids):
 
         category_ids = set(category_ids)
-        fields = set()
+        fields = []
 
         while len(category_ids) != 0:
             category_id = category_ids.pop()
             category_ids.update(self.df_catbrowse.loc[self.df_catbrowse['parent_id'] == category_id, 'child_id'])
-            fields.update(self.__get_fields_from_category(category_id))
+            fields.extend(self.__get_fields_from_category(category_id))
 
-        return fields
+        return list(set(fields)) # removes duplicates
 
-    def filter_by_value(self, fields, value, keep=True):
+    def filter_by_value(self, fields, value, colname='title', keep=True):
 
-        # TODO
-        pass
+        if keep:
+            fn_condition = (lambda x: value in x)
+        else:
+            fn_condition = (lambda x: not (value in x))
+
+        df_field_subset = self.df_field.set_index('field_id').loc[fields]
+        df_field_filtered = df_field_subset.loc[df_field_subset[colname].map(fn_condition)]
+
+        return df_field_filtered.index.tolist()
 
 class UDISelector():
 
