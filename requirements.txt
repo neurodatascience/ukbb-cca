@@ -38,11 +38,12 @@ pure-eval==0.2.1
 py==1.11.0
 Pygments==2.11.2
 pyparsing==3.0.6
+pytest==6.2.5
 python-dateutil==2.8.2
 pytz==2021.3
 pyzmq==22.3.0
 six==1.16.0
--e git+https://github.com/neurodatascience/ukbb-cca.git@16efc99e5b621ce4c579c900029df1dfa3778dc3#egg=src
+-e git+https://github.com/neurodatascience/ukbb-cca.git@39cd743be258a44ac3bbcc49f3779c92b6e39091#egg=src
 stack-data==0.1.4
 toml==0.10.2
 tomli==1.2.3
