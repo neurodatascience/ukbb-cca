@@ -2,7 +2,7 @@
 import os
 import pandas as pd
 
-class FieldSelector():
+class FieldHelper():
 
     def __init__(self, dpath_schema, fname_field='field.txt', fname_recommended='recommended.txt', fname_catbrowse='catbrowse.txt'):
         
@@ -47,16 +47,16 @@ class FieldSelector():
 
         return df_field_filtered.index.tolist()
 
-class UDISelector():
+class UDIHelper():
 
-    def __init__(self, fpath_UDIs):
+    def __init__(self, fpath_udis):
 
-        self.fpath_UDIs = fpath_UDIs
-        self.df_UDIs = pd.read_csv(self.fpath_UDIs)
+        self.fpath_udis = fpath_udis
+        self.df_udis = pd.read_csv(self.fpath_udis)
 
-    def get_UDIs_from_fields(self, fields, instances='all'):
+    def get_udis_from_fields(self, fields, instances='all'):
 
-        udis = self.df_UDIs.loc[self.df_UDIs['field_id'].isin(fields), 'udi'].tolist()
+        udis = self.df_udis.loc[self.df_udis['field_id'].isin(fields), 'udi'].tolist()
 
         if instances != 'all':
             udis = self.filter_by_instance(udis, instances)
@@ -65,4 +65,4 @@ class UDISelector():
 
     def filter_by_instance(self, udis, instances):
 
-        return self.df_UDIs.loc[self.df_UDIs['udi'].isin(udis) & self.df_UDIs['instance_id'].isin(instances), 'udis'].tolist()
+        return self.df_udis.loc[self.df_udis['udi'].isin(udis) & self.df_udis['instance'].isin(instances), 'udis'].tolist()

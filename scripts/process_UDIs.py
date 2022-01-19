@@ -3,9 +3,9 @@ import re
 import pandas as pd
 from paths import FPATHS
 
-def parse_UDIs(fpath_data):
+def parse_udis(fpath_data):
 
-    def parse_UDI(udi):
+    def parse_udi(udi):
         match = re_udi.match(udi)
         if not match:
             raise ValueError(f'Could not parse UDI {udi}')
@@ -17,17 +17,17 @@ def parse_UDIs(fpath_data):
     # read UDIs (column names) from data
     # faster to read 1 row then drop it than reading 0 rows
     df_tabular = pd.read_csv(fpath_data, header=0, index_col='eid', nrows=1)
-    df_UDIs = df_tabular.iloc[:0].transpose()
+    df_udis = df_tabular.iloc[:0].transpose()
     
-    df_UDIs.index.name = 'udi'
-    df_UDIs.columns.name = None
+    df_udis.index.name = 'udi'
+    df_udis.columns.name = None
 
-    df_UDIs = df_UDIs.reset_index()
-    df_UDIs['field_id'], df_UDIs['instance_id'], df_UDIs['array_index'] =  zip(*df_UDIs['udi'].map(parse_UDI))
+    df_udis = df_udis.reset_index()
+    df_udis['field_id'], df_udis['instance'], df_udis['array_index'] =  zip(*df_udis['udi'].map(parse_udi))
 
-    return df_UDIs
+    return df_udis
 
 if __name__ == '__main__':
 
-    df_UDIs = parse_UDIs(FPATHS['data_tabular_raw'])
-    df_UDIs.to_csv(FPATHS['UDIs_tabular_raw'], header=True, index=False)
+    df_udis = parse_udis(FPATHS['data_tabular_raw'])
+    df_udis.to_csv(FPATHS['udis_tabular_raw'], header=True, index=False)
