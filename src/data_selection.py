@@ -34,3 +34,28 @@ class FieldSelector():
             fields.update(self.__get_fields_from_category(category_id))
 
         return fields
+
+    def filter_by_value(self, fields, value, keep=True):
+
+        # TODO
+        pass
+
+class UDISelector():
+
+    def __init__(self, fpath_UDIs):
+
+        self.fpath_UDIs = fpath_UDIs
+        self.df_UDIs = pd.read_csv(self.fpath_UDIs)
+
+    def get_UDIs_from_fields(self, fields, instances='all'):
+
+        udis = self.df_UDIs.loc[self.df_UDIs['field_id'].isin(fields), 'udi'].tolist()
+
+        if instances != 'all':
+            udis = self.filter_by_instance(udis, instances)
+
+        return udis
+
+    def filter_by_instance(self, udis, instances):
+
+        return self.df_UDIs.loc[self.df_UDIs['udi'].isin(udis) & self.df_UDIs['instance_id'].isin(instances), 'udis'].tolist()
