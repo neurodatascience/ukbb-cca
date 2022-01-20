@@ -5,6 +5,9 @@ data
 # path variables
 scripts/paths.py
 
+# processed data
+results/processed/*.csv
+
 # macOS system files
 .DS_Store
 
