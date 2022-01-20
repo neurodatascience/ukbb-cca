@@ -65,4 +65,4 @@ class UDIHelper():
 
     def filter_by_instance(self, udis, instances):
 
-        return self.df_udis.loc[self.df_udis['udi'].isin(udis) & self.df_udis['instance'].isin(instances), 'udis'].tolist()
+        return self.df_udis.loc[self.df_udis['udi'].isin(udis) & self.df_udis['instance'].isin(instances), 'udi'].tolist()
