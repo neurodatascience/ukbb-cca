@@ -5,8 +5,8 @@ data
 # path variables
 scripts/paths.py
 
-# processed data
-results/processed/*.csv
+# logfiles from e.g. slurm jobs
+scripts/logs
 
 # macOS system files
 .DS_Store
