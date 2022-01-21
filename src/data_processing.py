@@ -17,11 +17,11 @@ def write_subset(fpath_data, fpath_out, colnames=None, fn_to_apply=None, header=
 
     for df_chunk in df_chunks:
 
-        n_rows += df_chunk.shape[0]
-        n_cols = df_chunk.shape[1]
-
         if not (fn_to_apply is None):
             df_chunk = fn_to_apply(df_chunk)
+
+        n_rows += df_chunk.shape[0]
+        n_cols = df_chunk.shape[1]
 
         df_chunk.to_csv(fpath_out, mode=mode, header=write_header, index=False)
         mode = 'a' # append subsequent chunks
