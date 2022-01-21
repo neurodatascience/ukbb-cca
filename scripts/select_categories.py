@@ -45,6 +45,7 @@ if __name__ == '__main__':
     filter_value = config['filter_value']
 
     print('----- Parameters -----')
+    print(f'type:\t\t{type}')
     print(f'categories:\t{categories}')
     print(f'fpath_out:\t{fpath_out}')
     print(f'filter_value:\t{filter_value}')
