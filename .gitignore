@@ -2,6 +2,9 @@
 # data directory
 data
 
+# pickled result files
+.pkl
+
 # path variables
 scripts/paths.py
 
