@@ -72,12 +72,15 @@ class FieldHelper():
 
         return df_field_filtered.index.tolist()
 
-    def filter_by_value(self, fields, value, colname='title', keep=True):
+    def filter_by_value(self, fields, value, colname='title', check_inclusion=False, keep=True):
 
-        if keep:
+        if check_inclusion:
             fn_condition = (lambda x: value in x)
         else:
-            fn_condition = (lambda x: value not in x)
+            fn_condition = (lambda x: value == x) # check equality
+
+        if not keep:
+            fn_condition = (lambda x: not fn_condition(x))
 
         return self.filter_by_condition(fields, fn_condition, colname)
 
@@ -124,4 +127,14 @@ class UDIHelper():
             return df_to_keep.loc[idx, 'udi'].tolist()
         else:
             raise ValueError(f'keep_instance="{keep_instance}" is invalid')
+
+    def filter_by_field(self, udis, fields, keep=True):
+
+        df_fields_subset = self.get_info(udis, colnames='field_id')
+        to_keep = df_fields_subset.isin(fields)
+
+        if not keep:
+            to_keep = not to_keep
+
+        return df_fields_subset.loc[to_keep].index.tolist()
             

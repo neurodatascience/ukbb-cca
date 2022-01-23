@@ -72,7 +72,7 @@ if __name__ == '__main__':
     print(f'Selected {len(fields)} fields')
 
     if filter_value is not None:
-        fields = field_helper.filter_by_value(fields, filter_value)
+        fields = field_helper.filter_by_value(fields, filter_value, check_inclusion=True)
         print(f'{len(fields)} fields remaining after filtering')
 
     udis = udi_helper.get_udis_from_fields(fields, instances=instances)
