@@ -117,5 +117,11 @@ if __name__ == '__main__':
     # normalize
     df_data_normalized = zscore_df(df_data_filtered)
 
+    # replace NaNs with 0s
+    if fill_na_with_mean:
+        na_count = df_data_normalized.isna().values.sum()
+        df_data_normalized = df_data_normalized.fillna(0)
+        print(f'Replaced {na_count} NaNs with the mean')
+
     # save
     df_data_normalized.to_csv(fpath_out, header=True, index=True)
