@@ -43,7 +43,7 @@ if __name__ == '__main__':
     fpath_out = config['fpath_out']
 
     print('----- Parameters -----')
-    print(f'type:\t\t{type}')
+    print(f'type:\t{type}')
     print(f'fpath_data:\t{fpath_data}')
     print(f'fpath_out:\t{fpath_out}')
     print('----------------------')
@@ -67,11 +67,13 @@ if __name__ == '__main__':
         print(f'Category: {category}')
 
         if category == 'all':
-            data = df_data.values.copy()
+            df_data_subset = df_data
         else:
             fields_subset = field_helper.filter_by_value(fields, category, colname='main_category')
             udis_subset = udi_helper.filter_by_field(udis, fields_subset)
-            data = df_data.loc[:, udis_subset].values.copy()
+            df_data_subset = df_data.loc[:, udis_subset]
+
+        data = df_data_subset.values.copy()
 
         print(f'\tData array shape: {data.shape}')
 
@@ -80,6 +82,7 @@ if __name__ == '__main__':
         print(f'\tSVD results: u {u.shape}, s {s.shape}, vh {vh.shape}')
 
         results[category] = {
+            'df_data': df_data_subset,
             'u': u,
             's': s,
             'vh': vh,
