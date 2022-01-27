@@ -3,8 +3,11 @@ from src.data_selection import UDIHelper
 from src.data_processing import write_subset
 from paths import FPATHS
 
-def filter_df_by_content(df, colname, value=1):
-    return df.loc[df[colname] == value]
+def filter_df_by_content(df, colnames, value=1):
+    df_out = df
+    for colname in colnames:
+        df_out = df_out.loc[df_out[colname] == value]
+    return df_out
 
 if __name__ == '__main__':
 
@@ -27,11 +30,11 @@ if __name__ == '__main__':
     print('----------------------')
 
     udi_helper = UDIHelper(fpath_udis)
-    udi_completed_mri = udi_helper.get_udis_from_fields([field_completed_mri], instances=instances)[0]
+    udis_completed_mri = udi_helper.get_udis_from_fields([field_completed_mri], instances=instances)
 
     n_rows, n_cols = write_subset(
         fpath_data, fpath_out, colnames=None, chunksize=chunksize,
-        fn_to_apply=(lambda df: filter_df_by_content(df, udi_completed_mri))
+        fn_to_apply=(lambda df: filter_df_by_content(df, udis_completed_mri))
     )
 
     print(f'Wrote {n_rows} rows and {n_cols} columns')
