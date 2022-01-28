@@ -16,17 +16,17 @@ if __name__ == '__main__':
 
     configs = {
         'behavioural': {
-            'fpath_data': FPATHS['data_behavioural_qc'],
+            'fpath_data': FPATHS['data_behavioural_clean'],
             'fpath_out': FPATHS['res_behavioural_svd'],
         },
-        # 'brain': {
-        #     'fpath_data': FPATHS['data_brain_qc'],
-        #     'fpath_out': FPATHS['res_brain_svd'],
-        # },
-        # 'demographic': {
-        #     'fpath_data': FPATHS['data_demographic_qc'],
-        #     'fpath_out': FPATHS['res_demographic_svd'],
-        # },
+        'brain': {
+            'fpath_data': FPATHS['data_brain_clean'],
+            'fpath_out': FPATHS['res_brain_svd'],
+        },
+        'demographic': {
+            'fpath_data': FPATHS['data_demographic_clean'],
+            'fpath_out': FPATHS['res_demographic_svd'],
+        },
     }
 
     if len(sys.argv) != 2:
@@ -73,19 +73,20 @@ if __name__ == '__main__':
             udis_subset = udi_helper.filter_by_field(udis, fields_subset)
             df_data_subset = df_data.loc[:, udis_subset]
 
-        data = df_data_subset.values.copy()
+        data = df_data_subset.values
 
         print(f'\tData array shape: {data.shape}')
 
-        u, s, vh = svd(data, full_matrices=False, compute_uv=True)
+        U, s, VT = svd(data, full_matrices=False, compute_uv=True)
 
-        print(f'\tSVD results: u {u.shape}, s {s.shape}, vh {vh.shape}')
+        print(f'\tSVD results: U {U.shape}, s {s.shape}, VT {VT.shape}')
 
         results[category] = {
-            'df_data': df_data_subset,
-            'u': u,
+            'subjects': df_data_subset.index.tolist(),
+            'udis': df_data_subset.columns.tolist(),
+            'U': U,
             's': s,
-            'vh': vh,
+            'VT': VT,
         }
 
     # save everything in a single pickle file
