@@ -3,7 +3,7 @@
 data
 
 # pickled result files
-.pkl
+*.pkl
 
 # path variables
 scripts/paths.py
