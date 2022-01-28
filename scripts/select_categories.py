@@ -23,8 +23,9 @@ if __name__ == '__main__':
             'fpath_out': FPATHS['data_behavioural'],
         },
         'brain': {
-            'categories': [134],
-            'filter_value': 'Mean FA', # dMRI measure
+            'categories': [134, 135],
+            # 'filter_value': 'Mean FA', # dMRI measure
+            'filter_value': None,
             'instances': [2],
             'keep_instance': 'all',
             'fpath_out': FPATHS['data_brain'],
