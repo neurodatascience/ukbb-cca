@@ -30,20 +30,20 @@ if __name__ == '__main__':
     }
 
     if len(sys.argv) != 2:
-        raise ValueError(f'Usage: {sys.argv[0]} <type>')
+        raise ValueError(f'Usage: {sys.argv[0]} <domain>')
 
-    type = sys.argv[1]
+    domain = sys.argv[1]
 
     try:
-        config = configs[type]
+        config = configs[domain]
     except KeyError:
-        raise ValueError(f'Invalid type "{type}". Accepted types are: {configs.keys()}')
+        raise ValueError(f'Invalid domain "{domain}". Accepted domains are: {configs.keys()}')
 
     fpath_data = config['fpath_data']
     fpath_out = config['fpath_out']
 
     print('----- Parameters -----')
-    print(f'type:\t{type}')
+    print(f'domain:\t{domain}')
     print(f'fpath_data:\t{fpath_data}')
     print(f'fpath_out:\t{fpath_out}')
     print('----------------------')

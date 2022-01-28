@@ -39,14 +39,14 @@ if __name__ == '__main__':
     }
 
     if len(sys.argv) != 2:
-        raise ValueError(f'Usage: {sys.argv[0]} <type>')
+        raise ValueError(f'Usage: {sys.argv[0]} <domain>')
 
-    type = sys.argv[1]
+    domain = sys.argv[1]
 
     try:
-        config = configs[type]
+        config = configs[domain]
     except KeyError:
-        raise ValueError(f'Invalid type "{type}". Accepted types are: {configs.keys()}')
+        raise ValueError(f'Invalid domain "{domain}". Accepted domains are: {configs.keys()}')
 
     categories = config['categories']
     filter_value = config['filter_value']
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     fpath_out = config['fpath_out']
 
     print('----- Parameters -----')
-    print(f'type:\t\t{type}')
+    print(f'domain:\t{domain}')
     print(f'categories:\t{categories}')
     print(f'value_types:\t{value_types}')
     print(f'filter_value:\t{filter_value}')
