@@ -137,4 +137,19 @@ class UDIHelper():
             to_keep = not to_keep
 
         return df_fields_subset.loc[to_keep].index.tolist()
+
+class CategoryHelper():
+
+    def __init__(self, dpath_schema, fname_category='category.txt'):
+
+        self.dpath_schema = dpath_schema
+        self.fpath_category = os.path.join(dpath_schema, fname_category)
+        self.df_category = pd.read_csv(self.fpath_category, sep='\t')
+
+    def get_info(self, categories, colnames='all'):
+
+        if colnames == 'all':
+            return self.df_category.set_index('category_id').loc[categories]
+        else:
+            return self.df_category.set_index('category_id').loc[categories, colnames]
             
