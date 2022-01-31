@@ -76,7 +76,7 @@ if __name__ == '__main__':
         fields = field_helper.filter_by_value(fields, filter_value, check_inclusion=True)
         print(f'{len(fields)} fields remaining after filtering')
 
-    udis = udi_helper.get_udis_from_fields(fields, instances=instances)
+    udis = udi_helper.get_udis_from_fields(fields, instances=instances, keep_instance=keep_instance)
     print(f'Selected {len(udis)} UDIs')
 
     n_rows, n_cols = write_subset(fpath_data, fpath_out, colnames=udis, chunksize=chunksize)
