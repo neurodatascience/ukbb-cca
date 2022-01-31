@@ -1,6 +1,7 @@
 
-# data directory
+# data/result files
 data
+*.csv
 
 # binary result files
 *.pkl
