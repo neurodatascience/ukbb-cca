@@ -2,6 +2,9 @@
 # data directory
 data
 
+# tools
+toolbox
+
 # pickled result files
 *.pkl
 
