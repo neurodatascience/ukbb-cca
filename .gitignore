@@ -2,17 +2,22 @@
 # data directory
 data
 
+# binary result files
+*.pkl
+*.mat
+
+# for path variables
+scripts/paths.py
+scripts/generate_paths.m
+
 # tools
 toolbox
 
-# pickled result files
-*.pkl
-
-# path variables
-scripts/paths.py
-
 # logfiles from e.g. slurm jobs
 scripts/logs
+
+# MATLAB temporary files
+*.asv
 
 # macOS system files
 .DS_Store
