@@ -13,7 +13,6 @@ if __name__ == '__main__':
     domains = ['behavioural', 'brain', 'demographic']
 
     remove_constant_cols = True
-    fill_na_with_mean = True
 
     fig_prefix = 'hist_na'
     dpath_figs = DPATHS['preprocessing']
@@ -21,7 +20,6 @@ if __name__ == '__main__':
     print('----- Parameters -----')
     print(f'domains:\t{domains}')
     print(f'remove_constant_cols:\t{remove_constant_cols}')
-    print(f'fill_na_with_mean:\t{fill_na_with_mean}')
     print(f'fig_prefix:\t{fig_prefix}')
     print(f'dpath_figs:\t{dpath_figs}')
     print('----------------------')
@@ -81,12 +79,9 @@ if __name__ == '__main__':
         fig.savefig(fpath_fig, dpi=300, bbox_inches='tight')
         print(f'\tFigure saved: {fpath_fig}')
 
-        # replace NaNs with the mean of each column
-        if fill_na_with_mean:
-            na_count = df_clean.isna().values.sum()
-            means = df_clean.mean(axis='index', skipna=True)
-            df_clean = df_clean.fillna(means)
-            print(f'\tReplaced {na_count} NaNs with the mean ({100*na_count/df_clean.size:.0f}%)')
+        # report NaN count/percentage
+        na_count = df_clean.isna().values.sum()
+        print(f'\tNaN count: {na_count} ({100*na_count/df_clean.size:.0f}%)')
 
         # save
         fpath_out = FPATHS[f'data_{domain}_clean']
