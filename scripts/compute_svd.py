@@ -4,6 +4,7 @@ import pickle
 import numpy as np
 import pandas as pd
 from src.data_selection import FieldHelper, UDIHelper
+from src.utils import fill_df_with_mean
 from paths import DPATHS, FPATHS
 
 def svd(data, full_matrices=False, compute_uv=True):
@@ -53,6 +54,11 @@ if __name__ == '__main__':
 
     # load data
     df_data = pd.read_csv(fpath_data, index_col='eid')
+
+    # fill missing data
+    na_count = df_data.isna().values.sum()
+    df_data = fill_df_with_mean(df_data)
+    print(f'Filled {na_count} NaNs with mean')
 
     # get category of each field (main_category)
     udis = df_data.columns
