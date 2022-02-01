@@ -2,10 +2,12 @@
 import pickle
 import sys
 import os
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.linalg import qr
+
 from src.data_selection import FieldHelper, UDIHelper, CategoryHelper
 from paths import FPATHS, DPATHS
 
@@ -24,7 +26,7 @@ def get_coefs(V, idx_small):
 if __name__ == '__main__':
 
     within_only = True # if True, ignores 'all' category
-    save_figures = False
+    save_figures = True
 
     fpath_udis = FPATHS['udis_tabular_raw']
     dpath_schema = DPATHS['schema']
@@ -34,6 +36,10 @@ if __name__ == '__main__':
         raise ValueError(f'Usage: {sys.argv[0]} <domain>')
 
     domain = sys.argv[1]
+
+    valid_domains = ['behavioural', 'brain', 'demographic']
+    if domain not in valid_domains:
+        raise ValueError(f'domain "{domain}" not in {valid_domains}')
 
     fpath_svd = FPATHS[f'res_{domain}_svd']
     fpath_out_csv = FPATHS[f'res_{domain}_collinear']
@@ -45,6 +51,7 @@ if __name__ == '__main__':
     print(f'save_figures:\t{save_figures}')
     print(f'fpath_svd:\t{fpath_svd}')
     print(f'fpath_out_csv:\t{fpath_out_csv}')
+    print(f'fpath_out_pkl:\t{fpath_out_pkl}')
     print(f'fpath_udis:\t{fpath_udis}')
     print(f'dpath_schema:\t{dpath_schema}')
     print(f'dpath_figs:\t{dpath_figs}')
@@ -85,11 +92,11 @@ if __name__ == '__main__':
         # plot singular values
         if save_figures:
             fig, ax = plt.subplots(figsize=(4, 3))
-            ax.semilogy(s)
+            ax.semilogy(s, marker='o', markersize=4)
             ax.set_title(f'{category}: {category_desc}')
             ax.set_xlabel('Component')
             ax.set_ylabel('Singular value')
-            fpath_fig = os.path.join(dpath_figs, f'plot_singular_values_{domain}_{category}.png')
+            fpath_fig = os.path.join(dpath_figs, f'plot_svd_{domain}_{category}.png')
             fig.savefig(fpath_fig, dpi=300, bbox_inches='tight')
             print(f'Figure saved: {fpath_fig}')
 
