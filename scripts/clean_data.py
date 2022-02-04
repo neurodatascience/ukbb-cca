@@ -4,7 +4,27 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from paths import DPATHS, FPATHS
+from src.data_processing import find_cols_with_missing, find_cols_with_high_freq, find_cols_with_outliers
 from src.plotting import plot_na_histograms
+
+def remove_bad_cols(df, threshold_na=0.5, threshold_high_freq=0.95, threshold_outliers=100):
+
+    # identify columns with too much missing data
+    cols_with_missing = find_cols_with_missing(df, threshold=threshold_na)
+    df = df.drop(columns=cols_with_missing)
+    print(f'\t\tRemoved {len(cols_with_missing)} columns with too much missing data')
+
+    # identify columns with not enough variability
+    cols_without_variability = find_cols_with_high_freq(df, threshold=threshold_high_freq)
+    df = df.drop(columns=cols_without_variability)
+    print(f'\t\tRemoved {len(cols_without_variability)} columns with not enough variability')
+
+    # identify columns with outliers
+    cols_with_outliers = find_cols_with_outliers(df, threshold=threshold_outliers)
+    print(f'\t\tRemoved {len(cols_with_outliers)} columns with outlier(s)')
+    df = df.drop(columns=cols_with_outliers)
+
+    return df
 
 if __name__ == '__main__':
 
@@ -12,14 +32,18 @@ if __name__ == '__main__':
     # so that they all keep/remove the same subjects
     domains = ['behavioural', 'brain', 'demographic']
 
-    remove_constant_cols = True
+    threshold_na = 0.5
+    threshold_high_freq = 0.95
+    threshold_outliers = 100
 
     fig_prefix = 'hist_na'
     dpath_figs = DPATHS['preprocessing']
 
     print('----- Parameters -----')
     print(f'domains:\t{domains}')
-    print(f'remove_constant_cols:\t{remove_constant_cols}')
+    print(f'threshold_na:\t{threshold_na}')
+    print(f'threshold_high_freq:\t{threshold_high_freq}')
+    print(f'threshold_outliers:\t{threshold_outliers}')
     print(f'fig_prefix:\t{fig_prefix}')
     print(f'dpath_figs:\t{dpath_figs}')
     print('----------------------')
@@ -53,37 +77,44 @@ if __name__ == '__main__':
         dfs_data[domain] = df_data
 
     print('----- Cleaning data -----')
-    for domain in domains:
+    while len(subjects_to_drop) != 0:
+        subjects_to_drop_new = set()
+        for domain in domains:
 
-        print(f'{domain}')
+            print(f'{domain}')
 
-        df_clean = dfs_data[domain].drop(index=subjects_to_drop)
-        df_clean = df_clean.dropna(axis='columns', how='all')
-        print(f'\tDataframe shape after removing empty rows/columns: {df_clean.shape}')
+            # remove bad rows
+            print(f'\tRemoving {len(subjects_to_drop)} rows')
+            df_clean = dfs_data[domain].drop(index=subjects_to_drop)
 
-        # drop columns that only contain one unique value (excluding NaNs)
-        if remove_constant_cols:
-            nunique = df_clean.nunique()
-            constant_cols = nunique[nunique == 1].index
-            df_clean = df_clean.drop(columns=constant_cols)
-            if len(constant_cols) > 0:
-                print(f'\tDropped {len(constant_cols)} columns with constant values')
+            # remove bad columns
+            print('\tLooking for bad columns...')
+            df_clean = remove_bad_cols(df_clean, 
+                threshold_na=threshold_na, threshold_high_freq=threshold_high_freq, threshold_outliers=threshold_outliers)
 
-        # plot histograms of row-/column-wise NaN frequencies
-        fig, freqs_na_row, freqs_na_col = plot_na_histograms(df_clean, return_freqs=True)
-        fig.subplots_adjust(top=0.85)
-        fig.suptitle(f'{domain.capitalize()} dataset {df_clean.shape}')
+            print(f'\tDataframe shape after removing empty rows/columns: {df_clean.shape}')
 
-        # save figure
-        fpath_fig = os.path.join(dpath_figs, f'{fig_prefix}_{domain}_after.png')
-        fig.savefig(fpath_fig, dpi=300, bbox_inches='tight')
-        print(f'\tFigure saved: {fpath_fig}')
+            # report NaN count/percentage
+            na_count = df_clean.isna().values.sum()
+            print(f'\tNaN count: {na_count} ({100*na_count/df_clean.size:.0f}%)')
 
-        # report NaN count/percentage
-        na_count = df_clean.isna().values.sum()
-        print(f'\tNaN count: {na_count} ({100*na_count/df_clean.size:.0f}%)')
+            # plot histograms of row-/column-wise NaN frequencies
+            fig, freqs_na_row, freqs_na_col = plot_na_histograms(df_clean, return_freqs=True)
+            fig.subplots_adjust(top=0.85)
+            fig.suptitle(f'{domain.capitalize()} dataset {df_clean.shape}')
 
-        # save
-        fpath_out = FPATHS[f'data_{domain}_clean']
-        df_clean.to_csv(fpath_out, header=True, index=True)
-        print(f'\tSaved to {fpath_out}')
+            # add rows to drop later
+            subjects_to_drop_new.update(freqs_na_row.loc[np.isclose(freqs_na_row, 1)].index)
+
+            # save figure
+            fpath_fig = os.path.join(dpath_figs, f'{fig_prefix}_{domain}_after.png')
+            fig.savefig(fpath_fig, dpi=300, bbox_inches='tight')
+            print(f'\tFigure saved: {fpath_fig}')
+
+        subjects_to_drop = subjects_to_drop_new
+        print('-------------------------')
+
+    # save
+    fpath_out = FPATHS[f'data_{domain}_clean']
+    df_clean.to_csv(fpath_out, header=True, index=True)
+    print(f'\tSaved to {fpath_out}')
