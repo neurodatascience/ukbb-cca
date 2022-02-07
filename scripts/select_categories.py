@@ -1,6 +1,6 @@
 
 import sys
-from src.data_selection import DatabaseHelper
+from src.database_helpers import DatabaseHelper
 from src.data_processing import write_subset
 from paths import DPATHS, FPATHS
 

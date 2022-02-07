@@ -3,7 +3,7 @@ import sys
 import pickle
 import numpy as np
 import pandas as pd
-from src.data_selection import DatabaseHelper
+from src.database_helpers import DatabaseHelper
 from src.utils import fill_df_with_mean
 from paths import DPATHS, FPATHS
 
