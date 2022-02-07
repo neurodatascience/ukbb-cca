@@ -8,8 +8,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.linalg import qr
 
-from src.data_selection import FieldHelper, UDIHelper, CategoryHelper
+from src.data_selection import DatabaseHelper
 from paths import FPATHS, DPATHS
+
+within_only = True # if True, ignores 'all' category
+save_figures = False
+
+fpath_udis = FPATHS['udis_tabular_raw']
+dpath_schema = DPATHS['schema']
+dpath_figs = DPATHS['collinearity']
 
 def get_coefs(V, idx_small):
 
@@ -24,13 +31,6 @@ def get_coefs(V, idx_small):
     return coefs, e # e is permutation array
 
 if __name__ == '__main__':
-
-    within_only = True # if True, ignores 'all' category
-    save_figures = True
-
-    fpath_udis = FPATHS['udis_tabular_raw']
-    dpath_schema = DPATHS['schema']
-    dpath_figs = DPATHS['collinearity']
 
     if len(sys.argv) != 2:
         raise ValueError(f'Usage: {sys.argv[0]} <domain>')
@@ -52,14 +52,10 @@ if __name__ == '__main__':
     print(f'fpath_svd:\t{fpath_svd}')
     print(f'fpath_out_csv:\t{fpath_out_csv}')
     print(f'fpath_out_pkl:\t{fpath_out_pkl}')
-    print(f'fpath_udis:\t{fpath_udis}')
-    print(f'dpath_schema:\t{dpath_schema}')
     print(f'dpath_figs:\t{dpath_figs}')
     print('----------------------')
 
-    field_helper = FieldHelper(dpath_schema)
-    udi_helper = UDIHelper(fpath_udis)
-    category_helper = CategoryHelper(dpath_schema)
+    db_helper = DatabaseHelper(dpath_schema, fpath_udis)
 
     # load saved SVD output
     with open(fpath_svd, 'rb') as file_in:
@@ -75,7 +71,7 @@ if __name__ == '__main__':
             continue
 
         try:
-            category_desc = category_helper.get_info([category], colnames='title').tolist()[0]
+            category_desc = db_helper.get_category_title(category)
         except KeyError:
             category_desc = 'All available categories'
 
@@ -104,26 +100,19 @@ if __name__ == '__main__':
             print('--------------------')
             continue
 
-        df_udi_info = udi_helper.get_info(udis, colnames=['field_id']).reset_index().rename(columns={'index': 'udi'})
-        df_field_info = field_helper.get_info(df_udi_info['field_id'], colnames=['title']).reset_index()
-        df_info = df_udi_info.merge(df_field_info, on='field_id').drop_duplicates()
-
         # get linear combination coefficients and permutation order
         coefs, e = get_coefs(V, idx_small)
 
         # find the n_small columns that can be written as a linear combination of the other columns
         udis_collinear = [udis[i] for i in e[:n_small]]
-        df_tmp = df_info.set_index('udi').loc[udis_collinear]
-        df_tmp['category_id'] = category
-        dfs_collinear.append(df_tmp)
+        dfs_collinear.append(db_helper.get_info(udis_collinear, 
+            colnames=['field_id', 'title_field', 'main_category', 'title_category']))
 
         # find and save exact linear combinations
         original_data = results_svd[category]['U'] @ np.diag(s) @ V.T
         for i_coefs, i_udi_collinear in enumerate(e[:n_small]):
             udi_collinear = udis[i_udi_collinear]
             labelled_coefs = pd.Series(data=coefs[:, i_coefs], index=[udis[i] for i in e[n_small:]])
-            # print(df_info.set_index('udi').loc[udi_collinear])
-            # print(np.around(df_coefs.loc[ ~np.isclose(df_coefs['coef'], 0)], decimals=5))
 
             # make sure that the linear combination is correct
             if not np.allclose(original_data[:, i_udi_collinear], original_data[:, e[n_small:]] @ labelled_coefs):
@@ -137,7 +126,7 @@ if __name__ == '__main__':
     if len(dfs_collinear) != 0:
         df_collinear = pd.concat(dfs_collinear).reset_index().drop_duplicates()
     else:
-        df_collinear = pd.DataFrame(columns=['udi', 'field_id', 'title', 'category_id'])
+        df_collinear = pd.DataFrame(columns=['udi', 'field_id', 'title_field', 'main_category', 'title_category'])
     df_collinear.to_csv(fpath_out_csv, header=True, index=False)
 
     # save pickle file
