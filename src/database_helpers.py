@@ -64,7 +64,17 @@ class DatabaseHelper():
         selected = df_merged_subset['main_category'].isin(category_ids)
 
         if not keep:
-            selected = not selected
+            selected = ~selected
+
+        return df_merged_subset.loc[selected].index.tolist()
+
+    def filter_udis_by_value_type(self, udis, value_types, keep=True):
+        value_types = self.field_helper.parse_value_types(value_types)
+        df_merged_subset = self.df_merged.loc[udis]
+        selected = df_merged_subset['value_type'].isin(value_types)
+
+        if not keep:
+            selected = ~selected
 
         return df_merged_subset.loc[selected].index.tolist()
 
@@ -116,11 +126,11 @@ class FieldHelper():
         selected = df_field_subset['title'].str.contains(substring)
 
         if not keep:
-            selected = not selected
+            selected = ~selected
 
         return df_field_subset.loc[selected].index.tolist()
 
-    def filter_by_value_type(self, fields, value_types, keep=True):
+    def parse_value_types(self, value_types):
 
         # 11: integer
         # 21: categorical (single)
@@ -146,11 +156,17 @@ class FieldHelper():
             if len(diff) != 0:
                 raise ValueError(f'Invalid value types {diff}. Valid calue types are {value_types_all}')
 
+        return value_types
+
+    def filter_by_value_type(self, fields, value_types, keep=True):
+
+        value_types = self.parse_value_types(value_types)
+
         df_field_subset = self.df_field.loc[fields]
         selected = df_field_subset['value_type'].isin(value_types)
 
         if not keep:
-            selected = not selected
+            selected = ~selected
 
         return df_field_subset.loc[selected].index.tolist()
 

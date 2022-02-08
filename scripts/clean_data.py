@@ -2,10 +2,41 @@
 import os
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from paths import DPATHS, FPATHS
+from src.database_helpers import DatabaseHelper
 from src.data_processing import find_cols_with_missing, find_cols_with_high_freq, find_cols_with_outliers
 from src.plotting import plot_na_histograms
+
+# process all 3 datasets at the same time
+# so that they all keep/remove the same subjects
+domains = ['behavioural', 'brain', 'demographic']
+
+threshold_na = 0.5
+threshold_high_freq = 0.95
+threshold_outliers = 100
+
+fig_prefix = 'hist_na'
+dpath_figs = DPATHS['preprocessing']
+dpath_schema = DPATHS['schema']
+fpath_udis = FPATHS['udis_tabular_raw']
+
+def one_hot_encode(df):
+
+    def fn_rename(colname):
+        components = colname.split('.')
+        if len(components) != 2:
+            return '.'.join(components[:-1]) # remove trailing floating point
+        else:
+            return colname
+
+    dfs_encoded = []
+
+    for colname_original in df.columns:
+
+        df_encoded = pd.get_dummies(df[colname_original], prefix=colname_original, prefix_sep='_')
+        dfs_encoded.append(df_encoded.rename(columns=fn_rename))
+
+    return pd.concat(dfs_encoded, axis='columns')
 
 def remove_bad_cols(df, threshold_na=0.5, threshold_high_freq=0.95, threshold_outliers=100):
 
@@ -28,17 +59,6 @@ def remove_bad_cols(df, threshold_na=0.5, threshold_high_freq=0.95, threshold_ou
 
 if __name__ == '__main__':
 
-    # process all 3 datasets at the same time
-    # so that they all keep/remove the same subjects
-    domains = ['behavioural', 'brain', 'demographic']
-
-    threshold_na = 0.5
-    threshold_high_freq = 0.95
-    threshold_outliers = 100
-
-    fig_prefix = 'hist_na'
-    dpath_figs = DPATHS['preprocessing']
-
     print('----- Parameters -----')
     print(f'domains:\t{domains}')
     print(f'threshold_na:\t{threshold_na}')
@@ -47,6 +67,8 @@ if __name__ == '__main__':
     print(f'fig_prefix:\t{fig_prefix}')
     print(f'dpath_figs:\t{dpath_figs}')
     print('----------------------')
+
+    db_helper = DatabaseHelper(dpath_schema, fpath_udis)
 
     dfs_data = {}
     subjects_to_drop = set()
@@ -60,6 +82,15 @@ if __name__ == '__main__':
         # load data
         df_data = pd.read_csv(fpath_data, index_col='eid')
         print(f'\tDataframe shape: {df_data.shape}')
+
+        # one-hot encode categorical variables
+        udis = df_data.columns
+        categorical_udis = db_helper.filter_udis_by_value_type(udis, 'categorical')
+        if len(categorical_udis) > 0:
+            print(f'\tOne-hot encoding {len(categorical_udis)} categorical UDIs')
+            df_data = pd.concat([df_data, one_hot_encode(df_data[categorical_udis])], axis='columns')
+            df_data = df_data.drop(columns=categorical_udis)
+            print(f'\t\tShape after one-hot encoding: {df_data.shape}')
 
         # plot histograms of row-/column-wise NaN frequencies
         fig, freqs_na_row, freqs_na_col = plot_na_histograms(df_data, return_freqs=True)
@@ -92,7 +123,7 @@ if __name__ == '__main__':
             df_clean = remove_bad_cols(df_clean, 
                 threshold_na=threshold_na, threshold_high_freq=threshold_high_freq, threshold_outliers=threshold_outliers)
 
-            print(f'\tDataframe shape after removing empty rows/columns: {df_clean.shape}')
+            print(f'\tDataframe shape after removing bad rows/columns: {df_clean.shape}')
 
             # report NaN count/percentage
             na_count = df_clean.isna().values.sum()
@@ -115,6 +146,7 @@ if __name__ == '__main__':
         print('-------------------------')
 
     # save
-    fpath_out = FPATHS[f'data_{domain}_clean']
-    df_clean.to_csv(fpath_out, header=True, index=True)
-    print(f'\tSaved to {fpath_out}')
+    for domain in domains:
+        fpath_out = FPATHS[f'data_{domain}_clean']
+        df_clean.to_csv(fpath_out, header=True, index=True)
+        print(f'\tSaved to {fpath_out}')
