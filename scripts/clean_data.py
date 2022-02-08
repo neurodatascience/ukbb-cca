@@ -121,6 +121,7 @@ if __name__ == '__main__':
         dfs_data[domain] = df_data
 
     print('----- Cleaning data -----')
+    dfs_clean = {}
     while len(subjects_to_drop) != 0:
         subjects_to_drop_new = set()
         for domain in domains:
@@ -147,7 +148,7 @@ if __name__ == '__main__':
             fig.subplots_adjust(top=0.85)
             fig.suptitle(f'{domain.capitalize()} dataset {df_clean.shape}')
 
-            # add rows to drop later
+            # add rows to drop later, if any
             subjects_to_drop_new.update(freqs_na_row.loc[np.isclose(freqs_na_row, 1)].index)
 
             # save figure
@@ -155,11 +156,13 @@ if __name__ == '__main__':
             fig.savefig(fpath_fig, dpi=300, bbox_inches='tight')
             print(f'\tFigure saved: {fpath_fig}')
 
+            dfs_clean[domain] = df_clean # to be saved
+
         subjects_to_drop = subjects_to_drop_new
         print('-------------------------')
 
     # save
     for domain in domains:
         fpath_out = FPATHS[f'data_{domain}_clean']
-        df_clean.to_csv(fpath_out, header=True, index=True)
+        dfs_clean[domain].to_csv(fpath_out, header=True, index=True)
         print(f'\tSaved to {fpath_out}')
