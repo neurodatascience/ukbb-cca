@@ -2,7 +2,7 @@
 import warnings
 import pandas as pd
 
-def load_df(fpath, index_col='eid'):
+def load_data_df(fpath, index_col='eid'):
     return pd.read_csv(fpath, index_col=index_col)
 
 def demean_df(df, axis='index'):
