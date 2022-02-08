@@ -38,6 +38,11 @@ def one_hot_encode(df):
 
     return pd.concat(dfs_encoded, axis='columns')
 
+def square_df(df):
+    df = np.square(df)
+    df = df.rename(columns=(lambda x: f'{x}-squared')) # append 'squared' to column name
+    return df
+
 def remove_bad_cols(df, threshold_na=0.5, threshold_high_freq=0.95, threshold_outliers=100):
 
     # identify columns with too much missing data
@@ -91,6 +96,14 @@ if __name__ == '__main__':
             df_data = pd.concat([df_data, one_hot_encode(df_data[categorical_udis])], axis='columns')
             df_data = df_data.drop(columns=categorical_udis)
             print(f'\t\tShape after one-hot encoding: {df_data.shape}')
+
+        # square confounders
+        if domain == 'demographic':
+            # only square non-categorical (i.e., integer/continuous) columns
+            non_categorical_udis = db_helper.filter_udis_by_value_type(udis, [11, 31])
+            print(f'\tSquaring {len(non_categorical_udis)} numerical, non-categorical columns')
+            df_data = pd.concat([df_data, square_df(df_data[non_categorical_udis])], axis='columns')
+            print(f'\t\tShape after squaring: {df_data.shape}')
 
         # plot histograms of row-/column-wise NaN frequencies
         fig, freqs_na_row, freqs_na_col = plot_na_histograms(df_data, return_freqs=True)
