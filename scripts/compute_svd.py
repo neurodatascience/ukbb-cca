@@ -52,7 +52,7 @@ if __name__ == '__main__':
     db_helper = DatabaseHelper(dpath_schema, fpath_udis)
 
     # load data
-    df_data = load_data_df(fpath_data)
+    df_data = load_data_df(fpath_data, encoded=True)
 
     # fill missing data
     na_count = df_data.isna().values.sum()
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     print(f'Filled {na_count} NaNs with mean')
 
     # get category (main_category) of each field
-    udis = df_data.columns
+    udis = df_data.columns.get_level_values('udi').drop_duplicates()
     main_categories = db_helper.get_categories_from_udis(udis)
     main_categories.append('all')
 
@@ -85,7 +85,8 @@ if __name__ == '__main__':
 
         results[category] = {
             'subjects': df_data_subset.index.tolist(),
-            'udis': df_data_subset.columns.tolist(),
+            'udis': df_data_subset.columns.get_level_values('udi').tolist(),
+            'udis_encoded': df_data_subset.columns.get_level_values('udi_encoded').tolist(),
             'U': U,
             's': s,
             'VT': VT,

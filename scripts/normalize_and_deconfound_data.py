@@ -33,7 +33,8 @@ def normalize_df(df, apply_inverse=True, fill_na=True):
     df = zscore_df(df)
 
     if fill_na:
-        print('\tFilling NaNs with zeros...')
+        na_count = df.isna().values.sum()
+        print(f'\tFilling {na_count} NaNs with zeros...')
         df = df.fillna(0)
 
     return df
@@ -65,8 +66,8 @@ if __name__ == '__main__':
     print('----------------------')
 
     # load data and confounds
-    df_data = load_data_df(fpath_data)
-    df_conf = load_data_df(fpath_conf)
+    df_data = load_data_df(fpath_data, encoded=True)
+    df_conf = load_data_df(fpath_conf, encoded=True)
 
     # preprocess main data (drop bad columns, normalize, fill NaNs)
     print(f'Normalizing main dataset (shape: {df_data.shape})')
