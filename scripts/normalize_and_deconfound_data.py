@@ -21,7 +21,7 @@ configs = {
     },
 }
 
-def normalize_df(df, apply_inverse=True):
+def normalize_df(df, apply_inverse=True, fill_na=True):
 
     # rank-based inverse normal transformation
     if apply_inverse:
@@ -32,8 +32,9 @@ def normalize_df(df, apply_inverse=True):
     print('\tZ-scoring...')
     df = zscore_df(df)
 
-    print('\tFilling NaNs with zeros...')
-    df = df.fillna(0)
+    if fill_na:
+        print('\tFilling NaNs with zeros...')
+        df = df.fillna(0)
 
     return df
 
@@ -63,17 +64,17 @@ if __name__ == '__main__':
     print(f'apply_inverse:\t{apply_inverse}')
     print('----------------------')
 
-    # load confounds and data
-    df_conf = load_data_df(fpath_conf)
+    # load data and confounds
     df_data = load_data_df(fpath_data)
+    df_conf = load_data_df(fpath_conf)
 
     # preprocess main data (drop bad columns, normalize, fill NaNs)
     print(f'Normalizing main dataset (shape: {df_data.shape})')
-    df_data = normalize_df(df_data, apply_inverse=apply_inverse)
+    df_data = normalize_df(df_data, apply_inverse=apply_inverse, fill_na=True)
 
     # preprocess confounds (drop bad columns, normalize, fill NaNs)
     print(f'Normalizing confounds dataset (shape: {df_conf.shape})')
-    df_conf = normalize_df(df_conf, apply_inverse=apply_inverse)
+    df_conf = normalize_df(df_conf, apply_inverse=apply_inverse, fill_na=True)
 
     # remove confounds from main dataset
     print('Deconfounding data...')

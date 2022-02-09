@@ -1,7 +1,9 @@
 
 import re
 import pandas as pd
+
 from paths import FPATHS
+from src.utils import load_data_df
 
 def parse_udis(fpath_data):
 
@@ -16,7 +18,7 @@ def parse_udis(fpath_data):
 
     # read UDIs (column names) from data
     # faster to read 1 row then drop it than reading 0 rows
-    df_tabular = pd.read_csv(fpath_data, header=0, index_col='eid', nrows=1)
+    df_tabular = load_data_df(fpath_data, nrows=1)
     df_udis = df_tabular.iloc[:0].transpose()
     
     df_udis.index.name = 'udi'

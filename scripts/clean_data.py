@@ -5,6 +5,7 @@ import pandas as pd
 from paths import DPATHS, FPATHS
 from src.database_helpers import DatabaseHelper
 from src.data_processing import find_cols_with_missing, find_cols_with_high_freq, find_cols_with_outliers
+from src.utils import load_data_df
 from src.plotting import plot_na_histograms
 
 # process all 3 datasets at the same time
@@ -101,7 +102,7 @@ if __name__ == '__main__':
         print(f'{domain}: {fpath_data}')
 
         # load data
-        df_data = pd.read_csv(fpath_data, index_col='eid')
+        df_data = load_data_df(fpath_data)
         print(f'\tDataframe shape: {df_data.shape}')
 
         # if data contains holdout UDIs, extract them and drop them from dataframe

@@ -4,7 +4,7 @@ import pickle
 import numpy as np
 import pandas as pd
 from src.database_helpers import DatabaseHelper
-from src.utils import fill_df_with_mean
+from src.utils import load_data_df, fill_df_with_mean
 from paths import DPATHS, FPATHS
 
 dpath_schema = DPATHS['schema']
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     db_helper = DatabaseHelper(dpath_schema, fpath_udis)
 
     # load data
-    df_data = pd.read_csv(fpath_data, index_col='eid')
+    df_data = load_data_df(fpath_data)
 
     # fill missing data
     na_count = df_data.isna().values.sum()

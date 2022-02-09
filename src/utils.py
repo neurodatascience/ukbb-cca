@@ -2,8 +2,8 @@
 import warnings
 import pandas as pd
 
-def load_data_df(fpath, index_col='eid'):
-    return pd.read_csv(fpath, index_col=index_col)
+def load_data_df(fpath, index_col='eid', nrows=None):
+    return pd.read_csv(fpath, index_col=index_col, nrows=nrows)
 
 def demean_df(df, axis='index'):
     means = df.mean(axis=axis, skipna=True)
