@@ -31,7 +31,7 @@ fpath_udis = FPATHS['udis_tabular_raw']
 
 def one_hot_encode(df):
 
-    def fn_rename(colname):
+    def fn_rename(colname): # TODO change negative values
         components = colname.split('.')
         if len(components) != 2:
             return '.'.join(components[:-1]) # remove trailing floating point
@@ -49,7 +49,11 @@ def one_hot_encode(df):
 
 def square_df(df):
     df = np.square(df)
-    df = df.rename(columns=(lambda x: f'{x}_squared')) # append 'squared' to column name
+    # change suffix to "squared"
+    df.columns = df.columns.remove_unused_levels().set_levels(
+        df.columns.map(lambda x: f'{x[1].split("_")[0]}_squared'),
+        level=multiindex_names[1],
+    )
     return df
 
 def remove_bad_cols(df, threshold_na=0.5, threshold_high_freq=0.95, threshold_outliers=100, return_colnames=False):
@@ -119,7 +123,7 @@ if __name__ == '__main__':
         if len(categorical_udis) > 0:
 
             print(f'\tOne-hot encoding {len(categorical_udis)} categorical UDIs')
-            df_encoded = one_hot_encode(df_data[categorical_udis]) # returns multiindexed df
+            df_encoded = one_hot_encode(df_data.loc[:, categorical_udis]) # returns multiindexed df
 
             # drop original categorical columns
             df_data = df_data.drop(columns=categorical_udis)
@@ -140,7 +144,7 @@ if __name__ == '__main__':
             # only square non-categorical (i.e., integer/continuous) columns
             non_categorical_udis = db_helper.filter_udis_by_value_type(udis, [11, 31])
             print(f'\tSquaring {len(non_categorical_udis)} numerical, non-categorical columns')
-            df_data = pd.concat([df_data, square_df(df_data[non_categorical_udis])], axis='columns')
+            df_data = pd.concat([df_data, square_df(df_data.loc[:, non_categorical_udis])], axis='columns')
             print(f'\t\tShape after squaring: {df_data.shape}')
 
         # plot histograms of row-/column-wise NaN frequencies
