@@ -23,6 +23,7 @@ fpath_holdout = FPATHS['data_holdout_clean']
 fpath_dropped_subjects = os.path.join(DPATHS['clean'], 'dropped_subjects.csv')
 fpath_dropped_udis = os.path.join(DPATHS['clean'], 'dropped_udis.csv')
 
+multiindex_names = ['udi', 'udi_encoded']
 fig_prefix = 'hist_na'
 dpath_figs = DPATHS['preprocessing']
 dpath_schema = DPATHS['schema']
@@ -44,7 +45,7 @@ def one_hot_encode(df):
         df_encoded = pd.get_dummies(df[colname_original], prefix=colname_original, prefix_sep='_')
         dfs_encoded[colname_original] = df_encoded.rename(columns=fn_rename)
 
-    return pd.concat(dfs_encoded, axis='columns', names=['udis', 'udis_encoded'])
+    return pd.concat(dfs_encoded, axis='columns', names=multiindex_names)
 
 def square_df(df):
     df = np.square(df)
@@ -122,15 +123,17 @@ if __name__ == '__main__':
 
             # drop original categorical columns
             df_data = df_data.drop(columns=categorical_udis)
+        else:
+            df_encoded = None
 
-            # add column level for compatibility with df_encoded
-            df_data.columns = pd.MultiIndex.from_arrays(
-                [df_data.columns, df_data.columns.map(lambda colname: f'{colname}_orig')],
-                names=['udis', 'udis_encoded'],
-            )
-            
-            df_data = pd.concat([df_data, df_encoded], axis='columns')
-            print(f'\t\tShape after one-hot encoding: {df_data.shape}')
+        # add column level for compatibility with df_encoded
+        df_data.columns = pd.MultiIndex.from_arrays(
+            [df_data.columns, df_data.columns.map(lambda colname: f'{colname}_orig')],
+            names=multiindex_names,
+        )
+        
+        df_data = pd.concat([df_data, df_encoded], axis='columns')
+        print(f'\t\tShape after one-hot encoding: {df_data.shape}')
 
         # square confounders
         if square_conf and domain in ['demographic']:
