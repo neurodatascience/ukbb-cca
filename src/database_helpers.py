@@ -23,6 +23,9 @@ class DatabaseHelper():
         )
         self.df_merged = self.df_merged.set_index('udi')
 
+    def decode_udis(self, udis):
+        return [udi.split('_')[0] for udi in udis]
+
     def get_info(self, udis, colnames='all'):
 
         if colnames == 'all':
@@ -77,6 +80,9 @@ class DatabaseHelper():
             selected = ~selected
 
         return df_merged_subset.loc[selected].index.tolist()
+
+    def filter_udis_by_field(self, udis, fields, keep=True):
+        return self.udi_helper.filter_by_field(udis, fields, keep=keep)
 
     def get_category_title(self, category_id):
         return self.category_helper.get_info([category_id], colnames='title').tolist()[0]
@@ -209,6 +215,16 @@ class UDIHelper():
             return df_to_keep.loc[selected].index.tolist()
         else:
             raise ValueError(f'keep_instance="{keep_instance}" is invalid')
+
+    def filter_by_field(self, udis, fields, keep=True):
+
+        df_udis_subset = self.df_udis.loc[udis]
+        selected = df_udis_subset['field_id'].isin(fields)
+
+        if not keep:
+            selected = ~selected
+
+        return df_udis_subset.loc[selected].index.tolist()
 
 class CategoryHelper():
 

@@ -10,10 +10,17 @@ from src.plotting import plot_na_histograms
 # process all 3 datasets at the same time
 # so that they all keep/remove the same subjects
 domains = ['behavioural', 'brain', 'demographic']
+holdout_fields = [21003, 34] # age, year of birth
+
+square_conf = True
 
 threshold_na = 0.5
 threshold_high_freq = 0.95
 threshold_outliers = 100
+
+fpath_holdout = FPATHS['data_holdout_clean']
+fpath_dropped_subjects = os.path.join(DPATHS['clean'], 'dropped_subjects.csv')
+fpath_dropped_udis = os.path.join(DPATHS['clean'], 'dropped_udis.csv')
 
 fig_prefix = 'hist_na'
 dpath_figs = DPATHS['preprocessing']
@@ -43,7 +50,7 @@ def square_df(df):
     df = df.rename(columns=(lambda x: f'{x}-squared')) # append 'squared' to column name
     return df
 
-def remove_bad_cols(df, threshold_na=0.5, threshold_high_freq=0.95, threshold_outliers=100):
+def remove_bad_cols(df, threshold_na=0.5, threshold_high_freq=0.95, threshold_outliers=100, return_colnames=False):
 
     # identify columns with too much missing data
     cols_with_missing = find_cols_with_missing(df, threshold=threshold_na)
@@ -60,15 +67,23 @@ def remove_bad_cols(df, threshold_na=0.5, threshold_high_freq=0.95, threshold_ou
     print(f'\t\tRemoved {len(cols_with_outliers)} columns with outlier(s)')
     df = df.drop(columns=cols_with_outliers)
 
+    if return_colnames:
+        bad_colnames = set(cols_with_missing).union(cols_without_variability).union(cols_with_outliers)
+        return df, list(bad_colnames)
+
     return df
 
 if __name__ == '__main__':
 
     print('----- Parameters -----')
     print(f'domains:\t{domains}')
+    print(f'holdout_fields:\t{holdout_fields}')
     print(f'threshold_na:\t{threshold_na}')
     print(f'threshold_high_freq:\t{threshold_high_freq}')
     print(f'threshold_outliers:\t{threshold_outliers}')
+    print(f'fpath_holdout:\t{fpath_holdout}')
+    print(f'fpath_dropped_subjects:\t{fpath_dropped_subjects}')
+    print(f'fpath_dropped_udis:\t{fpath_dropped_udis}')
     print(f'fig_prefix:\t{fig_prefix}')
     print(f'dpath_figs:\t{dpath_figs}')
     print('----------------------')
@@ -76,6 +91,7 @@ if __name__ == '__main__':
     db_helper = DatabaseHelper(dpath_schema, fpath_udis)
 
     dfs_data = {}
+    dfs_holdout = [] # to be concatenated
     subjects_to_drop = set()
 
     print('----- Loading unprocessed data -----')
@@ -88,6 +104,13 @@ if __name__ == '__main__':
         df_data = pd.read_csv(fpath_data, index_col='eid')
         print(f'\tDataframe shape: {df_data.shape}')
 
+        # if data contains holdout UDIs, extract them and drop them from dataframe
+        holdout_udis = db_helper.filter_udis_by_field(df_data.columns, holdout_fields)
+        if len(holdout_udis) > 0:
+            print(f'\tExtracting {len(holdout_udis)} holdout variables')
+            dfs_holdout.append(df_data.loc[:, holdout_udis])
+            df_data = df_data.drop(columns=holdout_udis)
+
         # one-hot encode categorical variables
         udis = df_data.columns
         categorical_udis = db_helper.filter_udis_by_value_type(udis, 'categorical')
@@ -98,7 +121,7 @@ if __name__ == '__main__':
             print(f'\t\tShape after one-hot encoding: {df_data.shape}')
 
         # square confounders
-        if domain == 'demographic':
+        if square_conf and domain in ['demographic']:
             # only square non-categorical (i.e., integer/continuous) columns
             non_categorical_udis = db_helper.filter_udis_by_value_type(udis, [11, 31])
             print(f'\tSquaring {len(non_categorical_udis)} numerical, non-categorical columns')
@@ -120,9 +143,22 @@ if __name__ == '__main__':
 
         dfs_data[domain] = df_data
 
+    df_holdout = pd.concat(dfs_holdout, axis='columns')
+
     print('----- Cleaning data -----')
+    mode = 'w'
     dfs_clean = {}
+    dfs_dropped_cols = []
     while len(subjects_to_drop) != 0:
+
+        # write dropped subject IDs
+        pd.Series(list(subjects_to_drop), name='eid').to_csv(fpath_dropped_subjects, 
+            header=True, index=False, mode=mode)
+        mode = 'a' # append for subsequent iterations
+
+        # drop subjects from holdouts dataframe
+        df_holdout = df_holdout.drop(index=subjects_to_drop)
+
         subjects_to_drop_new = set()
         for domain in domains:
 
@@ -134,8 +170,11 @@ if __name__ == '__main__':
 
             # remove bad columns
             print('\tLooking for bad columns...')
-            df_clean = remove_bad_cols(df_clean, 
+            df_clean, bad_cols = remove_bad_cols(df_clean, return_colnames=True,
                 threshold_na=threshold_na, threshold_high_freq=threshold_high_freq, threshold_outliers=threshold_outliers)
+
+            # save in df, to write later
+            dfs_dropped_cols.append(pd.DataFrame({'uid':bad_cols, 'domain':domain}))
 
             print(f'\tDataframe shape after removing bad rows/columns: {df_clean.shape}')
 
@@ -156,13 +195,21 @@ if __name__ == '__main__':
             fig.savefig(fpath_fig, dpi=300, bbox_inches='tight')
             print(f'\tFigure saved: {fpath_fig}')
 
-            dfs_clean[domain] = df_clean # to be saved
+            dfs_clean[domain] = df_clean # to be saved in csv file
 
         subjects_to_drop = subjects_to_drop_new
         print('-------------------------')
 
-    # save
+    print(f'Holdout dataframe shape: {df_holdout.shape}')
+
+    # save cleaned data
     for domain in domains:
         fpath_out = FPATHS[f'data_{domain}_clean']
         dfs_clean[domain].to_csv(fpath_out, header=True, index=True)
-        print(f'\tSaved to {fpath_out}')
+        print(f'Saved {domain} data to {fpath_out}')
+
+    # save cleaned holdouts dataframe
+    df_holdout.to_csv(fpath_holdout, header=True, index=True)
+
+    # log dropped columns
+    pd.concat(dfs_dropped_cols).to_csv(fpath_dropped_udis, header=True, index=False)
