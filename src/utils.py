@@ -2,8 +2,9 @@
 import warnings
 import pandas as pd
 
-def load_data_df(fpath, index_col='eid', nrows=None):
-    return pd.read_csv(fpath, index_col=index_col, nrows=nrows)
+def load_data_df(fpath, index_col=0, nrows=None, encoded=False):
+    header = [0, 1] if encoded else 0
+    return pd.read_csv(fpath, index_col=index_col, nrows=nrows, header=header)
 
 def demean_df(df, axis='index'):
     means = df.mean(axis=axis, skipna=True)

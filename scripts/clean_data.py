@@ -37,18 +37,18 @@ def one_hot_encode(df):
         else:
             return colname
 
-    dfs_encoded = []
+    dfs_encoded = {} # to be concatenated
 
     for colname_original in df.columns:
 
         df_encoded = pd.get_dummies(df[colname_original], prefix=colname_original, prefix_sep='_')
-        dfs_encoded.append(df_encoded.rename(columns=fn_rename))
+        dfs_encoded[colname_original] = df_encoded.rename(columns=fn_rename)
 
-    return pd.concat(dfs_encoded, axis='columns')
+    return pd.concat(dfs_encoded, axis='columns', names=['udis', 'udis_encoded'])
 
 def square_df(df):
     df = np.square(df)
-    df = df.rename(columns=(lambda x: f'{x}-squared')) # append 'squared' to column name
+    df = df.rename(columns=(lambda x: f'{x}_squared')) # append 'squared' to column name
     return df
 
 def remove_bad_cols(df, threshold_na=0.5, threshold_high_freq=0.95, threshold_outliers=100, return_colnames=False):
@@ -116,9 +116,20 @@ if __name__ == '__main__':
         udis = df_data.columns
         categorical_udis = db_helper.filter_udis_by_value_type(udis, 'categorical')
         if len(categorical_udis) > 0:
+
             print(f'\tOne-hot encoding {len(categorical_udis)} categorical UDIs')
-            df_data = pd.concat([df_data, one_hot_encode(df_data[categorical_udis])], axis='columns')
+            df_encoded = one_hot_encode(df_data[categorical_udis]) # returns multiindexed df
+
+            # drop original categorical columns
             df_data = df_data.drop(columns=categorical_udis)
+
+            # add column level for compatibility with df_encoded
+            df_data.columns = pd.MultiIndex.from_arrays(
+                [df_data.columns, df_data.columns.map(lambda colname: f'{colname}_orig')],
+                names=['udis', 'udis_encoded'],
+            )
+            
+            df_data = pd.concat([df_data, df_encoded], axis='columns')
             print(f'\t\tShape after one-hot encoding: {df_data.shape}')
 
         # square confounders
@@ -148,7 +159,6 @@ if __name__ == '__main__':
 
     print('----- Cleaning data -----')
     mode = 'w'
-    dfs_clean = {}
     dfs_dropped_cols = []
     while len(subjects_to_drop) != 0:
 
@@ -196,7 +206,7 @@ if __name__ == '__main__':
             fig.savefig(fpath_fig, dpi=300, bbox_inches='tight')
             print(f'\tFigure saved: {fpath_fig}')
 
-            dfs_clean[domain] = df_clean # to be saved in csv file
+            dfs_data[domain] = df_clean # to be saved in csv file
 
         subjects_to_drop = subjects_to_drop_new
         print('-------------------------')
@@ -206,7 +216,7 @@ if __name__ == '__main__':
     # save cleaned data
     for domain in domains:
         fpath_out = FPATHS[f'data_{domain}_clean']
-        dfs_clean[domain].to_csv(fpath_out, header=True, index=True)
+        dfs_data[domain].to_csv(fpath_out, header=True, index=True)
         print(f'Saved {domain} data to {fpath_out}')
 
     # save cleaned holdouts dataframe
