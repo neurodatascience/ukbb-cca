@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
     # preprocess main data (drop bad columns, normalize, fill NaNs)
     print(f'Normalizing main dataset (shape: {df_data.shape})')
-    df_data = normalize_df(df_data, apply_inverse=apply_inverse, fill_na=True)
+    df_data = normalize_df(df_data, apply_inverse=apply_inverse, fill_na=False)
 
     # preprocess confounds (drop bad columns, normalize, fill NaNs)
     print(f'Normalizing confounds dataset (shape: {df_conf.shape})')
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     # remove confounds from main dataset
     print('Deconfounding data...')
     df_deconfounded = deconfound_df(df_data, df_conf)
-    df_deconfounded = zscore_df(df_deconfounded) # normalize deconfounded data
+    # df_deconfounded = zscore_df(df_deconfounded) # normalize deconfounded data
 
     # save csv file
     print(f'Saving final dataframe (shape: {df_deconfounded.shape})...')

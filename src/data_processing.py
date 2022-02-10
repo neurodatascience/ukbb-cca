@@ -58,15 +58,26 @@ def deconfound_df(df_data, df_conf):
 
     # TODO add reference for deconfounding method
 
+    # df_conf cannot have missing data because pinv() would fail
+    if df_conf.isna().values.sum() != 0:
+        raise ValueError('confound data cannot contain NaNs')
+
     # remember columns/index of original dataframe
     data_cols = df_data.columns
     data_index = df_data.index
 
-    # deconfound (on numpy arrays)
-    data_deconfounded = df_data.values - (df_conf.values @ (np.linalg.pinv(df_conf.values) @ df_data.values))
+    conf = df_conf.values
 
-    # rebuild dataframe
-    return pd.DataFrame(data=data_deconfounded, index=data_index, columns=data_cols)
+    # mask NaNs in df_data
+    data_masked = np.ma.masked_invalid(df_data.values)
+
+    # deconfound
+    conf_weights = np.ma.dot(np.linalg.pinv(conf), data_masked)
+    conf_effects = np.ma.dot(conf, conf_weights)
+    data_deconfounded = data_masked - conf_effects
+
+    # put back NaNs and rebuild dataframe
+    return pd.DataFrame(data=data_deconfounded.filled(np.nan), index=data_index, columns=data_cols)
 
 def inv_norm(X, method='blom', rank_method='average'):
     '''Rank-based inverse normal transformation.'''
