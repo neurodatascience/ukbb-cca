@@ -14,7 +14,7 @@ seed = 3791
 fpath_data1 = FPATHS['data_behavioural_clean']
 fpath_data2 = FPATHS['data_brain_clean']
 fpath_conf = FPATHS['data_demographic_clean']
-fpath_stratification = FPATHS['data_stratification_clean']
+fpath_groups = FPATHS['data_groups_clean']
 
 # output paths
 fpath_train = FPATHS['subjects_train']
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     print(f'fpath_data1:\t{fpath_data1}')
     print(f'fpath_data2:\t{fpath_data2}')
     print(f'fpath_conf:\t{fpath_conf}')
-    print(f'fpath_stratification:\t{fpath_stratification}')
+    print(f'fpath_groups:\t{fpath_groups}')
     print('----------------------')
 
     # load data
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     print(f'\t{df_data2.shape}')
     df_conf = load_data_df(fpath_conf, encoded=True)
     print(f'\t{df_conf.shape}')
-    stratification_var = load_data_df(fpath_stratification, encoded=False).squeeze('columns')
+    groups = load_data_df(fpath_groups, encoded=False).squeeze('columns')
 
     # make sure all datasets contain the same subjects
     print('Checking that all datasets have the same subjects... ', end='')
@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
     # split (order is data1_train, data1_test, data2_train, etc.)
     subjects_train, subjects_test = train_test_split(
-        subjects_sorted, stratify=stratification_var.loc[subjects_sorted],
+        subjects_sorted, stratify=groups.loc[subjects_sorted],
         test_size=test_size, shuffle=shuffle, random_state=seed,
     )
 

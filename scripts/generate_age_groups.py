@@ -11,7 +11,7 @@ age_udi = '21003-2.0'
 year_group = 5
 
 fpath_holdout = FPATHS['data_holdout_clean']
-fpath_out = FPATHS['data_stratification_clean']
+fpath_out = FPATHS['data_groups_clean']
 fpath_fig = os.path.join(DPATHS['preprocessing'], 'hist_age.png')
 
 if __name__ == '__main__':
