@@ -59,5 +59,5 @@ if __name__ == '__main__':
 
     # save in train/test files
     for fpath_out, subjects_subset in zip([fpath_train, fpath_test], [subjects_train, subjects_test]):
-        pd.Series(subjects_subset).to_csv(fpath_out, header=False, index=False)
+        pd.Series(subjects_subset).to_csv(fpath_out, header=['eid'], index=False)
         print(f'Saved {len(subjects_subset)} subjects to {fpath_out}')
