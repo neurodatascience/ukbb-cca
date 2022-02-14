@@ -19,7 +19,7 @@ class PreprocessingPipeline():
                     Xt = transform.transform(Xt, y)
             return Xt
 
-    def __init__(self, dataset_names={'data1', 'data2'}, conf_name='conf', verbose=False):
+    def __init__(self, dataset_names=['data1', 'data2'], conf_name='conf', verbose=False):
 
         self.dataset_names = dataset_names
         self.conf_name = conf_name
@@ -88,7 +88,7 @@ class PreprocessingPipeline():
     def _check_X(self, X):
         # top level unique keys (except for conf_name)
         dataset_names = set(X.drop(columns=self.conf_name, errors='ignore').columns.get_level_values(0))
-        if dataset_names != self.dataset_names:
+        if dataset_names != set(self.dataset_names):
             raise ValueError(f'Mismatch between dataset names. Expected {self.dataset_names} (conf: {self.conf_name}), got {dataset_names})')
 
     def _preprocess_confounds(self, X, fit=False):
