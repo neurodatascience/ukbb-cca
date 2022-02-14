@@ -1,10 +1,11 @@
 
 import numpy as np
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
 # TODO accept DataFrame type for conf
 
-class NanDeconfounder():
+class NanDeconfounder(TransformerMixin, BaseEstimator):
 
     def fit(self, X, conf):
 

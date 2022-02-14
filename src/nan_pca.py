@@ -1,10 +1,11 @@
 
 import numpy as np
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.extmath import stable_cumsum
 from .utils import nearest_spd
 
-class NanPCA():
+class NanPCA(TransformerMixin, BaseEstimator):
 
     def __init__(self, n_components=None):
         self.n_components = n_components
