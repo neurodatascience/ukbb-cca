@@ -1,6 +1,7 @@
 
 import warnings
 import pandas as pd
+import numpy as np
 
 def load_data_df(fpath, index_col=0, nrows=None, encoded=False):
     header = [0, 1] if encoded else 0
@@ -25,3 +26,54 @@ def zscore_df(df, axis='index'):
 def fill_df_with_mean(df, axis='index'):
     means = df.mean(axis=axis, skipna=True)
     return df.fillna(means)
+
+def nearest_spd(A):
+    """
+    Finds nearest symmetric positive definite matrix.
+    Adapted from https://stackoverflow.com/questions/43238173/python-convert-matrix-to-positive-semi-definite/43244194#43244194.
+    """
+
+    def is_symmetric(A, rtol=1e-05, atol=1e-08):
+        return np.allclose(A, A.T, rtol=rtol, atol=atol)
+
+    def is_pd(A):
+        try:
+            np.linalg.cholesky(A)
+            return True
+        except np.linalg.LinAlgError:
+            return False
+
+    # input validation
+    if len(A.shape) != 2:
+        raise ValueError('matrix must be 2D')
+
+    n_rows, n_cols = A.shape
+    if n_rows != n_cols:
+        raise ValueError('matrix must be square')
+
+    if is_symmetric(A) and is_pd(A):
+        return A
+
+    if n_rows == 1:
+        return np.spacing(1)
+
+    # symmetrize A into B
+    B = (A + A.T) / 2
+
+    # H is the symmetric polar factor of B
+    _, s, Vt = np.linalg.svd(B)
+    H = Vt.T @ np.diag(s) @ Vt
+
+    A_hat = (B + H) / 2
+    A_hat = (A_hat + A_hat.T) / 2 # make it symmetric
+
+    k = 1
+    I = np.eye(n_rows)
+    spacing = np.spacing(np.linalg.norm(A_hat))
+    while not is_pd(A_hat):
+
+        min_eig = np.min(np.real(np.linalg.eigvals(A_hat)))
+        A_hat += I * (-min_eig * k**2 + spacing)
+        k += 1
+
+    return A_hat
