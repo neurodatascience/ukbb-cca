@@ -9,8 +9,10 @@ class NanDeconfounder(TransformerMixin, BaseEstimator):
 
     def fit(self, X, conf):
 
+        if conf is None:
+            return self
+
         self._check_conf(conf)
-        
         X = np.ma.masked_invalid(X)
         weights = np.ma.dot(np.linalg.pinv(conf), X)
         self.weights_ = weights
@@ -18,6 +20,9 @@ class NanDeconfounder(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, X, conf):
+
+        if conf is None:
+            return X
 
         check_is_fitted(self)
         self._check_conf(conf)
