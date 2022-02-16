@@ -39,7 +39,7 @@ def find_cols_with_missing(df, threshold=0.5):
 def find_cols_with_high_freq(df, threshold=0.95):
     n_rows_nonan = (~df.isna()).sum(axis='index').values
     _, mode_counts = np.squeeze(stats.mode(df, axis=0))
-    return df.columns[(mode_counts / n_rows_nonan) > threshold].tolist() 
+    return df.columns[(mode_counts / n_rows_nonan) >= threshold].tolist() 
 
 def find_cols_with_outliers(df, threshold=100):
 
@@ -47,7 +47,7 @@ def find_cols_with_outliers(df, threshold=100):
         # outlier if max((X - median(X))**2) > 100*mean((X - median(X))**2)
         squared_distances_from_median = (s - s.median()) ** 2
         ratio = squared_distances_from_median.max() / squared_distances_from_median.mean()
-        return ratio > threshold
+        return ratio >= threshold
 
     df = inv_norm_df(df)
     df = zscore_df(df)
