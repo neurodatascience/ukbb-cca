@@ -21,11 +21,10 @@ from src.cca_utils import score_projections
 
 # settings
 save_models = True
-min_n_latent_dims = 20
 
 # model parameters: number of PCA components
-n_components1 = 100
-n_components2 = 100
+n_components1 = None
+n_components2 = None
 
 # cross-validation parameters
 verbose=True
@@ -34,11 +33,7 @@ shuffle = False
 seed = None # TODO get seed from input argument
 
 # paths to data files
-fpath_data1 = FPATHS['data_behavioural_clean']
-fpath_data2 = FPATHS['data_brain_clean']
-fpath_conf = FPATHS['data_demographic_clean']
-fpath_train_subjects = FPATHS['subjects_train'] # subject IDs
-fpath_groups = FPATHS['data_groups_clean']
+fpath_data = FPATHS['data_Xy_train']
 
 # output path
 dpath_out = DPATHS['cca']
@@ -72,18 +67,18 @@ if __name__ == '__main__':
     print('----- Parameters -----')
     print(f'n_components1:\t{n_components1}')
     print(f'n_components2:\t{n_components2}')
-    print(f'min_n_latent_dims:\t{min_n_latent_dims}')
     print(f'save_models:\t{save_models}')
     print(f'verbose:\t{verbose}')
     print(f'n_folds:\t{n_folds}')
     print(f'shuffle:\t{shuffle}')
     print(f'seed:\t{seed}')
-    # print(f'fpath_data1:\t{fpath_data1}')
-    # print(f'fpath_data2:\t{fpath_data2}')
-    # print(f'fpath_conf:\t{fpath_conf}')
-    # print(f'fpath_train_subjects:\t{fpath_train_subjects}')
-    # print(f'fpath_groups:\t{fpath_groups}')
+    print(f'fpath_data:\t{fpath_data}')
     print('----------------------')
+
+    with open(fpath_data, 'rb') as file_in:
+        X, y = pickle.load(file_in)
+
+    subjects = np.array(X.index)
 
     # random state
     if shuffle:
@@ -91,38 +86,13 @@ if __name__ == '__main__':
     else:
         random_state = None
 
-    # extract subjects IDs # TODO make split_subjects.py save X and y train/test dfs
-    train_subjects = pd.read_csv(fpath_train_subjects).squeeze('columns')
-
-    # load all datasets and extract subjects
-    df_data1 = load_data_df(fpath_data1, encoded=True).loc[train_subjects]
-    df_data2 = load_data_df(fpath_data2, encoded=True).loc[train_subjects]
-    df_conf = load_data_df(fpath_conf, encoded=True).loc[train_subjects]
-    dfs_dict = {'data1': df_data1, 'data2': df_data2, 'conf': df_conf}
-
-    # grouping variable for stratification
-    y = load_data_df(fpath_groups, encoded=False).squeeze('columns').loc[train_subjects]
-
-    # drop one of the multiindex levels (after storing it)
-    # (some sklearn classes cannot handle multiindex columns)
-    udis = {}
-    level_to_drop = 'udi'
-    for dataset_name, df in dfs_dict.items():
-        udis[dataset_name] = df.columns.get_level_values(level_to_drop)
-        dfs_dict[dataset_name] = dfs_dict[dataset_name].droplevel(level_to_drop, axis='columns')
-
-    # combine into a single big dataframe
-    # for compatibility with sklearn Pipeline
-    X = pd.concat(dfs_dict, axis='columns').loc[train_subjects]
-    print(f'X shape: {X.shape}')
-
     # process PCA n_components
     if n_components1 is None:
-        n_components1 = df_data1.shape[1]
+        n_components1 = X['data1'].shape[1]
     if n_components2 is None:
-        n_components2 = df_data2.shape[1]
+        n_components2 = X['data2'].shape[1]
 
-    n_latent_dims = max(min_n_latent_dims, n_components1, n_components2)
+    n_latent_dims = min(n_components1, n_components2)
     print(f'Using {n_latent_dims} latent dimensions')
     latent_dims_names = [f'CF{i+1}' for i in range(n_latent_dims)]
 
@@ -152,8 +122,8 @@ if __name__ == '__main__':
     val_projections2_all = []
     for index_train, index_val in cv_split(X, y):
 
-        subjects_train = train_subjects[index_train]
-        subjects_val = train_subjects[index_val]
+        subjects_train = subjects[index_train]
+        subjects_val = subjects[index_val]
 
         X_train = X.loc[subjects_train]
         X_val = X.loc[subjects_val]
@@ -191,16 +161,15 @@ if __name__ == '__main__':
     df_projections1 = pd.concat(val_projections1_all, axis='index')
     df_projections2 = pd.concat(val_projections2_all, axis='index')
     if n_folds != 1:
-        df_projections1 = df_projections1.loc[train_subjects] # use original subject order
-        df_projections2 = df_projections2.loc[train_subjects]
+        df_projections1 = df_projections1.loc[subjects] # use original subject order
+        df_projections2 = df_projections2.loc[subjects]
     
     # to be pickled
     results_all = {
         'cv_results': cv_results,
         'df_projections1': df_projections1, 
         'df_projections2': df_projections2, 
-        'subjects': train_subjects,
-        'udis': udis,
+        'subjects': subjects,
         'latent_dims_names': latent_dims_names,
     }
 
