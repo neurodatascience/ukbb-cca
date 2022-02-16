@@ -1,5 +1,6 @@
 
 import pickle
+import numpy as np
 import pandas as pd
 
 from sklearn.pipeline import Pipeline
@@ -21,7 +22,7 @@ verbose=True
 # cross-validation parameters
 n_folds = 5
 shuffle = False
-# seed = None # TODO use RandomState
+seed = 3791
 
 # paths to data files
 fpath_data1 = FPATHS['data_behavioural_clean']
@@ -37,15 +38,15 @@ def build_data_pipeline():
         ('deconfounder', NanDeconfounder()),
         ('pca', NanPCA()),
     ]
-    return PipelineXY(steps, verbose=verbose)
+    return PipelineXY(steps, verbose=False)
 
 def build_conf_pipeline():
     steps = [
-            ('imputer', SimpleImputer(strategy='median')),
-            ('inv_norm', QuantileTransformer(output_distribution='normal')),
-            ('scaler', StandardScaler()),
+        ('imputer', SimpleImputer(strategy='median')),
+        ('inv_norm', QuantileTransformer(output_distribution='normal')),
+        ('scaler', StandardScaler()),
     ]
-    return Pipeline(steps, verbose=verbose)
+    return Pipeline(steps, verbose=False)
 
 if __name__ == '__main__':
 
@@ -53,7 +54,7 @@ if __name__ == '__main__':
     print(f'verbose:\t{verbose}')
     print(f'n_folds:\t{n_folds}')
     print(f'shuffle:\t{shuffle}')
-    # print(f'seed:\t{seed}')
+    print(f'seed:\t{seed}')
     print(f'fpath_data1:\t{fpath_data1}')
     print(f'fpath_data2:\t{fpath_data2}')
     print(f'fpath_conf:\t{fpath_conf}')
@@ -61,8 +62,14 @@ if __name__ == '__main__':
     print(f'fpath_groups:\t{fpath_groups}')
     print('----------------------')
 
+    # random state
+    if shuffle:
+        random_state = np.random.RandomState(seed=seed)
+    else:
+        random_state = None
+
     # extract subjects IDs
-    train_subjects = pd.read_csv(fpath_train_subjects).squeeze('columns')[:2000]
+    train_subjects = pd.read_csv(fpath_train_subjects).squeeze('columns')
 
     # load all datasets and extract subjects
     df_data1 = load_data_df(fpath_data1, encoded=True).loc[train_subjects]
@@ -84,9 +91,10 @@ if __name__ == '__main__':
     # combine into a single big dataframe
     # for compatibility with sklearn Pipeline
     train_data = pd.concat(dfs_dict, axis='columns').loc[train_subjects]
+    print(f'Train data shape: {train_data.shape}')
 
     # make CV splitter object
-    cv_splitter = StratifiedKFold(n_splits=n_folds, shuffle=shuffle)
+    cv_splitter = StratifiedKFold(n_splits=n_folds, shuffle=shuffle, random_state=random_state)
 
     # make preprocessing pipeline
     cca_pipeline = Pipeline([
