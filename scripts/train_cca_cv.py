@@ -9,30 +9,30 @@ from sklearn.base import clone
 from scripts.pipeline_definitions import build_cca_pipeline
 
 from paths import DPATHS, FPATHS
-from src.cca_utils import score_projections
 
 # settings
 save_models = True
 
 # model parameters: number of PCA components
-n_components1 = None
-n_components2 = None
+n_components1 = 25
+n_components2 = 25
 
 # cross-validation parameters
 verbose=True
-n_folds = 5
+n_folds = 5 # at least 2
 shuffle = False
-seed = None # TODO get seed from input argument
+seed = None
 
 # paths to data files
 fpath_data = FPATHS['data_Xy_train']
 
 # output path
-dpath_out = DPATHS['cca']
-fname_out_prefix = 'cca_results'
+dpath_out = DPATHS['cv']
+fname_out_prefix = 'cca_cv_results'
 
 if __name__ == '__main__':
 
+    n_views = 2
     fpath_out = os.path.join(dpath_out, f'{fname_out_prefix}.pkl')
 
     print('----- Parameters -----')
@@ -81,16 +81,12 @@ if __name__ == '__main__':
     print('------------------------------------------------------------------')
 
     # cross-validation splitter
-    if n_folds != 1:
-        cv_split = StratifiedKFold(n_splits=n_folds, shuffle=shuffle, random_state=random_state).split
-    else:
-        cv_split = (lambda X, y: [(np.arange(X.shape[0]), np.asarray([]))])
+    cv_splitter = StratifiedKFold(n_splits=n_folds, shuffle=shuffle, random_state=random_state)
 
     # cross-validation loop
     cv_results = []
-    val_projections1_all = [] # estimated 'canonical factor scores' (data x weights) of validation sets
-    val_projections2_all = []
-    for index_train, index_val in cv_split(X, y):
+    projections_val_all = [[] for _ in range(2)] # estimated 'canonical factor scores' (data x weights) of validation sets
+    for index_train, index_val in cv_splitter.split(X, y):
 
         subjects_train = subjects[index_train]
         subjects_val = subjects[index_val]
@@ -98,47 +94,50 @@ if __name__ == '__main__':
         X_train = X.loc[subjects_train]
         X_val = X.loc[subjects_val]
 
-        # fit model
+        # clone model and get pipeline components
         cca_pipeline_clone = clone(cca_pipeline)
-        train_projections1, train_projections2 = cca_pipeline_clone.fit_transform(X_train)
-        correlations_train = score_projections(train_projections1, train_projections2)
+        preprocessor = cca_pipeline_clone['preprocessor']
+        cca = cca_pipeline_clone['cca']
+
+        # fit pipeline in 2 steps 
+        # (keeping preprocessed train data for scoring later)
+        X_train_preprocessed = preprocessor.fit_transform(X_train)
+        cca.fit(X_train_preprocessed)
+
+        # get train metrics
+        loadings_train = cca.get_loadings(X_train_preprocessed)
+        correlations_train = cca.score(X_train_preprocessed)
+
+        # get validation metrics
+        X_val_preprocessed = preprocessor.transform(X_val)
+        loadings_val = cca.get_loadings(X_val_preprocessed)
+        projections_val = cca.transform(X_val_preprocessed)
+        correlations_val = cca.score(X_val_preprocessed)
         
-        # get predicted factor scores (shape: (n_subjects, n_latent_dims))
-        # Note: some columns might have all NaNs (too many dimensions?)
-        if n_folds != 1:
-            val_projections1, val_projections2 = cca_pipeline_clone.transform(X_val)
-            correlations_val = score_projections(val_projections1, val_projections2)
-        # 1-fold case (no CV)
-        else:
-            val_projections1, val_projections2, correlations_val = [], [], []
-        val_projections1_all.append(pd.DataFrame(val_projections1, subjects_val, latent_dims_names))
-        val_projections2_all.append(pd.DataFrame(val_projections2, subjects_val, latent_dims_names))
+        # put all projections in a single list, to be transformed in a big dataframe later
+        for i_view in range(n_views):
+            projections_val_all[i_view].append(pd.DataFrame(projections_val[i_view], subjects_val, latent_dims_names))
 
         fold_results = {
-            'subjects_train': subjects_train,
-            'subjects_val': subjects_val,
+            'subjects_train': subjects_train.tolist(),
+            'subjects_val': subjects_val.tolist(),
+            'loadings_train': loadings_train,
+            'loadings_val': loadings_val,
             'correlations_train': correlations_train,
             'correlations_val': correlations_val,
         }
 
-        # save entire model
-        if save_models:
-            fold_results['model'] = cca_pipeline_clone
-
         cv_results.append(fold_results)
 
     # get full set of factors from all CV folds combined
-    df_projections1 = pd.concat(val_projections1_all, axis='index')
-    df_projections2 = pd.concat(val_projections2_all, axis='index')
-    if n_folds != 1:
-        df_projections1 = df_projections1.loc[subjects] # use original subject order
-        df_projections2 = df_projections2.loc[subjects]
+    dfs_projections = []
+    for i_view in range(n_views):
+        dfs_projections.append(pd.concat(projections_val_all[i_view], axis='index'))
     
     # to be pickled
     results_all = {
         'cv_results': cv_results,
-        'df_projections1': df_projections1, 
-        'df_projections2': df_projections2, 
+        'dfs_projections': dfs_projections, 
         'subjects': subjects,
         'latent_dims_names': latent_dims_names,
     }
