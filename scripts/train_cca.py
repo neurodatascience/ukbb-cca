@@ -6,17 +6,9 @@ import pandas as pd
 from sklearn.model_selection import StratifiedKFold
 from sklearn.base import clone
 
-from sklearn.pipeline import Pipeline
-from src import PreprocessingPipeline, PipelineXY
-
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import QuantileTransformer
-from sklearn.preprocessing import StandardScaler
-from src import NanDeconfounder, NanPCA
-from cca_zoo.models import CCA
+from scripts.pipeline_definitions import build_cca_pipeline
 
 from paths import DPATHS, FPATHS
-from src.utils import load_data_df
 from src.cca_utils import score_projections
 
 # settings
@@ -28,7 +20,7 @@ n_components2 = None
 
 # cross-validation parameters
 verbose=True
-n_folds = 1 # set to 1 for no CV
+n_folds = 5
 shuffle = False
 seed = None # TODO get seed from input argument
 
@@ -38,27 +30,6 @@ fpath_data = FPATHS['data_Xy_train']
 # output path
 dpath_out = DPATHS['cca']
 fname_out_prefix = 'cca_results'
-
-def build_data_pipeline(**kwargs):
-    steps = [
-        ('inv_norm', QuantileTransformer(output_distribution='normal')),
-        ('scaler', StandardScaler()),
-        ('deconfounder', NanDeconfounder()),
-        ('pca', NanPCA()),
-    ]
-    pipeline = PipelineXY(steps, verbose=False)
-    pipeline.set_params(**kwargs)
-    return pipeline
-
-def build_conf_pipeline(**kwargs):
-    steps = [
-        ('imputer', SimpleImputer(strategy='median')),
-        ('inv_norm', QuantileTransformer(output_distribution='normal')),
-        ('scaler', StandardScaler()),
-    ]
-    pipeline = Pipeline(steps, verbose=False)
-    pipeline.set_params(**kwargs)
-    return pipeline
 
 if __name__ == '__main__':
 
@@ -75,10 +46,11 @@ if __name__ == '__main__':
     print(f'fpath_data:\t{fpath_data}')
     print('----------------------')
 
+    # load data
     with open(fpath_data, 'rb') as file_in:
         X, y = pickle.load(file_in)
 
-    subjects = np.array(X.index)
+    subjects = X.index
 
     # random state
     if shuffle:
@@ -92,20 +64,18 @@ if __name__ == '__main__':
     if n_components2 is None:
         n_components2 = X['data2'].shape[1]
 
+    # figure out the number of latent dimensions in CCA
     n_latent_dims = min(n_components1, n_components2)
     print(f'Using {n_latent_dims} latent dimensions')
-    latent_dims_names = [f'CF{i+1}' for i in range(n_latent_dims)]
+    latent_dims_names = [f'CA{i+1}' for i in range(n_latent_dims)]
 
-    # build final pipeline/model
-    cca_pipeline = Pipeline([
-        ('preprocessing', PreprocessingPipeline(
-            data1_pipeline=build_data_pipeline(pca__n_components=n_components1),
-            data2_pipeline=build_data_pipeline(pca__n_components=n_components2),
-            conf_pipeline=build_conf_pipeline(),
-            verbose=verbose,
-        )),
-        ('cca', CCA(latent_dims=n_latent_dims, random_state=random_state)),
-    ], verbose=verbose)
+    # build pipeline/model
+    cca_pipeline = build_cca_pipeline(
+        n_pca_components1=n_components1, 
+        n_pca_components2=n_components2,
+        cca__latent_dims=n_latent_dims,
+        verbose=verbose,
+    )
     print('------------------------------------------------------------------')
     print(cca_pipeline)
     print('------------------------------------------------------------------')
