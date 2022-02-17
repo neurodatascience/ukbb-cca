@@ -28,3 +28,6 @@ scripts/logs
 
 # pycache
 __pycache__
+
+# IDE files
+.vscode
