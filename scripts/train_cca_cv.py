@@ -13,9 +13,8 @@ from paths import DPATHS, FPATHS
 # settings
 save_models = True
 
-# model parameters: number of PCA components
-n_components1 = 25
-n_components2 = 25
+# model hyperparameters: number of PCA components
+n_components_all = [100, 100]
 
 # cross-validation parameters
 verbose=True
@@ -32,12 +31,11 @@ fname_out_prefix = 'cca_cv_results'
 
 if __name__ == '__main__':
 
-    n_views = 2
-    fpath_out = os.path.join(dpath_out, f'{fname_out_prefix}.pkl')
+    suffix = '_'.join([str(n) for n in n_components_all])
+    fpath_out = os.path.join(dpath_out, f'{fname_out_prefix}_{suffix}.pkl')
 
     print('----- Parameters -----')
-    print(f'n_components1:\t{n_components1}')
-    print(f'n_components2:\t{n_components2}')
+    print(f'n_components_all:\t{n_components_all}')
     print(f'save_models:\t{save_models}')
     print(f'verbose:\t{verbose}')
     print(f'n_folds:\t{n_folds}')
@@ -48,7 +46,12 @@ if __name__ == '__main__':
 
     # load data
     with open(fpath_data, 'rb') as file_in:
-        X, y = pickle.load(file_in)
+        data = pickle.load(file_in)
+        X = data['X']
+        y = data['y']
+        dataset_names = data['dataset_names']
+        conf_name = data['conf_name']
+        n_datasets = len(dataset_names)
 
     subjects = X.index
 
@@ -59,20 +62,21 @@ if __name__ == '__main__':
         random_state = None
 
     # process PCA n_components
-    if n_components1 is None:
-        n_components1 = X['data1'].shape[1]
-    if n_components2 is None:
-        n_components2 = X['data2'].shape[1]
+    if len(n_components_all) != n_datasets:
+        raise ValueError(f'Mismatch between n_components_all (size {len(n_components_all)}) and data ({n_datasets} datasets)')
+    for i_dataset, dataset_name in enumerate(dataset_names):
+        if n_components_all[i_dataset] is None:
+            n_components_all[i_dataset] = X[dataset_name].shape[1]
 
     # figure out the number of latent dimensions in CCA
-    n_latent_dims = min(n_components1, n_components2)
+    n_latent_dims = min(n_components_all)
     print(f'Using {n_latent_dims} latent dimensions')
     latent_dims_names = [f'CA{i+1}' for i in range(n_latent_dims)]
 
     # build pipeline/model
     cca_pipeline = build_cca_pipeline(
-        n_pca_components1=n_components1, 
-        n_pca_components2=n_components2,
+        dataset_names=dataset_names,
+        n_pca_components_all=n_components_all,
         cca__latent_dims=n_latent_dims,
         verbose=verbose,
     )
@@ -115,7 +119,7 @@ if __name__ == '__main__':
         correlations_val = cca.score(X_val_preprocessed)
         
         # put all projections in a single list, to be transformed in a big dataframe later
-        for i_view in range(n_views):
+        for i_view in range(n_datasets):
             projections_val_all[i_view].append(pd.DataFrame(projections_val[i_view], subjects_val, latent_dims_names))
 
         fold_results = {
@@ -131,7 +135,7 @@ if __name__ == '__main__':
 
     # get full set of factors from all CV folds combined
     dfs_projections = []
-    for i_view in range(n_views):
+    for i_view in range(n_datasets):
         dfs_projections.append(pd.concat(projections_val_all[i_view], axis='index'))
     
     # to be pickled

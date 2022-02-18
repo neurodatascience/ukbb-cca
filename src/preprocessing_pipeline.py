@@ -16,25 +16,19 @@ class PipelineXY(Pipeline):
 class PreprocessingPipeline(_BaseComposition):
 
     def __init__(self, 
-        data1_pipeline, data2_pipeline, conf_pipeline=None, 
-        data1_name='data1', data2_name='data2', conf_name='conf', verbose=False
-    ):
+        dataset_names, data_pipelines,
+        conf_name='conf', conf_pipeline=None,
+        verbose=False):
 
-        self.data1_name = data1_name
-        self.data2_name = data2_name
+        # input validation
+        if len(data_pipelines) != len(dataset_names):
+            print(f'Mismatch between number of data pipelines ({len(data_pipelines)}) and dataset names ({len(dataset_names)})')
+
+        self.data_pipelines = data_pipelines
+        self.dataset_names = dataset_names
+        self.conf_pipeline = conf_pipeline
         self.conf_name = conf_name
         self.verbose = verbose
-
-        # need to be defined as input arguments in __init__
-        # for pipeline get_params()/set_params() to work
-        self.conf_pipeline = conf_pipeline
-        self.data1_pipeline = data1_pipeline
-        self.data2_pipeline = data2_pipeline
-
-        # for input validation
-        self.dataset_names = [data1_name, data2_name]
-        # for looping
-        self.data_pipelines = {data1_name: self.data1_pipeline, data2_name: self.data2_pipeline}
 
     def fit(self, X, y=None):
         self._fit(X)
@@ -48,11 +42,11 @@ class PreprocessingPipeline(_BaseComposition):
         conf_preprocessed = self._preprocess_confounds(X, fit=True)
 
         # preprocess each dataset separately
-        for dataset_name in self.dataset_names:
+        for dataset_name, data_pipeline in zip(self.dataset_names, self.data_pipelines):
 
             if self.verbose:
              print(f'[Preprocessing pipeline] Processing {dataset_name}')
-            self.data_pipelines[dataset_name].fit(X[dataset_name], conf_preprocessed)
+            data_pipeline.fit(X[dataset_name], conf_preprocessed)
 
         return conf_preprocessed
 
@@ -65,8 +59,8 @@ class PreprocessingPipeline(_BaseComposition):
             conf_preprocessed = self._preprocess_confounds(X)
 
         views = []
-        for dataset_name in self.dataset_names:
-            view = self.data_pipelines[dataset_name].transform(X[dataset_name], y=conf_preprocessed)
+        for dataset_name, data_pipeline in zip(self.dataset_names, self.data_pipelines):
+            view = data_pipeline.transform(X[dataset_name], y=conf_preprocessed)
             views.append(view)
 
         # return a list of preprocessed datasets ('views' in cca-zoo)
@@ -80,19 +74,17 @@ class PreprocessingPipeline(_BaseComposition):
     def _check_X(self, X):
         # top level unique keys (except for conf_name)
         dataset_names = set(X.drop(columns=self.conf_name, errors='ignore').columns.get_level_values(0))
-        if len(dataset_names) != 2:
-            raise ValueError(f'X must contain exactly 2 datasets (excluding confounders)')
         if dataset_names != set(self.dataset_names):
             raise ValueError(f'Mismatch between dataset names. Expected {self.dataset_names} (conf: {self.conf_name}), got {dataset_names})')
 
     def _preprocess_confounds(self, X, fit=False):
 
+        if self.conf_pipeline is None:
+            return None
+
         try:
             conf = X[self.conf_name]
         except KeyError:
-            return None
-
-        if self.conf_pipeline is None:
             return None
 
         if self.verbose:

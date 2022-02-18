@@ -29,11 +29,19 @@ def build_conf_pipeline(**kwargs):
     pipeline.set_params(**kwargs)
     return pipeline
 
-def build_cca_pipeline(n_pca_components1=None, n_pca_components2=None, verbose=False, **kwargs):
+def build_cca_pipeline(n_pca_components_all, dataset_names=None, conf_name='conf', verbose=False, **kwargs):
+
+    if dataset_names is None:
+        dataset_names = [f'data{i+1}' for i in range(len(n_pca_components_all))]
+
+    data_pipelines = []
+    for n_pca_components in n_pca_components_all:
+        data_pipelines.append(build_data_pipeline(pca__n_components=n_pca_components))
+
     steps = [
         ('preprocessor', PreprocessingPipeline(
-            data1_pipeline=build_data_pipeline(pca__n_components=n_pca_components1),
-            data2_pipeline=build_data_pipeline(pca__n_components=n_pca_components2),
+            dataset_names=dataset_names,
+            data_pipelines=data_pipelines,
             conf_pipeline=build_conf_pipeline(),
         )),
         ('cca', CCA()),

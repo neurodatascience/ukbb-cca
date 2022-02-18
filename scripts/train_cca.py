@@ -3,9 +3,8 @@ import os, pickle
 from scripts.pipeline_definitions import build_cca_pipeline
 from paths import DPATHS, FPATHS
 
-# model parameters: number of PCA components
-n_components1 = 100
-n_components2 = 100
+# model hyperparameters: number of PCA components
+n_components_all = [100, 100]
 
 # other pipeline parameters
 verbose=True
@@ -20,11 +19,11 @@ fname_out_prefix = 'cca_results'
 
 if __name__ == '__main__':
 
-    fpath_out = os.path.join(dpath_out, f'{fname_out_prefix}_{n_components1}_{n_components2}.pkl')
+    suffix = '_'.join([str(n) for n in n_components_all])
+    fpath_out = os.path.join(dpath_out, f'{fname_out_prefix}_{suffix}.pkl')
 
     print('----- Parameters -----')
-    print(f'n_components1:\t{n_components1}')
-    print(f'n_components2:\t{n_components2}')
+    print(f'n_components_all:\t{n_components_all}')
     print(f'verbose:\t{verbose}')
     print(f'fpath_data_train:\t{fpath_data_train}')
     print(f'fpath_data_test:\t{fpath_data_test}')
@@ -32,30 +31,40 @@ if __name__ == '__main__':
 
     # load train data
     with open(fpath_data_train, 'rb') as file_train:
-        X_train, _ = pickle.load(file_train)
+        train_data = pickle.load(file_train)
+        X_train = train_data['X']
+        dataset_names = train_data['dataset_names']
+        conf_name = train_data['conf_name']
 
     # load test data
     with open(fpath_data_test, 'rb') as file_test:
-        X_test, _ = pickle.load(file_test)
+        test_data = pickle.load(file_test)
+        X_test = test_data['X']
+
+        if test_data['dataset_names'] != dataset_names:
+            raise ValueError('Train/test sets do not have the same dataset names')
+        if test_data['conf_name'] != conf_name:
+            raise ValueError('Train/test sets do not have the same conf name')
 
     subjects_train = X_train.index
     subjects_test = X_test.index
 
     # process PCA n_components
-    if n_components1 is None:
-        n_components1 = X_train['data1'].shape[1]
-    if n_components2 is None:
-        n_components2 = X_train['data2'].shape[1]
+    if len(n_components_all) != len(dataset_names):
+        raise ValueError(f'Mismatch between n_components_all (size {len(n_components_all)}) and dataset_names (size {len(dataset_names)})')
+    for i_dataset, dataset_name in enumerate(dataset_names):
+        if n_components_all[i_dataset] is None:
+            n_components_all[i_dataset] = X_train[dataset_name].shape[1]
 
     # figure out the number of latent dimensions in CCA
-    n_latent_dims = min(n_components1, n_components2)
+    n_latent_dims = min(n_components_all)
     print(f'Using {n_latent_dims} latent dimensions')
     latent_dims_names = [f'CA{i+1}' for i in range(n_latent_dims)]
 
     # build pipeline/model
     cca_pipeline = build_cca_pipeline(
-        n_pca_components1=n_components1, 
-        n_pca_components2=n_components2,
+        dataset_names=dataset_names,
+        n_pca_components_all=n_components_all,
         cca__latent_dims=n_latent_dims,
         verbose=verbose,
     )
