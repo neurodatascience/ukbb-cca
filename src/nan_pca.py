@@ -82,3 +82,6 @@ class NanPCA(TransformerMixin, BaseEstimator):
 
     def fit_transform(self, X, y=None):
         return self.fit(X).transform(X)
+
+    def inverse_transform(self, Xt):
+        return np.dot(Xt, self.components_) + self.mean_
