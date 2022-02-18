@@ -34,6 +34,7 @@ if __name__ == '__main__':
         train_data = pickle.load(file_train)
         X_train = train_data['X']
         dataset_names = train_data['dataset_names']
+        n_datasets = len(dataset_names)
         conf_name = train_data['conf_name']
 
     # load test data
@@ -50,14 +51,14 @@ if __name__ == '__main__':
     subjects_test = X_test.index
 
     # process PCA n_components
-    if len(n_components_all) != len(dataset_names):
+    if len(n_components_all) != n_datasets:
         raise ValueError(f'Mismatch between n_components_all (size {len(n_components_all)}) and dataset_names (size {len(dataset_names)})')
     for i_dataset, dataset_name in enumerate(dataset_names):
         if n_components_all[i_dataset] is None:
             n_components_all[i_dataset] = X_train[dataset_name].shape[1]
 
     # figure out the number of latent dimensions in CCA
-    n_latent_dims = min(n_components_all)
+    n_latent_dims = 10#min(n_components_all)
     print(f'Using {n_latent_dims} latent dimensions')
     latent_dims_names = [f'CA{i+1}' for i in range(n_latent_dims)]
 
@@ -81,22 +82,32 @@ if __name__ == '__main__':
     projections_train = cca.fit_transform(X_train_preprocessed)
 
     # get train metrics
-    loadings_train = cca.get_loadings(X_train_preprocessed)
+    pca_loadings_train = cca.get_loadings(X_train_preprocessed)
     correlations_train = cca.score(X_train_preprocessed)
 
     # get test metrics
     X_test_preprocessed = preprocessor.transform(X_test)
     projections_test = cca.transform(X_test_preprocessed)
-    loadings_test = cca.get_loadings(X_test_preprocessed)
+    pca_loadings_test = cca.get_loadings(X_test_preprocessed)
     correlations_test = cca.score(X_test_preprocessed)
+
+    # transform loadings from PCA space to feature space
+    feature_loadings_train = []
+    feature_loadings_test = []
+    for i_dataset in range(n_datasets):
+        pca = preprocessor.data_pipelines[i_dataset]['pca']
+        feature_loadings_train.append(pca.inverse_transform(pca_loadings_train[i_dataset].T).T)
+        feature_loadings_test.append(pca.inverse_transform(pca_loadings_test[i_dataset].T).T)
 
     # to be pickled
     results_all = {
         'model': cca_pipeline, # fitted model
         'projections_train': projections_train,
         'projections_test': projections_test,
-        'loadings_train': loadings_train,
-        'loadings_test': loadings_test,
+        'pca_loadings_train': pca_loadings_train,
+        'pca_loadings_test': pca_loadings_test,
+        'feature_loadings_train': feature_loadings_train,
+        'feature_loadings_test': feature_loadings_test,
         'correlations_train': correlations_train,
         'correlations_test': correlations_test,
         'subjects_train': subjects_train.tolist(),

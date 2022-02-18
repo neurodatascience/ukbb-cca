@@ -109,14 +109,22 @@ if __name__ == '__main__':
         cca.fit(X_train_preprocessed)
 
         # get train metrics
-        loadings_train = cca.get_loadings(X_train_preprocessed)
+        pca_loadings_train = cca.get_loadings(X_train_preprocessed)
         correlations_train = cca.score(X_train_preprocessed)
 
         # get validation metrics
         X_val_preprocessed = preprocessor.transform(X_val)
-        loadings_val = cca.get_loadings(X_val_preprocessed)
+        pca_loadings_val = cca.get_loadings(X_val_preprocessed)
         projections_val = cca.transform(X_val_preprocessed)
         correlations_val = cca.score(X_val_preprocessed)
+
+        # transform loadings from PCA space to feature space
+        feature_loadings_train = []
+        feature_loadings_val = []
+        for i_dataset in range(n_datasets):
+            pca = preprocessor.data_pipelines[i_dataset]['pca']
+            feature_loadings_train.append(pca.inverse_transform(pca_loadings_train[i_dataset].T).T)
+            feature_loadings_val.append(pca.inverse_transform(pca_loadings_val[i_dataset].T).T)
         
         # put all projections in a single list, to be transformed in a big dataframe later
         for i_view in range(n_datasets):
@@ -125,8 +133,10 @@ if __name__ == '__main__':
         fold_results = {
             'subjects_train': subjects_train.tolist(),
             'subjects_val': subjects_val.tolist(),
-            'loadings_train': loadings_train,
-            'loadings_val': loadings_val,
+            'pca_loadings_train': pca_loadings_train,
+            'pca_loadings_val': pca_loadings_val,
+            'feature_loadings_train': feature_loadings_train,
+            'feature_loadings_val': feature_loadings_val,
             'correlations_train': correlations_train,
             'correlations_val': correlations_val,
         }
