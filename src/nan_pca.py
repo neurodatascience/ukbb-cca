@@ -23,7 +23,7 @@ class NanPCA(TransformerMixin, BaseEstimator):
         X = np.ma.masked_invalid(X)
 
         # demean
-        self.mean_ = X.mean(axis=0)
+        self.mean_ = X.mean(axis=0).filled()
         X = X - self.mean_
 
         # compute covariance matrix (n_features x n_features)
