@@ -1,8 +1,12 @@
 
 import os, pickle
 import numpy as np
+
 from sklearn.base import clone
+from sklearn.linear_model import LinearRegression
+
 from scripts.pipeline_definitions import build_cca_pipeline
+from src.utils import load_data_df
 from paths import DPATHS, FPATHS
 
 # parameters
@@ -13,6 +17,8 @@ verbose=True
 
 # paths to data files
 fpath_data_train = FPATHS['data_Xy_train']
+fpath_holdout = FPATHS['data_holdout_clean'] # for bootstrapped regression with holdout variable
+holdout_udi = '21003-2.0'
 
 # output path
 dpath_out = DPATHS['cca']
@@ -44,6 +50,10 @@ if __name__ == '__main__':
 
     subjects_train = X_train.index
     n_subjects_train = len(subjects_train)
+
+    # load holdout data
+    df_holdout = load_data_df(fpath_holdout)
+    holdout_train = df_holdout.loc[subjects_train, holdout_udi]
 
     # process PCA n_components
     if len(n_components_all) != n_datasets:
@@ -78,9 +88,8 @@ if __name__ == '__main__':
     cca.fit_transform(X_train_preprocessed)
 
     correlations_bootstrap_train = []
+    R2_holdout_bootstrap_train = []
     for i_permutation in range(n_permutations):
-        if i_permutation % 100 == 0:
-            print('.')
         weights = []
         for i_dataset_fix in range(n_datasets):
 
@@ -104,13 +113,30 @@ if __name__ == '__main__':
         # set model weights (from bootstrap)
         cca.weights = weights
 
-        # get bootstrap correlation
+        # get bootstrap CCA correlations
         correlations_bootstrap_train.append(cca.score(X_train_preprocessed))
+
+        # get correlations with holdout variable
+        projections_train = cca.transform(X_train_preprocessed)
+        R2 = []
+        for i_dim in range(n_latent_dims):
+
+            # extract canonical scores for this latent dimension
+            projections_dim = [projections[:, i_dim] for projections in projections_train]
+            projections_dim = np.vstack(projections_dim).T
+
+            # get R2 score
+            lr = LinearRegression()
+            lr.fit(projections_dim, holdout_train)
+            R2.append(lr.score(projections_dim, holdout_train))
+        R2_holdout_bootstrap_train.append(R2)
 
     # to be pickled
     results_all = {
         'model': cca_pipeline, # fitted model
         'correlations_bootstrap_train': np.array(correlations_bootstrap_train).T,
+        'R2_holdout_bootstrap_train': np.array(R2_holdout_bootstrap_train).T,
+        'r_holdout_bootstrap_train': np.sqrt(R2_holdout_bootstrap_train).T,
         'subjects_train': subjects_train.tolist(),
         'latent_dims_names': latent_dims_names,
     }
