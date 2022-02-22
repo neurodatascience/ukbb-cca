@@ -17,6 +17,7 @@ verbose=True
 
 # paths to data files
 fpath_data_train = FPATHS['data_Xy_train']
+fpath_data_test = FPATHS['data_Xy_test']
 fpath_holdout = FPATHS['data_holdout_clean'] # for bootstrapped regression with holdout variable
 holdout_udi = '21003-2.0'
 
@@ -35,6 +36,7 @@ if __name__ == '__main__':
     print(f'n_components_all:\t{n_components_all}')
     print(f'verbose:\t{verbose}')
     print(f'fpath_data_train:\t{fpath_data_train}')
+    print(f'fpath_data_test:\t{fpath_data_test}')
     print('----------------------')
 
     # create random number generator
@@ -48,12 +50,19 @@ if __name__ == '__main__':
         n_datasets = len(dataset_names)
         conf_name = train_data['conf_name']
 
+    # load test data
+    with open(fpath_data_test, 'rb') as file_test:
+        test_data = pickle.load(file_test)
+        X_test = test_data['X']
+
     subjects_train = X_train.index
+    subjects_test = X_test.index
     n_subjects_train = len(subjects_train)
 
     # load holdout data
     df_holdout = load_data_df(fpath_holdout)
     holdout_train = df_holdout.loc[subjects_train, holdout_udi]
+    holdout_test = df_holdout.loc[subjects_test, holdout_udi]
 
     # process PCA n_components
     if len(n_components_all) != n_datasets:
@@ -83,12 +92,15 @@ if __name__ == '__main__':
 
     # preprocess data
     X_train_preprocessed = preprocessor.fit_transform(X_train)
+    X_test_preprocessed = preprocessor.fit_transform(X_test)
 
     # 'fit' cca (weights will be overwritten later)
     cca.fit_transform(X_train_preprocessed)
 
     correlations_bootstrap_train = []
+    correlations_bootstrap_test = []
     R2_holdout_bootstrap_train = []
+    R2_holdout_bootstrap_test = []
     for i_permutation in range(n_permutations):
         weights = []
         for i_dataset_fix in range(n_datasets):
@@ -113,31 +125,44 @@ if __name__ == '__main__':
         # set model weights (from bootstrap)
         cca.weights = weights
 
-        # get bootstrap CCA correlations
+        # get bootstrap CCA correlations (for train and test data)
         correlations_bootstrap_train.append(cca.score(X_train_preprocessed))
+        correlations_bootstrap_test.append(cca.score(X_test_preprocessed))
 
         # get correlations with holdout variable
         projections_train = cca.transform(X_train_preprocessed)
-        R2 = []
+        projections_test = cca.transform(X_test_preprocessed)
+        R2_train = []
+        R2_test = []
         for i_dim in range(n_latent_dims):
 
             # extract canonical scores for this latent dimension
-            projections_dim = [projections[:, i_dim] for projections in projections_train]
-            projections_dim = np.vstack(projections_dim).T
+            projections_dim_train = [projections[:, i_dim] for projections in projections_train]
+            projections_dim_train = np.vstack(projections_dim_train).T
+            # test set
+            projections_dim_test = [projections[:, i_dim] for projections in projections_test]
+            projections_dim_test = np.vstack(projections_dim_test).T
 
             # get R2 score
             lr = LinearRegression()
-            lr.fit(projections_dim, holdout_train)
-            R2.append(lr.score(projections_dim, holdout_train))
-        R2_holdout_bootstrap_train.append(R2)
+            lr.fit(projections_dim_train, holdout_train)
+            R2_train.append(lr.score(projections_dim_train, holdout_train))
+            R2_test.append(lr.score(projections_dim_test, holdout_test))
+
+        R2_holdout_bootstrap_train.append(R2_train)
+        R2_holdout_bootstrap_test.append(R2_test)
 
     # to be pickled
     results_all = {
         'model': cca_pipeline, # fitted model
         'correlations_bootstrap_train': np.array(correlations_bootstrap_train).T,
+        'correlations_bootstrap_test': np.array(correlations_bootstrap_test).T,
         'R2_holdout_bootstrap_train': np.array(R2_holdout_bootstrap_train).T,
         'r_holdout_bootstrap_train': np.sqrt(R2_holdout_bootstrap_train).T,
+        'R2_holdout_bootstrap_test': np.array(R2_holdout_bootstrap_test).T,
+        'r_holdout_bootstrap_test': np.sqrt(R2_holdout_bootstrap_test).T,
         'subjects_train': subjects_train.tolist(),
+        'subjects_test': subjects_test.tolist(),
         'latent_dims_names': latent_dims_names,
     }
 
