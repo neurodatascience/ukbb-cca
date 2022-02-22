@@ -45,6 +45,7 @@ if __name__ == '__main__':
     # build dict of dataframes
     print('Loading data...')
     dfs_dict = {}
+    udis = {}
     subjects = None
     for name, fpath in zip(dataset_names + [conf_name], fpaths_data + [fpath_conf]):
 
@@ -52,6 +53,9 @@ if __name__ == '__main__':
         df = load_data_df(fpath, encoded=True)
         dfs_dict[name] = df
         print(f'\t{name}:\t{df.shape}')
+
+        # get UDIs
+        udis[name] = df.columns.tolist()
 
         # make sure all datasets contain the same subjects
         subjects_new = set(df.index)
@@ -96,6 +100,7 @@ if __name__ == '__main__':
 
         data['dataset_names'] = dataset_names
         data['conf_name'] = conf_name
+        data['udis'] = udis
 
         with open(fpath_out, 'wb') as file_out:
             pickle.dump(data, file_out)

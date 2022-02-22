@@ -36,6 +36,7 @@ if __name__ == '__main__':
         dataset_names = train_data['dataset_names']
         n_datasets = len(dataset_names)
         conf_name = train_data['conf_name']
+        udis = train_data['udis']
 
     # load test data
     with open(fpath_data_test, 'rb') as file_test:
@@ -58,7 +59,7 @@ if __name__ == '__main__':
             n_components_all[i_dataset] = X_train[dataset_name].shape[1]
 
     # figure out the number of latent dimensions in CCA
-    n_latent_dims = 10#min(n_components_all)
+    n_latent_dims = min(n_components_all)
     print(f'Using {n_latent_dims} latent dimensions')
     latent_dims_names = [f'CA{i+1}' for i in range(n_latent_dims)]
 
@@ -113,6 +114,8 @@ if __name__ == '__main__':
         'subjects_train': subjects_train.tolist(),
         'subjects_test': subjects_test.tolist(),
         'latent_dims_names': latent_dims_names,
+        'udis': udis,
+        'dataset_names': dataset_names,
     }
 
     # save results
