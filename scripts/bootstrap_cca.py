@@ -120,7 +120,7 @@ if __name__ == '__main__':
             cca_tmp.fit(X_train_shuffled)
 
             # fit and get weights for this dataset
-            weights.append(cca_tmp.weights[i_dataset])
+            weights.append(cca_tmp.weights[i_dataset_fix])
 
         # set model weights (from bootstrap)
         cca.weights = weights
