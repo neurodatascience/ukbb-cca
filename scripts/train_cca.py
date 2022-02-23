@@ -1,10 +1,7 @@
 
-import os, pickle
+import os, sys, pickle
 from scripts.pipeline_definitions import build_cca_pipeline
 from paths import DPATHS, FPATHS
-
-# model hyperparameters: number of PCA components
-n_components_all = [100, 100]
 
 # other pipeline parameters
 verbose=True
@@ -18,6 +15,12 @@ dpath_out = DPATHS['cca']
 fname_out_prefix = 'cca_results'
 
 if __name__ == '__main__':
+
+    # process user inputs
+    print(len(sys.argv), sys.argv)
+    if len(sys.argv) < 3:
+        raise ValueError(f'Usage: {sys.argv[0]} <n_components1> <n_components2> [etc.]')
+    n_components_all = [int(n) for n in sys.argv[1:]] # number of PCA components
 
     suffix = '_'.join([str(n) for n in n_components_all])
     fpath_out = os.path.join(dpath_out, f'{fname_out_prefix}_{suffix}.pkl')

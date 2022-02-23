@@ -1,5 +1,5 @@
 
-import os, pickle
+import os, sys, pickle
 import numpy as np
 import pandas as pd
 
@@ -13,13 +13,10 @@ from paths import DPATHS, FPATHS
 # settings
 save_models = True
 
-# model hyperparameters: number of PCA components
-n_components_all = [100, 100]
-
 # cross-validation parameters
 verbose=True
 n_folds = 5 # at least 2
-shuffle = False
+shuffle = True
 seed = None
 
 # paths to data files
@@ -31,7 +28,15 @@ fname_out_prefix = 'cca_cv_results'
 
 if __name__ == '__main__':
 
+    # process user inputs
+    print(len(sys.argv), sys.argv)
+    if len(sys.argv) < 4:
+        raise ValueError(f'Usage: {sys.argv[0]} <i_repetition> <n_components1> <n_components2> [etc.]')
+    i_repetition = int(sys.argv[1])
+    n_components_all = [int(n) for n in sys.argv[2:]] # number of PCA components
+
     suffix = '_'.join([str(n) for n in n_components_all])
+    suffix = f'{suffix}_rep{i_repetition}'
     fpath_out = os.path.join(dpath_out, f'{fname_out_prefix}_{suffix}.pkl')
 
     print('----- Parameters -----')

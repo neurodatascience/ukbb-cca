@@ -1,5 +1,5 @@
 
-import os, pickle
+import os, sys, pickle
 import numpy as np
 
 from sklearn.base import clone
@@ -12,7 +12,6 @@ from paths import DPATHS, FPATHS
 # parameters
 n_permutations = 1000
 seed = None # for random number generator
-n_components_all = [100, 100] # number of PCA components
 verbose=True
 
 # paths to data files
@@ -26,6 +25,12 @@ dpath_out = DPATHS['cca']
 fname_out_prefix = 'bootstrap_results'
 
 if __name__ == '__main__':
+
+    # process user inputs
+    print(len(sys.argv), sys.argv)
+    if len(sys.argv) < 3:
+        raise ValueError(f'Usage: {sys.argv[0]} <n_components1> <n_components2> [etc.]')
+    n_components_all = [int(n) for n in sys.argv[1:]] # number of PCA components
 
     suffix = '_'.join([str(n) for n in n_components_all])
     fpath_out = os.path.join(dpath_out, f'{fname_out_prefix}_{suffix}.pkl')
