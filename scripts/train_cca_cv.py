@@ -1,5 +1,6 @@
 
 import os, sys, pickle
+from pathlib import Path
 import numpy as np
 import pandas as pd
 
@@ -9,9 +10,6 @@ from sklearn.base import clone
 from scripts.pipeline_definitions import build_cca_pipeline
 
 from paths import DPATHS, FPATHS
-
-# settings
-save_models = True
 
 # cross-validation parameters
 verbose=True
@@ -23,25 +21,30 @@ seed = None
 fpath_data = FPATHS['data_Xy_train']
 
 # output path
-dpath_out = DPATHS['cv']
+dpath_cv = DPATHS['cv']
 fname_out_prefix = 'cca_cv_results'
 
 if __name__ == '__main__':
 
     # process user inputs
     print(len(sys.argv), sys.argv)
-    if len(sys.argv) < 4:
-        raise ValueError(f'Usage: {sys.argv[0]} <i_repetition> <n_components1> <n_components2> [etc.]')
-    i_repetition = int(sys.argv[1])
-    n_components_all = [int(n) for n in sys.argv[2:]] # number of PCA components
+    if len(sys.argv) < 5:
+        raise ValueError(f'Usage: {sys.argv[0]} <CV ID> <i_repetition> <n_components1> <n_components2> [etc.]')
+    dpath_out_suffix = sys.argv[1]
+    i_repetition = int(sys.argv[2])
+    n_components_all = [int(n) for n in sys.argv[3:]] # number of PCA components
 
-    suffix = '_'.join([str(n) for n in n_components_all])
-    suffix = f'{suffix}_rep{i_repetition}'
-    fpath_out = os.path.join(dpath_out, f'{fname_out_prefix}_{suffix}.pkl')
+    str_components = '_'.join([str(n) for n in n_components_all])
+
+    # create output directory if necessary
+    dpath_out = os.path.join(dpath_cv, f'cv_{str_components}_{dpath_out_suffix}')
+    Path(dpath_out).mkdir(parents=True, exist_ok=True)
+
+    fname_out_suffix = f'{str_components}_rep{i_repetition}'
+    fpath_out = os.path.join(dpath_out, f'{fname_out_prefix}_{fname_out_suffix}.pkl')
 
     print('----- Parameters -----')
     print(f'n_components_all:\t{n_components_all}')
-    print(f'save_models:\t{save_models}')
     print(f'verbose:\t{verbose}')
     print(f'n_folds:\t{n_folds}')
     print(f'shuffle:\t{shuffle}')
