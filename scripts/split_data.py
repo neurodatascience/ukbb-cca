@@ -55,7 +55,7 @@ if __name__ == '__main__':
         print(f'\t{name}:\t{df.shape}')
 
         # get UDIs
-        udis[name] = df.columns.tolist()
+        udis[name] = df.columns
 
         # make sure all datasets contain the same subjects
         subjects_new = set(df.index)
