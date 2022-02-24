@@ -8,7 +8,7 @@ value_types = 'numeric' # integer, categorical (single/multiple), continuous
 
 dpath_schema = DPATHS['schema']
 fpath_udis = FPATHS['udis_tabular_raw']
-fpath_data = FPATHS['data_tabular_mri_subjects']
+fpath_data = FPATHS['data_tabular_mri_subjects_filtered']
 
 chunksize = 10000
 
