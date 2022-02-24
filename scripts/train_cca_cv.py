@@ -168,7 +168,7 @@ if __name__ == '__main__':
             columns=latent_dims_names,
         )
         df_loadings.index = pd.MultiIndex.from_tuples(df_loadings.index)
-        df_loadings.append(df_loadings)
+        dfs_loadings.append(df_loadings)
 
     # to be pickled
     results_all = {
@@ -177,6 +177,10 @@ if __name__ == '__main__':
         'dfs_loadings': dfs_loadings,
         'subjects': subjects,
         'latent_dims_names': latent_dims_names,
+        'n_datasets': n_datasets, 
+        'dataset_names': dataset_names, 
+        'udis_datasets': [udis[dataset_name] for dataset_name in dataset_names], 
+        'udis_conf': udis[conf_name], 
     }
 
     # save results
