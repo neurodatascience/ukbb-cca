@@ -31,7 +31,7 @@ fpath_udis = FPATHS['udis_tabular_raw']
 
 def one_hot_encode(df):
 
-    def fn_rename(colname): # TODO change negative values
+    def fn_rename(colname):
         components = colname.split('.')
         if len(components) != 2:
             return '.'.join(components[:-1]) # remove trailing floating point
@@ -113,8 +113,16 @@ if __name__ == '__main__':
         # if data contains holdout UDIs, extract them and drop them from dataframe
         holdout_udis = db_helper.filter_udis_by_field(df_data.columns, holdout_fields)
         if len(holdout_udis) > 0:
+
             print(f'\tExtracting {len(holdout_udis)} holdout variables')
-            dfs_holdout.append(df_data.loc[:, holdout_udis])
+            df_holdout = df_data.loc[:, holdout_udis]
+
+            # remove any subject with missing holdout data
+            n_missing = df_holdout.isna().sum(axis='columns')
+            subjects_with_missing = n_missing.loc[n_missing > 0].index
+            print(f'\t\tRemoving {len(subjects_with_missing)} subjects with no holdout data')
+            subjects_to_drop.update(subjects_with_missing)
+            dfs_holdout.append(df_holdout) # to save later
             df_data = df_data.drop(columns=holdout_udis)
 
         # one-hot encode categorical variables
@@ -192,7 +200,10 @@ if __name__ == '__main__':
                 threshold_na=threshold_na, threshold_high_freq=threshold_high_freq, threshold_outliers=threshold_outliers)
 
             # save in df, to write later
-            dfs_dropped_cols.append(pd.DataFrame({'uid':bad_cols, 'domain':domain}))
+            bad_cols = pd.MultiIndex.from_tuples(bad_cols, names=df_clean.columns.names)
+            df_dropped_cols = pd.DataFrame({name: bad_cols.get_level_values(name) for name in bad_cols.names})
+            df_dropped_cols['domain'] = domain
+            dfs_dropped_cols.append(df_dropped_cols)
 
             print(f'\tDataframe shape after removing bad rows/columns: {df_clean.shape}')
 
