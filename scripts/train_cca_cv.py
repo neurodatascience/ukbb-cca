@@ -98,6 +98,7 @@ if __name__ == '__main__':
 
     # cross-validation loop
     cv_results = []
+    pca_loadings_val_all = [[] for _ in range(n_datasets)]
     feature_loadings_val_all = [[] for _ in range(n_datasets)] # variable loadings estimated on validation sets
     projections_val_all = [[] for _ in range(n_datasets)] # estimated 'canonical factor scores' (data x weights) of validation sets
     for index_train, index_val in cv_splitter.split(X, y):
@@ -119,12 +120,12 @@ if __name__ == '__main__':
         cca.fit(X_train_preprocessed)
 
         # get train metrics
-        pca_loadings_train = cca.get_loadings(X_train_preprocessed)
+        pca_loadings_train = cca.get_loadings(X_train_preprocessed, normalize=True)
         correlations_train = cca.score(X_train_preprocessed)
 
         # get validation metrics
         X_val_preprocessed = preprocessor.transform(X_val)
-        pca_loadings_val = cca.get_loadings(X_val_preprocessed)
+        pca_loadings_val = cca.get_loadings(X_val_preprocessed, normalize=True)
         projections_val = cca.transform(X_val_preprocessed)
         correlations_val = cca.score(X_val_preprocessed)
 
@@ -139,15 +140,15 @@ if __name__ == '__main__':
         # put all projections in a single list, to be transformed in a big dataframe later
         for i_dataset in range(n_datasets):
             projections_val_all[i_dataset].append(pd.DataFrame(projections_val[i_dataset], subjects_val, latent_dims_names))
+            pca_loadings_val_all[i_dataset].append(pca_loadings_val[i_dataset])
             feature_loadings_val_all[i_dataset].append(feature_loadings_val[i_dataset])
 
         fold_results = {
+            'weights': cca.weights,
             'subjects_train': subjects_train.tolist(),
             'subjects_val': subjects_val.tolist(),
-            # 'pca_loadings_train': pca_loadings_train,
-            # 'pca_loadings_val': pca_loadings_val,
+            'pca_loadings_train': pca_loadings_train,
             'feature_loadings_train': feature_loadings_train,
-            # 'feature_loadings_val': feature_loadings_val,
             'correlations_train': correlations_train,
             'correlations_val': correlations_val,
         }
@@ -155,6 +156,7 @@ if __name__ == '__main__':
 
     # combine validation set results
     dfs_projections = []
+    dfs_pca_loadings = []
     dfs_loadings = []
     for i_dataset in range(n_datasets):
 
@@ -170,11 +172,20 @@ if __name__ == '__main__':
         df_loadings.index = pd.MultiIndex.from_tuples(df_loadings.index)
         dfs_loadings.append(df_loadings)
 
+        df_pca_loadings = pd.DataFrame(
+            np.array(pca_loadings_val_all[i_dataset]).sum(axis=0),
+            index=udis[dataset_names[i_dataset]],
+            columns=latent_dims_names,
+        )
+        df_pca_loadings.index = pd.MultiIndex.from_tuples(df_pca_loadings.index)
+        dfs_pca_loadings.append(df_pca_loadings)
+
     # to be pickled
     results_all = {
         'cv_results': cv_results,
         'dfs_projections': dfs_projections, 
         'dfs_loadings': dfs_loadings,
+        'dfs_pca_loadings': dfs_pca_loadings,
         'subjects': subjects,
         'latent_dims_names': latent_dims_names,
         'n_datasets': n_datasets, 
