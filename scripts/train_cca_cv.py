@@ -22,7 +22,7 @@ fpath_data = FPATHS['data_Xy_train']
 
 # output path
 dpath_cv = DPATHS['cv']
-fname_out_prefix = 'cca_cv_results'
+fname_out_prefix = 'cv_cca'
 
 if __name__ == '__main__':
 
@@ -174,10 +174,9 @@ if __name__ == '__main__':
 
         df_pca_loadings = pd.DataFrame(
             np.array(pca_loadings_val_all[i_dataset]).sum(axis=0),
-            index=udis[dataset_names[i_dataset]],
+            index=[f'PC{i+1}' for i in range(n_components_all[i_dataset])],
             columns=latent_dims_names,
         )
-        df_pca_loadings.index = pd.MultiIndex.from_tuples(df_pca_loadings.index)
         dfs_pca_loadings.append(df_pca_loadings)
 
     # to be pickled
