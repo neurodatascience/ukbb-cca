@@ -18,8 +18,10 @@ if __name__ == '__main__':
     fnames = glob.glob(os.path.join(dpath_reps, cv_filename_pattern))
     fnames.sort()
 
+    print(f'Combining {len(fnames)} files')
+
     # for each rep
-    fold_results_all = []
+    # fold_results_all = []
     for i_rep, fname in enumerate(fnames):
 
         # load the file
@@ -29,9 +31,9 @@ if __name__ == '__main__':
 
         dfs_projections = results['dfs_projections']
         dfs_loadings = results['dfs_loadings']
-        fold_results = results['cv_results']
 
-        fold_results_all.append(fold_results)
+        # fold_results = results['cv_results']
+        # fold_results_all.append(fold_results)
 
         if i_rep == 0:
             dataset_names = results['dataset_names']
@@ -71,6 +73,19 @@ if __name__ == '__main__':
         'udis': udis,
     }
 
-    fpath_out = os.path.join(dpath_cv, f'{dname_reps}_all_results.pkl')
-    with open(fpath_out, 'wb') as file_out:
-        pickle.dump(results_combined, file_out)
+    results_median = {
+        'projections_median': projections_median,
+        'loadings_median': loadings_median,
+        'dataset_names': dataset_names,
+        'n_datasets': n_datasets,
+        'subjects': subjects,
+        'latent_dims_names': latent_dims_names,
+        'udis': udis,
+    }
+
+    fpath_out_combined = os.path.join(dpath_cv, f'{dname_reps}_results_combined.pkl')
+    fpath_out_median = os.path.join(dpath_cv, f'{dname_reps}_results_median.pkl')
+
+    for out, fpath_out in zip([results_combined, results_median], [fpath_out_combined, fpath_out_median]):
+        with open(fpath_out, 'wb') as file_out:
+            pickle.dump(out, file_out)
