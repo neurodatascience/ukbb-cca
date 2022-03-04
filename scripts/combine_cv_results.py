@@ -3,8 +3,15 @@ import sys, os, glob, pickle
 import numpy as np
 from paths import DPATHS
 
+save_extracted = True # if True, saved only summary (e.g., mean/median) measures instead of everything
+
 dpath_cv = DPATHS['cv'] # folder containing all CV results (different parameters/runs)
 cv_filename_pattern = '*rep*.pkl'
+
+extraction_methods = {
+    'mean': (lambda x: np.mean(x, axis=0)),
+    'median': (lambda x: np.median(x, axis=0)),
+}
 
 if __name__ == '__main__':
 
@@ -21,7 +28,6 @@ if __name__ == '__main__':
     print(f'Combining {len(fnames)} files')
 
     # for each rep
-    # fold_results_all = []
     for i_rep, fname in enumerate(fnames):
 
         # load the file
@@ -29,43 +35,51 @@ if __name__ == '__main__':
         with open(fpath_results, 'rb') as file_results:
             results = pickle.load(file_results)
 
-        dfs_projections = results['dfs_projections']
-        dfs_loadings = results['dfs_loadings']
-
-        # fold_results = results['cv_results']
-        # fold_results_all.append(fold_results)
-
         if i_rep == 0:
             dataset_names = results['dataset_names']
             n_datasets = results['n_datasets']
             subjects = results['subjects']
             latent_dims_names = results['latent_dims_names']
+            PC_names = results['PC_names']
             udis = results['udis_datasets']
+            n_folds = results['n_folds']
 
             # initialization
             projections_combined = [[] for _ in range(n_datasets)]
             loadings_combined = [[] for _ in range(n_datasets)]
+            weights_combined = [[] for _ in range(n_datasets)]
+            correlations_val_combined = []
+            R2_PC_reg_val_combined = []
 
         for i_dataset in range(n_datasets):
-            projections_combined[i_dataset].append(dfs_projections[i_dataset].loc[subjects, latent_dims_names].values)
-            loadings_combined[i_dataset].append(dfs_loadings[i_dataset].loc[udis[i_dataset], latent_dims_names].values)
+            projections_combined[i_dataset].append(results['projections_val'][i_dataset])
+            loadings_combined[i_dataset].append(results['loadings_val'][i_dataset])
+            weights_combined[i_dataset].append(results['weights_train'][i_dataset])
 
-    projections_median = []
-    loadings_median = []
+        correlations_val_combined.append(results['correlations_val'])
+        R2_PC_reg_val_combined.append(results['R2_PC_reg_val'])
+
+    projections_extracted = {key: [] for key in extraction_methods.keys()}
+    loadings_extracted = {key: [] for key in extraction_methods.keys()}
+    weights_extracted = {key: [] for key in extraction_methods.keys()}
     for i_dataset in range(n_datasets):
 
         # convert to numpy array
-        projections_combined[i_dataset] = np.stack(projections_combined[i_dataset], axis=0)
-        loadings_combined[i_dataset] = np.stack(loadings_combined[i_dataset], axis=0)
+        projections_combined[i_dataset] = np.array(projections_combined[i_dataset])
+        loadings_combined[i_dataset] = np.array(loadings_combined[i_dataset])
+        weights_combined[i_dataset] = np.array(weights_combined[i_dataset]).reshape(
+            (-1, results['n_components_all'][i_dataset], results['n_latent_dims']),
+        )
 
-        projections_median.append(np.median(projections_combined[i_dataset], axis=0))
-        loadings_median.append(np.median(loadings_combined[i_dataset], axis=0))
+        for method, fc_extraction in extraction_methods.items():
+            projections_extracted[method].append(fc_extraction(projections_combined[i_dataset]))
+            loadings_extracted[method].append(fc_extraction(loadings_combined[i_dataset]))
+            weights_extracted[method].append(fc_extraction(weights_combined[i_dataset]))
 
-    results_combined = {
-        'projections_combined': projections_combined,
-        'loadings_combined': loadings_combined,
-        'projections_median': projections_median,
-        'loadings_median': loadings_median,
+    # common measures
+    results_to_save = {
+        'correlations_val_combined': correlations_val_combined,
+        'R2_PC_reg_val_combined': R2_PC_reg_val_combined,
         'dataset_names': dataset_names,
         'n_datasets': n_datasets,
         'subjects': subjects,
@@ -73,19 +87,23 @@ if __name__ == '__main__':
         'udis': udis,
     }
 
-    results_median = {
-        'projections_median': projections_median,
-        'loadings_median': loadings_median,
-        'dataset_names': dataset_names,
-        'n_datasets': n_datasets,
-        'subjects': subjects,
-        'latent_dims_names': latent_dims_names,
-        'udis': udis,
-    }
+    if save_extracted:
+        results_to_save.update({
+            'projections_extracted': projections_extracted,
+            'loadings_extracted': loadings_extracted,
+            'weights_extracted': weights_extracted,
+        })
+        out_suffix = 'extracted'
 
-    fpath_out_combined = os.path.join(dpath_cv, f'{dname_reps}_results_combined.pkl')
-    fpath_out_median = os.path.join(dpath_cv, f'{dname_reps}_results_median.pkl')
+    else:
+        results_to_save.update({
+            'projections_combined': projections_combined,
+            'loadings_combined': loadings_combined,
+            'weights_combined': weights_combined,
+        })
+        out_suffix = 'combined'
 
-    for out, fpath_out in zip([results_combined, results_median], [fpath_out_combined, fpath_out_median]):
-        with open(fpath_out, 'wb') as file_out:
-            pickle.dump(out, file_out)
+    fpath_out = os.path.join(dpath_cv, f'{dname_reps}_results_{out_suffix}.pkl')
+    with open(fpath_out, 'wb') as file_out:
+        pickle.dump(results_to_save, file_out)
+
