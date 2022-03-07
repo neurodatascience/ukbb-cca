@@ -1,6 +1,5 @@
 
 import os, sys, pickle
-from pyexpat.errors import XML_ERROR_INVALID_TOKEN
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -28,7 +27,7 @@ udi_holdout = '21003-2.0'
 fpath_holdout = FPATHS['data_holdout_clean']
 
 # output path
-dpath_cv = DPATHS['cv']
+dpath_cv = DPATHS['scratch']
 fname_out_prefix = 'cv_cca'
 
 if __name__ == '__main__':

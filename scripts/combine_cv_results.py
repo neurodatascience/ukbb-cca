@@ -5,8 +5,10 @@ from paths import DPATHS
 
 save_extracted = True # if True, saved only summary (e.g., mean/median) measures instead of everything
 
-dpath_cv = DPATHS['cv'] # folder containing all CV results (different parameters/runs)
+dpath_cv = DPATHS['scratch'] # folder containing all CV results (different parameters/runs)
 cv_filename_pattern = '*rep*.pkl'
+
+dpath_out = DPATHS['cv'] # folder for combined results
 
 extraction_methods = {
     'mean': (lambda x: np.mean(x, axis=0)),
@@ -36,13 +38,27 @@ if __name__ == '__main__':
             results = pickle.load(file_results)
 
         if i_rep == 0:
+
+            subjects = results['subjects']
+
             dataset_names = results['dataset_names']
             n_datasets = results['n_datasets']
-            subjects = results['subjects']
+
             latent_dims_names = results['latent_dims_names']
+            n_latent_dims = results['n_latent_dims']
+
             PC_names = results['PC_names']
+            n_components_all = results['n_components_all']
+
             udis = results['udis_datasets']
             n_folds = results['n_folds']
+
+            projections_val = results['projections_val']
+            loadings_val = results['loadings_val']
+            weights_train = results['weights_train']
+
+            correlations_val = results['correlations_val']
+            R2_PC_reg_val = results['R2_PC_reg_val']
 
             # initialization
             projections_combined = [[] for _ in range(n_datasets)]
@@ -52,12 +68,12 @@ if __name__ == '__main__':
             R2_PC_reg_val_combined = []
 
         for i_dataset in range(n_datasets):
-            projections_combined[i_dataset].append(results['projections_val'][i_dataset])
-            loadings_combined[i_dataset].append(results['loadings_val'][i_dataset])
-            weights_combined[i_dataset].append(results['weights_train'][i_dataset])
+            projections_combined[i_dataset].append(projections_val[i_dataset])
+            loadings_combined[i_dataset].append(loadings_val[i_dataset])
+            weights_combined[i_dataset].append(weights_train[i_dataset])
 
-        correlations_val_combined.append(results['correlations_val'])
-        R2_PC_reg_val_combined.append(results['R2_PC_reg_val'])
+        correlations_val_combined.append(correlations_val)
+        R2_PC_reg_val_combined.append(R2_PC_reg_val)
 
     projections_extracted = {key: [] for key in extraction_methods.keys()}
     loadings_extracted = {key: [] for key in extraction_methods.keys()}
@@ -68,7 +84,7 @@ if __name__ == '__main__':
         projections_combined[i_dataset] = np.array(projections_combined[i_dataset])
         loadings_combined[i_dataset] = np.array(loadings_combined[i_dataset])
         weights_combined[i_dataset] = np.array(weights_combined[i_dataset]).reshape(
-            (-1, results['n_components_all'][i_dataset], results['n_latent_dims']),
+            (-1, n_components_all[i_dataset], n_latent_dims),
         )
 
         for method, fc_extraction in extraction_methods.items():
@@ -84,7 +100,11 @@ if __name__ == '__main__':
         'n_datasets': n_datasets,
         'subjects': subjects,
         'latent_dims_names': latent_dims_names,
+        'n_latent_dims': n_latent_dims,
+        'PC_names': PC_names,
+        'n_components_all': n_components_all,
         'udis': udis,
+        'n_folds': n_folds,
     }
 
     if save_extracted:
@@ -103,7 +123,7 @@ if __name__ == '__main__':
         })
         out_suffix = 'combined'
 
-    fpath_out = os.path.join(dpath_cv, f'{dname_reps}_results_{out_suffix}.pkl')
+    fpath_out = os.path.join(dpath_out, f'{dname_reps}_results_{out_suffix}.pkl')
     with open(fpath_out, 'wb') as file_out:
         pickle.dump(results_to_save, file_out)
 
