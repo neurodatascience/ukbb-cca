@@ -19,7 +19,8 @@ if __name__ == '__main__':
 
     # get path to CV directory from command line
     if len(sys.argv) != 2:
-        raise ValueError(f'Usage: {sys.argv[0]} <dname_cv>')
+        print(f'Usage: {sys.argv[0]} <dname_cv>')
+        sys.exit(1)
     dname_reps = sys.argv[1]
     dpath_reps = os.path.join(dpath_cv, dname_reps)
 
