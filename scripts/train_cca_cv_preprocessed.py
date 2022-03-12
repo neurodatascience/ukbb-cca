@@ -27,7 +27,7 @@ udi_holdout = '21003-2.0'
 fpath_holdout = FPATHS['data_holdout_clean']
 
 # output path
-dpath_cv = DPATHS['scratch']
+dpath_cv = os.path.join(DPATHS['scratch'], os.path.basename(DPATHS['cca'])) # use same folder name
 fname_out_prefix = 'cv_cca'
 
 if __name__ == '__main__':
