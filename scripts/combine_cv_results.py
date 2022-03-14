@@ -5,7 +5,7 @@ from paths import DPATHS
 
 save_extracted = True # if True, saved only summary (e.g., mean/median) measures instead of everything
 
-dpath_cv = DPATHS['scratch'] # folder containing all CV results (different parameters/runs)
+dpath_cv = dpath_cv = os.path.join(DPATHS['scratch'], os.path.basename(DPATHS['cca'])) # folder containing CV results (different parameters/runs)
 cv_filename_pattern = '*rep*.pkl'
 
 dpath_out = DPATHS['cv'] # folder for combined results
@@ -13,6 +13,7 @@ dpath_out = DPATHS['cv'] # folder for combined results
 extraction_methods = {
     'mean': (lambda x: np.mean(x, axis=0)),
     'median': (lambda x: np.median(x, axis=0)),
+    'std': (lambda x: np.std(x, axis=0)),
 }
 
 if __name__ == '__main__':
@@ -106,6 +107,7 @@ if __name__ == '__main__':
         'n_components_all': n_components_all,
         'udis': udis,
         'n_folds': n_folds,
+        'n_reps': len(fnames),
     }
 
     if save_extracted:
