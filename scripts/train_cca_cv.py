@@ -19,27 +19,38 @@ n_folds = 5 # at least 2
 shuffle = True
 seed = None
 
-# paths to data files
-fpath_data = FPATHS['data_Xy_train']
+# only used if preprocessed is True
+dpath_data = DPATHS['cca_preprocessed'] # directory containing preprocessed files
+dpath_preprocessor = DPATHS['cca_preprocessor'] # directory containing fitted preprocessor (needed for inverse PCA transform)
 
 # holdout variable (prediction target)
 udi_holdout = '21003-2.0'
 fpath_holdout = FPATHS['data_holdout_clean']
 
 # output path
-dpath_cv = DPATHS['scratch']
+dpath_cv = os.path.join(DPATHS['scratch'], os.path.basename(DPATHS['cca'])) # use same folder name
 fname_out_prefix = 'cv_cca'
 
 if __name__ == '__main__':
 
     # process user inputs
-    if len(sys.argv) < 5:
-        raise ValueError(f'Usage: {sys.argv[0]} <CV ID> <i_repetition> <n_components1> <n_components2> [etc.]')
+    if len(sys.argv) < 6:
+        print(f'Usage: {sys.argv[0]} <CV ID> <i_repetition> <use_preprocessed> <n_components1> <n_components2> [etc.]')
+        sys.exit(1)
     dpath_out_suffix = sys.argv[1]
     i_repetition = int(sys.argv[2])
-    n_components_all = [int(n) for n in sys.argv[3:]] # number of PCA components
-
+    # if 0: do PCA for each fold (using e.g. 80% of train data)
+    # else: use existing PCs (computed on all train data)
+    use_preprocessed = bool(int(sys.argv[3]))
+    n_components_all = [int(n) for n in sys.argv[4:]] # number of PCA components
     str_components = '_'.join([str(n) for n in n_components_all])
+
+    # generate paths to data and preprocessor objects
+    if use_preprocessed:
+        fpath_data = os.path.join(dpath_data, f'X_train_{str_components}.pkl')
+        fpath_preprocessor = os.path.join(dpath_preprocessor, f'preprocessor_{str_components}.pkl')
+    else:
+        fpath_data = FPATHS['data_Xy_train']
 
     # create output directory if necessary
     dpath_out = os.path.join(dpath_cv, f'cv_{str_components}_{dpath_out_suffix}')
@@ -49,6 +60,7 @@ if __name__ == '__main__':
     fpath_out = os.path.join(dpath_out, f'{fname_out_prefix}_{fname_out_suffix}.pkl')
 
     print('----- Parameters -----')
+    print(f'use_preprocessed:\t{use_preprocessed}')
     print(f'n_components_all:\t{n_components_all}')
     print(f'verbose:\t{verbose}')
     print(f'n_folds:\t{n_folds}')
@@ -62,14 +74,22 @@ if __name__ == '__main__':
     # load train dataset
     with open(fpath_data, 'rb') as file_in:
         data = pickle.load(file_in)
-
     X = data['X']
     y = data['y']
-    subjects = X.index
+
+    if use_preprocessed:
+        subjects = data['subjects']
+    else:
+        subjects = X.index # TODO save subjects as separate key in split_data.py, for consistency
     dataset_names = data['dataset_names']
     conf_name = data['conf_name']
     udis = data['udis']
     n_datasets = len(dataset_names)
+
+    # load preprocessor
+    if use_preprocessed:
+        with open(fpath_preprocessor, 'rb') as file_in:
+            preprocessor = pickle.load(file_in)['preprocessor']
 
     # load holdout variables
     df_holdout = load_data_df(fpath_holdout)
@@ -85,14 +105,18 @@ if __name__ == '__main__':
         raise ValueError(f'Mismatch between n_components_all (size {len(n_components_all)}) and data ({n_datasets} datasets)')
     for i_dataset, dataset_name in enumerate(dataset_names):
         if n_components_all[i_dataset] is None:
-            n_components_all[i_dataset] = X[dataset_name].shape[1]
+            # TODO save n_features list in split_data.py and process_data.py
+            if use_preprocessed:
+                n_components_all[i_dataset] = X[i_dataset].shape[1]
+            else:
+                n_components_all[i_dataset] = X[dataset_name].shape[1]
 
     # figure out the number of latent dimensions in CCA
     n_latent_dims = min(n_components_all)
     print(f'Using {n_latent_dims} latent dimensions')
     latent_dims_names = [f'CA{i+1}' for i in range(n_latent_dims)]
 
-    # build pipeline/model
+    # build pipeline/model 
     cca_pipeline = build_cca_pipeline(
         dataset_names=dataset_names,
         n_pca_components_all=n_components_all,
@@ -100,7 +124,10 @@ if __name__ == '__main__':
         verbose=verbose,
     )
     print('------------------------------------------------------------------')
-    print(cca_pipeline)
+    if use_preprocessed:
+        print(cca_pipeline['cca']) # only the CCA part of the pipeline will be used
+    else:
+        print(cca_pipeline) # entire pipeline will be used
     print('------------------------------------------------------------------')
 
     # cross-validation splitter
@@ -121,25 +148,29 @@ if __name__ == '__main__':
     R2_PC_reg_val_all = []
 
     # cross-validation loop
-    for index_train, index_val in cv_splitter.split(X, y):
+    for index_train, index_val in cv_splitter.split(subjects, y):
 
         subjects_train = subjects[index_train]
         subjects_val = subjects[index_val]
 
-        X_train = X.loc[subjects_train]
-        X_val = X.loc[subjects_val]
+        # clone model and get pipeline components
+        cca_pipeline_clone = clone(cca_pipeline)
+        cca = cca_pipeline_clone['cca']
+
+        if not use_preprocessed:
+            preprocessor = cca_pipeline_clone['preprocessor']
+            X_train = X.loc[subjects_train]
+            X_val = X.loc[subjects_val]
+            X_train_preprocessed = preprocessor.fit_transform(X_train)
+            X_val_preprocessed = preprocessor.transform(X_val)
+        else:
+            X_train_preprocessed = [X[i_dataset][index_train] for i_dataset in range(n_datasets)]
+            X_val_preprocessed = [X[i_dataset][index_val] for i_dataset in range(n_datasets)]
 
         holdout_train = df_holdout.loc[subjects_train, udi_holdout]
         holdout_val =  df_holdout.loc[subjects_val, udi_holdout]
 
-        # clone model and get pipeline components
-        cca_pipeline_clone = clone(cca_pipeline)
-        preprocessor = cca_pipeline_clone['preprocessor']
-        cca = cca_pipeline_clone['cca']
-
-        # fit pipeline in 2 steps 
-        # (keeping preprocessed train data for scoring later)
-        X_train_preprocessed = preprocessor.fit_transform(X_train)
+        # fit CCA
         cca.fit(X_train_preprocessed)
 
         # get CCA train metrics
@@ -147,7 +178,6 @@ if __name__ == '__main__':
         correlations_train_all.append(cca.score(X_train_preprocessed))
 
         # get CCA validation metrics
-        X_val_preprocessed = preprocessor.transform(X_val)
         pca_loadings_val = cca.get_loadings(X_val_preprocessed, normalize=True)
         projections_val = cca.transform(X_val_preprocessed)
         correlations_val_all.append(cca.score(X_val_preprocessed))
