@@ -2,6 +2,7 @@
 # data/result files
 data
 *.csv
+*.png
 
 # binary result files
 *.pkl
