@@ -77,3 +77,15 @@ def nearest_spd(A):
         k += 1
 
     return A_hat
+
+def eig_flip(V):
+    '''
+    Similar to sklearn's svd_flip() but for a single matrix (columns are eigenvectors).
+    Makes the largest coefficient in each eigenvector positive.
+    '''
+    
+    max_abs_cols = np.argmax(np.abs(V), axis=0)
+    signs = np.sign(V[max_abs_cols, range(V.shape[1])])
+    V *= signs
+    
+    return V
