@@ -4,12 +4,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from paths import DPATHS
 
+flip_sign = True
+
 save_extracted = True # if True, saved only summary (e.g., mean/median) measures instead of everything
 plot_sample_distributions = True
 n_to_plot = (5, 5)
 ax_size = 3
 
-dpath_cv = dpath_cv = os.path.join(DPATHS['scratch'], os.path.basename(DPATHS['cca'])) # folder containing CV results (different parameters/runs)
+# folder containing CV results (different parameters/runs)
+dpath_cv = dpath_cv = os.path.join(DPATHS['scratch'], os.path.basename(DPATHS['cca'])) 
 cv_filename_pattern = '*rep*.pkl'
 
 dpath_out = DPATHS['cv'] # folder for combined results
@@ -19,6 +22,25 @@ extraction_methods = {
     'median': (lambda x: np.median(x, axis=0)),
     'std': (lambda x: np.std(x, axis=0)),
 }
+
+def flip(V_combined):
+
+    # collapse first two dimensions and find largest (absolute) value
+    V_combined_reshaped = V_combined.reshape(V_combined.shape[0]*V_combined.shape[1], -1)
+    idx_max_abs = np.argmax(np.abs(V_combined_reshaped), axis=0)
+    max_abs = V_combined_reshaped[idx_max_abs, range(V_combined_reshaped.shape[1])]
+
+    # find rows in original matrix that correspond to the max values
+    _, idx_row, idx_col = np.nonzero(V_combined == max_abs)
+    idx_sort = np.argsort(idx_col)
+    idx_row = idx_row[idx_sort]
+    idx_col = idx_col[idx_sort]
+
+    # determine which repetitions and which columns need to be flipped
+    signs = np.where(np.sign(max_abs) == np.sign(V_combined[:, idx_row, idx_col]), 1, -1)
+    V_combined_flipped = V_combined * signs[:, np.newaxis, :]
+
+    return V_combined_flipped
 
 if __name__ == '__main__':
 
@@ -72,7 +94,7 @@ if __name__ == '__main__':
         projections_val = results['projections_val']
         loadings_val = results['loadings_val']
         weights_train = results['weights_train']
-
+        
         for i_dataset in range(n_datasets):
             projections_combined[i_dataset].append(projections_val[i_dataset])
             loadings_combined[i_dataset].append(loadings_val[i_dataset])
@@ -92,6 +114,17 @@ if __name__ == '__main__':
         weights_combined[i_dataset] = np.array(weights_combined[i_dataset]).reshape(
             (-1, n_components_all[i_dataset], n_latent_dims),
         )
+
+        if flip_sign:
+            weights_combined[i_dataset] = flip(weights_combined[i_dataset])
+
+            # doesn't work for projections (still get bimodal distributions)
+            # projections because it is the combination of 5 folds, and weights within folds don't have consistent signs
+            projections_combined[i_dataset] = flip(projections_combined[i_dataset])
+
+            # loadings don't have bimodal distributions, but the distributions have multiple peaks
+            # so flipping probably doesn't make sense
+            loadings_combined[i_dataset] = flip(loadings_combined[i_dataset])
 
         for method, fc_extraction in extraction_methods.items():
             projections_extracted[method].append(fc_extraction(projections_combined[i_dataset]))
@@ -130,6 +163,9 @@ if __name__ == '__main__':
         })
         out_suffix = 'combined'
 
+    if flip_sign:
+        out_suffix = f'{out_suffix}_flipped'
+
     fpath_out = os.path.join(dpath_out, f'{dname_reps}_results_{out_suffix}.pkl')
     with open(fpath_out, 'wb') as file_out:
         pickle.dump(results_to_save, file_out)
@@ -145,7 +181,11 @@ if __name__ == '__main__':
         for label, data in {'projections': projections_combined, 'loadings': loadings_combined, 'weights': weights_combined}.items():
             to_plot.update({f'{label}_{dataset_name}': data[i_dataset][:, :n_rows, :n_cols] for i_dataset, dataset_name in enumerate(dataset_names)})
         
-        with open(os.path.join(dpath_figs, f'plot_data_{dname_reps}.pkl'), 'wb') as file_out:
+        if not flip_sign:
+            fname_plot_data = f'plot_data_{dname_reps}.pkl'
+        else:
+            fname_plot_data = f'plot_data_{dname_reps}_flipped.pkl'
+        with open(os.path.join(dpath_figs, fname_plot_data), 'wb') as file_out:
             pickle.dump(to_plot, file_out)
 
         for label, data in to_plot.items():
