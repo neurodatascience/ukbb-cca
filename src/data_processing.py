@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 from scipy import stats
-from src.utils import zscore_df
+from .utils import zscore_df
 
 def write_subset(fpath_data, fpath_out, colnames=None, fn_to_apply=None, header=0, index_col='eid', chunksize=10000):
     
