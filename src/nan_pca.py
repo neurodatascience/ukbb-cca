@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.extmath import stable_cumsum
-from .utils import nearest_spd
+from .utils import nearest_spd, eig_flip
 
 class NanPCA(TransformerMixin, BaseEstimator):
 
@@ -39,6 +39,9 @@ class NanPCA(TransformerMixin, BaseEstimator):
         i_sort = np.flip(np.argsort(eigenvals))
         eigenvals = np.real(eigenvals[i_sort])
         eigenvecs = np.real(eigenvecs[:, i_sort])
+
+        # eigenvector sign convention for consistent signs
+        eigenvecs = eig_flip(eigenvecs)
 
         components_ = eigenvecs.T # transpose for consistency with sklearn PCA
 
