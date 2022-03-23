@@ -1,6 +1,4 @@
-
 import os, sys, pickle
-from pathlib import Path
 import numpy as np
 import pandas as pd
 
@@ -9,7 +7,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.base import clone
 
 from pipeline_definitions import build_cca_pipeline
-from src.utils import load_data_df
+from src.utils import make_dir, load_data_df, rotate_to_match
 
 from paths import DPATHS, FPATHS
 
@@ -54,7 +52,7 @@ if __name__ == '__main__':
 
     # create output directory if necessary
     dpath_out = os.path.join(dpath_cv, f'cv_{str_components}_{dpath_out_suffix}')
-    Path(dpath_out).mkdir(parents=True, exist_ok=True)
+    make_dir(dpath_out)
 
     fname_out_suffix = f'{str_components}_rep{i_repetition}'
     fpath_out = os.path.join(dpath_out, f'{fname_out_prefix}_{fname_out_suffix}.pkl')
@@ -148,7 +146,7 @@ if __name__ == '__main__':
     R2_PC_reg_val_all = []
 
     # cross-validation loop
-    for index_train, index_val in cv_splitter.split(subjects, y):
+    for i_fold, (index_train, index_val) in enumerate(cv_splitter.split(subjects, y)):
 
         subjects_train = subjects[index_train]
         subjects_val = subjects[index_val]
@@ -172,6 +170,14 @@ if __name__ == '__main__':
 
         # fit CCA
         cca.fit(X_train_preprocessed)
+
+        # align weights
+        # otherwise some folds may have flipped signs or switched columns
+        if i_fold == 0:
+            ref_weights = cca.weights
+        else:
+            rotated_weights = [rotate_to_match(cca.weights[i], ref_weights[i]) for i in range(n_datasets)]
+            cca.weights = rotated_weights
 
         # get CCA train metrics
         pca_loadings_train = cca.get_loadings(X_train_preprocessed, normalize=True)
