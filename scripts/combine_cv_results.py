@@ -3,8 +3,10 @@ import sys, os, glob, pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from paths import DPATHS
+from src.utils import rotate_to_match
 
 flip_sign = True
+flip_suffix = 'filtered'
 
 save_extracted = True # if True, saved only summary (e.g., mean/median) measures instead of everything
 plot_sample_distributions = True
@@ -25,22 +27,29 @@ extraction_methods = {
 
 def flip(V_combined):
 
-    # collapse first two dimensions and find largest (absolute) value
-    V_combined_reshaped = V_combined.reshape(V_combined.shape[0]*V_combined.shape[1], -1)
-    idx_max_abs = np.argmax(np.abs(V_combined_reshaped), axis=0)
-    max_abs = V_combined_reshaped[idx_max_abs, range(V_combined_reshaped.shape[1])]
+    n_reps = V_combined.shape[0]
+    V_ref = V_combined[0]
+    V_combined_flipped = [V_ref]
+    for i_rep in range(1, n_reps):
+        V = V_combined[i_rep]
+        V_combined_flipped.append(rotate_to_match(V, V_ref))
 
-    # find rows in original matrix that correspond to the max values
-    _, idx_row, idx_col = np.nonzero(V_combined == max_abs)
-    idx_sort = np.argsort(idx_col)
-    idx_row = idx_row[idx_sort]
-    idx_col = idx_col[idx_sort]
+    # # collapse first two dimensions and find largest (absolute) value
+    # V_combined_reshaped = V_combined.reshape(V_combined.shape[0]*V_combined.shape[1], -1)
+    # idx_max_abs = np.argmax(np.abs(V_combined_reshaped), axis=0)
+    # max_abs = V_combined_reshaped[idx_max_abs, range(V_combined_reshaped.shape[1])]
 
-    # determine which repetitions and which columns need to be flipped
-    signs = np.where(np.sign(max_abs) == np.sign(V_combined[:, idx_row, idx_col]), 1, -1)
-    V_combined_flipped = V_combined * signs[:, np.newaxis, :]
+    # # find rows in original matrix that correspond to the max values
+    # _, idx_row, idx_col = np.nonzero(V_combined == max_abs)
+    # idx_sort = np.argsort(idx_col)
+    # idx_row = idx_row[idx_sort]
+    # idx_col = idx_col[idx_sort]
 
-    return V_combined_flipped
+    # # determine which repetitions and which columns need to be flipped
+    # signs = np.where(np.sign(max_abs) == np.sign(V_combined[:, idx_row, idx_col]), 1, -1)
+    # V_combined_flipped = V_combined * signs[:, np.newaxis, :]
+
+    return np.array(V_combined_flipped)
 
 if __name__ == '__main__':
 
@@ -164,7 +173,7 @@ if __name__ == '__main__':
         out_suffix = 'combined'
 
     if flip_sign:
-        out_suffix = f'{out_suffix}_flipped'
+        out_suffix = f'{out_suffix}_{flip_suffix}'
 
     fpath_out = os.path.join(dpath_out, f'{dname_reps}_results_{out_suffix}.pkl')
     with open(fpath_out, 'wb') as file_out:
@@ -184,7 +193,7 @@ if __name__ == '__main__':
         if not flip_sign:
             fname_plot_data = f'plot_data_{dname_reps}.pkl'
         else:
-            fname_plot_data = f'plot_data_{dname_reps}_flipped.pkl'
+            fname_plot_data = f'plot_data_{dname_reps}_{flip_suffix}.pkl'
         with open(os.path.join(dpath_figs, fname_plot_data), 'wb') as file_out:
             pickle.dump(to_plot, file_out)
 
@@ -206,6 +215,10 @@ if __name__ == '__main__':
             
             fig.tight_layout()
 
-            fpath_fig = os.path.join(dpath_figs, f'{label}_{dname_reps}.png')
+            if not flip_sign:
+                fname_fig = f'{label}_{dname_reps}.png'
+            else:
+                fname_fig = f'{label}_{dname_reps}_{flip_suffix}.png'
+            fpath_fig = os.path.join(dpath_figs, fname_fig)
             fig.savefig(fpath_fig, dpi=300, bbox_inches='tight')
             print(f'Saved figure to {fpath_fig}')

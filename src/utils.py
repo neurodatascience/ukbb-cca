@@ -89,3 +89,8 @@ def eig_flip(V):
     V *= signs
     
     return V
+
+def rotate_to_match(weights, weights_ref):
+    U, _, Vt = np.linalg.svd(weights.T @ weights_ref)
+    Q = U @ Vt
+    return weights @ Q
