@@ -132,8 +132,8 @@ if __name__ == '__main__':
     cv_splitter = StratifiedKFold(n_splits=n_folds, shuffle=shuffle, random_state=random_state)
 
     # initialization
-    subjects_train_all = []
-    subjects_val_all = []
+    i_train_all = []
+    i_val_all = []
     weights_train_all = [[] for _ in range(n_datasets)]
     projections_val_all = [[] for _ in range(n_datasets)] # estimated 'canonical factor scores' (data x weights) of validation sets
     pca_loadings_train_all = [[] for _ in range(n_datasets)]
@@ -146,10 +146,10 @@ if __name__ == '__main__':
     R2_PC_reg_val_all = []
 
     # cross-validation loop
-    for i_fold, (index_train, index_val) in enumerate(cv_splitter.split(subjects, y)):
+    for i_fold, (i_train, i_val) in enumerate(cv_splitter.split(subjects, y)):
 
-        subjects_train = subjects[index_train]
-        subjects_val = subjects[index_val]
+        subjects_train = subjects[i_train]
+        subjects_val = subjects[i_val]
 
         # clone model and get pipeline components
         cca_pipeline_clone = clone(cca_pipeline)
@@ -162,8 +162,8 @@ if __name__ == '__main__':
             X_train_preprocessed = preprocessor.fit_transform(X_train)
             X_val_preprocessed = preprocessor.transform(X_val)
         else:
-            X_train_preprocessed = [X[i_dataset][index_train] for i_dataset in range(n_datasets)]
-            X_val_preprocessed = [X[i_dataset][index_val] for i_dataset in range(n_datasets)]
+            X_train_preprocessed = [X[i_dataset][i_train] for i_dataset in range(n_datasets)]
+            X_val_preprocessed = [X[i_dataset][i_val] for i_dataset in range(n_datasets)]
 
         holdout_train = df_holdout.loc[subjects_train, udi_holdout]
         holdout_val =  df_holdout.loc[subjects_val, udi_holdout]
@@ -214,8 +214,8 @@ if __name__ == '__main__':
             weights_train_all[i_dataset].append(cca.weights[i_dataset])
 
         # save some other information about this fold
-        subjects_train_all.append(subjects_train)
-        subjects_val_all.append(subjects_val)
+        i_train_all.append(i_train)
+        i_val_all.append(i_val)
 
     # combine main validation set results
     projections_val_combined = []
@@ -244,8 +244,8 @@ if __name__ == '__main__':
         'correlations_val': np.array(correlations_val_all),
         'R2_PC_reg_train': np.array(R2_PC_reg_train_all),
         'R2_PC_reg_val': np.array(R2_PC_reg_val_all),
-        'subjects_train': subjects_train_all,
-        'subjects_val': subjects_val_all,
+        'i_train': i_train_all,
+        'i_val': i_val_all,
         'subjects': subjects,
         'latent_dims_names': latent_dims_names,
         'n_latent_dims': n_latent_dims,
@@ -256,6 +256,7 @@ if __name__ == '__main__':
         'udis_datasets': [udis[dataset_name] for dataset_name in dataset_names], 
         'udis_conf': udis[conf_name],
         'n_folds': n_folds,
+        'use_preprocessed': use_preprocessed,
     }
 
     # save results
