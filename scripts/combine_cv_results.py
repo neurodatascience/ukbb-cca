@@ -3,7 +3,7 @@ import sys, os, glob, pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from paths import DPATHS
-from src.utils import rotate_to_match
+from src.utils import make_dir, rotate_to_match
 
 flip_sign = True
 flip_suffix = 'filtered'
@@ -88,18 +88,31 @@ if __name__ == '__main__':
             n_components_all = results['n_components_all']
 
             udis = results['udis_datasets']
+            udis_conf = results['udis_conf']
             n_folds = results['n_folds']
 
             # initialization
             projections_combined = [[] for _ in range(n_datasets)]
             loadings_combined = [[] for _ in range(n_datasets)]
             weights_combined = [[] for _ in range(n_datasets)]
+            correlations_train_combined = []
             correlations_val_combined = []
+            R2_PC_reg_train_combined = []
             R2_PC_reg_val_combined = []
+            # subjects_train_combined = []
+            # subjects_val_combined = []
+            i_train_combined = []
+            i_val_combined = []
 
+        correlations_train = results['correlations_train']
         correlations_val = results['correlations_val']
+        R2_PC_reg_train = results['R2_PC_reg_train']
         R2_PC_reg_val = results['R2_PC_reg_val']
-
+        # subjects_train = results['subjects_train']
+        # subjects_val = results['subjects_val']
+        i_train = results['i_train']
+        i_val = results['i_val']
+        
         projections_val = results['projections_val']
         loadings_val = results['loadings_val']
         weights_train = results['weights_train']
@@ -109,8 +122,12 @@ if __name__ == '__main__':
             loadings_combined[i_dataset].append(loadings_val[i_dataset])
             weights_combined[i_dataset].append(weights_train[i_dataset])
 
+        correlations_train_combined.append(correlations_train)
         correlations_val_combined.append(correlations_val)
+        R2_PC_reg_train_combined.append(R2_PC_reg_train)
         R2_PC_reg_val_combined.append(R2_PC_reg_val)
+        i_train_combined.append(i_train)
+        i_val_combined.append(i_val)
 
     projections_extracted = {key: [] for key in extraction_methods.keys()}
     loadings_extracted = {key: [] for key in extraction_methods.keys()}
@@ -126,13 +143,8 @@ if __name__ == '__main__':
 
         if flip_sign:
             weights_combined[i_dataset] = flip(weights_combined[i_dataset])
-
-            # doesn't work for projections (still get bimodal distributions)
-            # projections because it is the combination of 5 folds, and weights within folds don't have consistent signs
             projections_combined[i_dataset] = flip(projections_combined[i_dataset])
 
-            # loadings don't have bimodal distributions, but the distributions have multiple peaks
-            # so flipping probably doesn't make sense
             loadings_combined[i_dataset] = flip(loadings_combined[i_dataset])
 
         for method, fc_extraction in extraction_methods.items():
@@ -142,8 +154,14 @@ if __name__ == '__main__':
 
     # common measures
     results_to_save = {
+        'correlations_train_combined': correlations_train_combined,
         'correlations_val_combined': correlations_val_combined,
+        'R2_PC_reg_train_combined': R2_PC_reg_train_combined,
         'R2_PC_reg_val_combined': R2_PC_reg_val_combined,
+        # 'subjects_train_combined': subjects_train_combined,
+        # 'subjects_val_combined': subjects_val_combined,
+        # 'i_train_combined': i_train_combined,
+        # 'i_val_combined': i_val_combined,
         'dataset_names': dataset_names,
         'n_datasets': n_datasets,
         'subjects': subjects,
@@ -152,6 +170,7 @@ if __name__ == '__main__':
         'PC_names': PC_names,
         'n_components_all': n_components_all,
         'udis': udis,
+        'udis_conf': udis_conf,
         'n_folds': n_folds,
         'n_reps': len(fnames),
     }
@@ -184,6 +203,9 @@ if __name__ == '__main__':
     if plot_sample_distributions:
 
         dpath_figs = os.path.join(dpath_out, 'figs')
+        dpath_fig_data = os.path.join(dpath_figs, 'fig_data')
+        make_dir(dpath_figs)
+        make_dir(dpath_fig_data)
         n_rows, n_cols = n_to_plot
         
         to_plot = {}
@@ -194,7 +216,7 @@ if __name__ == '__main__':
             fname_plot_data = f'plot_data_{dname_reps}.pkl'
         else:
             fname_plot_data = f'plot_data_{dname_reps}_{flip_suffix}.pkl'
-        with open(os.path.join(dpath_figs, fname_plot_data), 'wb') as file_out:
+        with open(os.path.join(dpath_fig_data, fname_plot_data), 'wb') as file_out:
             pickle.dump(to_plot, file_out)
 
         for label, data in to_plot.items():
