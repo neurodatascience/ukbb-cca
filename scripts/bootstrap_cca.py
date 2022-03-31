@@ -1,4 +1,3 @@
-
 import os, sys, pickle
 import numpy as np
 
@@ -6,11 +5,11 @@ from sklearn.base import clone
 from sklearn.linear_model import LinearRegression
 
 from scripts.pipeline_definitions import build_cca_pipeline
-from src.utils import load_data_df
+from src.utils import load_data_df, make_dir
 from paths import DPATHS, FPATHS
 
 # parameters
-n_permutations = 1000
+n_permutations = 250
 seed = None # for random number generator
 
 # paths to data files
@@ -21,7 +20,7 @@ fpath_holdout = FPATHS['data_holdout_clean'] # for bootstrapped regression with 
 udi_holdout = '21003-2.0'
 
 # output path
-dpath_out = DPATHS['cca']
+dpath_out = DPATHS['bootstrap']
 fname_out_prefix = 'bootstrap_results'
 
 if __name__ == '__main__':
@@ -31,6 +30,9 @@ if __name__ == '__main__':
         print(f'Usage: {sys.argv[0]} <n_components1> <n_components2> [etc.]')
         sys.exit(1)
     n_components_all = [int(n) for n in sys.argv[1:]] # number of PCA components
+
+    # make output directory if it doesn't exist yet
+    make_dir(dpath_out)
 
     str_components = '_'.join([str(n) for n in n_components_all])
     fpath_data_train_preprocessed = os.path.join(dpath_data_preprocessed, f'X_train_{str_components}.pkl')
