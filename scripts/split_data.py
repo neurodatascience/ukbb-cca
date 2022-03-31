@@ -45,7 +45,10 @@ if __name__ == '__main__':
     # build dict of dataframes
     print('Loading data...')
     dfs_dict = {}
-    udis = {}
+    udis_datasets = []
+    udis_conf = None
+    n_features_datasets = []
+    n_features_conf = None
     subjects = None
     for name, fpath in zip(dataset_names + [conf_name], fpaths_data + [fpath_conf]):
 
@@ -54,8 +57,9 @@ if __name__ == '__main__':
         dfs_dict[name] = df
         print(f'\t{name}:\t{df.shape}')
 
-        # get UDIs
-        udis[name] = df.columns
+        # get UDIs and number of features
+        udis = df.columns
+        n_features = df.shape[1]
 
         # make sure all datasets contain the same subjects
         subjects_new = set(df.index)
@@ -63,6 +67,13 @@ if __name__ == '__main__':
             if subjects_new != subjects:
                 raise ValueError(f'Datasets {list(df.keys())} do not have exactly the same subjects')
         subjects = subjects_new
+
+        if name in dataset_names:
+            udis_datasets.append(udis)
+            n_features_datasets.append(n_features)
+        else:
+            udis_conf = udis
+            n_features_conf = n_features
     
     # make sure all subjects are in the same order
     subjects_sorted = sorted(list(subjects))
@@ -100,7 +111,11 @@ if __name__ == '__main__':
 
         data['dataset_names'] = dataset_names
         data['conf_name'] = conf_name
-        data['udis'] = udis
+        data['udis_datasets'] = udis_datasets
+        data['udis_conf'] = udis_conf
+        data['n_features_datasets'] = n_features_datasets
+        data['n_features_conf'] = n_features_conf
+        data['subjects'] = list(subjects)
 
         with open(fpath_out, 'wb') as file_out:
             pickle.dump(data, file_out)
