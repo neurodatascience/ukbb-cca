@@ -1,7 +1,14 @@
 
 import warnings
+from pathlib import Path
 import pandas as pd
 import numpy as np
+
+def make_dir(dpath):
+    Path(dpath).mkdir(parents=True, exist_ok=True)
+
+def make_parent_dir(fpath):
+    Path(fpath).parents[0].mkdir(parents=True, exist_ok=True)
 
 def load_data_df(fpath, index_col=0, nrows=None, encoded=False):
     header = [0, 1] if encoded else 0

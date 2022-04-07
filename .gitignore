@@ -12,6 +12,9 @@ data
 scripts/paths.py
 scripts/generate_paths.m
 
+# old/testing code
+scripts/old/*
+
 # tools
 toolbox
 

@@ -1,14 +1,16 @@
 
+import sys
 import pickle
+from pathlib import Path
 
+import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
 
 from paths import FPATHS
-from src.utils import load_data_df
+from src.utils import load_data_df, make_parent_dir
 
 # parameters
-test_size = 0.1
 shuffle = True
 seed = 3791
 column_level_to_drop = 'udi'
@@ -19,15 +21,23 @@ conf_name = 'conf'
 fpaths_data = [FPATHS['data_behavioural_clean'], FPATHS['data_brain_clean']]
 fpath_conf = FPATHS['data_demographic_clean']
 fpath_groups = FPATHS['data_groups_clean']
+fpath_holdout = FPATHS['data_holdout_clean']
 
-# output paths
-fpath_train = FPATHS['data_Xy_train']
-fpath_test = FPATHS['data_Xy_test']
+udi_holdout = '21003-2.0'
+
+# output
+fpath_out = FPATHS['data_Xy']
 
 if __name__ == '__main__':
 
+    if len(sys.argv) != 2:
+        print(f'Usage: {sys.argv[0]} n_splits')
+        sys.exit(1)
+
+    n_splits = int(sys.argv[1])
+
     print('----- Parameters -----')
-    print(f'test_size:\t{test_size}')
+    print(f'n_splits:\t{n_splits}')
     print(f'shuffle:\t{shuffle}')
     print(f'seed:\t{seed}')
     print(f'column_level_to_drop:\t{column_level_to_drop}')
@@ -36,6 +46,8 @@ if __name__ == '__main__':
     print(f'fpaths_data:\t{fpaths_data}')
     print(f'fpath_conf:\t{fpath_conf}')
     print(f'fpath_groups:\t{fpath_groups}')
+    print(f'fpath_holdout\t{fpath_holdout}')
+    print(f'udi_holdout\t{udi_holdout}')
     print('----------------------')
 
     # input validation
@@ -76,47 +88,55 @@ if __name__ == '__main__':
             n_features_conf = n_features
     
     # make sure all subjects are in the same order
-    subjects_sorted = sorted(list(subjects))
+    subjects_sorted = np.sort(list(subjects))
     for name in dfs_dict.keys():
         dfs_dict[name] = dfs_dict[name].loc[subjects_sorted]
 
     # load group data (for stratification)
     groups = load_data_df(fpath_groups, encoded=False).squeeze('columns')[subjects_sorted]
 
+    # load holdout data (for prediction)
+    holdout = load_data_df(fpath_holdout).loc[subjects_sorted, udi_holdout]
+
     # combine into a single big dataframe
     # for compatibility with sklearn Pipeline
     X = pd.concat(dfs_dict, axis='columns')
     X = X.droplevel(column_level_to_drop, axis='columns') # some sklearn classes cannot handle multiindex columns
-    print(f'X shape before split: {X.shape}')
+    X = X.loc[subjects_sorted]
+    print(f'X shape: {X.shape}')
 
-    # split
-    subjects_train, subjects_test = train_test_split(
-        subjects_sorted, stratify=groups.loc[subjects_sorted],
-        test_size=test_size, shuffle=shuffle, random_state=seed,
-    )
-    print(f'\tTrain subjects: {len(subjects_train)}')
-    print(f'\tTest subjects: {len(subjects_test)}')
+    splitter = KFold(n_splits=n_splits, shuffle=shuffle, random_state=seed)
+    # splitter = StratifiedKFold(n_splits=n_folds, shuffle=shuffle, random_state=random_state)
+    i_train_all = []
+    i_test_all = []
+    print('----------')
+    for i_split, (i_train, i_test) in enumerate(splitter.split(subjects_sorted)):
 
-    data_train = {
-        'X': X.loc[subjects_train],
-        'y': groups.loc[subjects_train],
+        print(f'Split {i_split+1}')
+        print(f'\ti_train: {i_train.shape}')
+        print(f'\ti_test: {i_test.shape}')
+
+        i_train_all.append(i_train)
+        i_test_all.append(i_test)
+
+    # save single large X dataframe and train/test indices for each split
+    # instead of many X_train and X_test
+    data = {
+        'X': X,
+        'y': groups,
+        'holdout': holdout,
+        'i_train_all': i_train_all,
+        'i_test_all': i_test_all,
+        'dataset_names': dataset_names,
+        'conf_name': conf_name,
+        'udis_datasets': udis_datasets,
+        'udis_conf': udis_conf,
+        'n_features_datasets': n_features_datasets,
+        'n_features_conf': n_features_conf,
+        'subjects': subjects_sorted,
     }
-    data_test = {
-        'X': X.loc[subjects_test],
-        'y': groups.loc[subjects_test],
-    }
 
-    # save in train/test files
-    for fpath_out, data in zip([fpath_train, fpath_test], [data_train, data_test]):
-
-        data['dataset_names'] = dataset_names
-        data['conf_name'] = conf_name
-        data['udis_datasets'] = udis_datasets
-        data['udis_conf'] = udis_conf
-        data['n_features_datasets'] = n_features_datasets
-        data['n_features_conf'] = n_features_conf
-        data['subjects'] = list(subjects)
-
-        with open(fpath_out, 'wb') as file_out:
-            pickle.dump(data, file_out)
-        print(f'Saved data (X: {data["X"].shape}, y: {data["y"].shape})  to {fpath_out}')
+    make_parent_dir(fpath_out)
+    with open(fpath_out, 'wb') as file_out:
+        pickle.dump(data, file_out)
+    print(f'Saved data (X: {data["X"].shape}, y: {data["y"].shape}) and split indices  to {fpath_out}')

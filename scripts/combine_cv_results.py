@@ -2,14 +2,15 @@
 import sys, os, glob, pickle
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.base import clone, BaseEstimator
+from cca_zoo.models._cca_base import _CCA_Base
 from paths import DPATHS
-from src.utils import make_dir, rotate_to_match
+from src.utils import make_dir
 
-flip_sign = True
-flip_suffix = 'filtered'
+save_extracted = True # if True, saved only averaged model instead of all individual models
+out_suffix = '' # may be updated later
 
-save_extracted = True # if True, saved only summary (e.g., mean/median) measures instead of everything
-plot_sample_distributions = True
+plot_sample_distributions = False #True
 n_to_plot = (5, 5)
 ax_size = 3
 
@@ -19,37 +20,76 @@ cv_filename_pattern = '*rep*.pkl'
 
 dpath_out = DPATHS['cv'] # folder for combined results
 
-extraction_methods = {
-    'mean': (lambda x: np.mean(x, axis=0)),
-    'median': (lambda x: np.median(x, axis=0)),
-    'std': (lambda x: np.std(x, axis=0)),
-}
+def average_models(models):
 
-def flip(V_combined):
+    cca_param_names = ['weights', 'view_means', 'view_stds']
 
-    n_reps = V_combined.shape[0]
-    V_ref = V_combined[0]
-    V_combined_flipped = [V_ref]
-    for i_rep in range(1, n_reps):
-        V = V_combined[i_rep]
-        V_combined_flipped.append(rotate_to_match(V, V_ref))
+    def find_nested_parameters(root_model, start_keys=[], keys_and_names=[]):
+        model = root_model
+        for key in start_keys:
+            model = model[key]
+        fitted_parameter_names = [name for name in vars(model) if name.endswith('_') and not name.startswith('__')]
+        if len(fitted_parameter_names) > 0:
+            for name in fitted_parameter_names:
+                keys_and_names.append((start_keys, name))
+        elif isinstance(model, _CCA_Base):
+            for param_name in cca_param_names:
+                if hasattr(model, param_name):
+                    keys_and_names.append((start_keys, param_name))
+        else:
+            if hasattr(model, 'named_steps'): # sklearn Pipeline
+                nested_models = model.named_steps
+            elif hasattr(model, 'named_pipelines'): # PreprocessingPipeline, PipelineList
+                nested_models = model.named_pipelines
+            else:
+                raise ValueError(f'Unhandled model: {model}')
+            for key, nested_model in nested_models.items():
+                keys_and_names = find_nested_parameters(root_model, start_keys=start_keys+[key], keys_and_names=keys_and_names)
+        return keys_and_names
 
-    # # collapse first two dimensions and find largest (absolute) value
-    # V_combined_reshaped = V_combined.reshape(V_combined.shape[0]*V_combined.shape[1], -1)
-    # idx_max_abs = np.argmax(np.abs(V_combined_reshaped), axis=0)
-    # max_abs = V_combined_reshaped[idx_max_abs, range(V_combined_reshaped.shape[1])]
+    def average_nested_parameter(models, keys, parameter_name):
+        all_values = []
+        for root_model in models:
+            model = root_model
+            for key in keys:
+                model = model[key]
+            all_values.append(getattr(model, parameter_name))
+        if hasattr(all_values[0], 'dtype'):
+            if np.issubdtype(all_values[0].dtype, np.number):
+                # print(f'{"__".join(keys)} --> {parameter_name}')
+                first = all_values[0]
+                for val in all_values:
+                    if val.shape != first.shape:
+                        print(f'{"__".join(keys)} --> {parameter_name}')
+                        break
+                # TODO also return std
+                return np.mean(all_values, axis=0)
+        elif hasattr(all_values[0], '__len__') and hasattr(all_values[0][0], 'dtype'):
+            if np.issubdtype(all_values[0][0].dtype, np.number):
+                # TODO also return std
+                # all_values_reshaped = []
+                return [np.mean([all_values[i][j] for i in range(len(all_values))], axis=0) for j in range(len(all_values[0]))]
+        return None
 
-    # # find rows in original matrix that correspond to the max values
-    # _, idx_row, idx_col = np.nonzero(V_combined == max_abs)
-    # idx_sort = np.argsort(idx_col)
-    # idx_row = idx_row[idx_sort]
-    # idx_col = idx_col[idx_sort]
+    def set_nested_parameter(root_model, keys, name, value):
+        model = root_model
+        for key in keys:
+            model = model[key]
+        setattr(model, name, value)
 
-    # # determine which repetitions and which columns need to be flipped
-    # signs = np.where(np.sign(max_abs) == np.sign(V_combined[:, idx_row, idx_col]), 1, -1)
-    # V_combined_flipped = V_combined * signs[:, np.newaxis, :]
+    # clone the model/pipeline
+    fitted_model = models[0]
+    model_clone = clone(fitted_model)
 
-    return np.array(V_combined_flipped)
+    # get all fitted values
+    for keys, parameter_name in find_nested_parameters(fitted_model):
+        # attempt to average them
+        avg_value = average_nested_parameter(models, keys, parameter_name)
+        # add averaged value to cloned model
+        if avg_value is not None:
+            set_nested_parameter(model_clone, keys, parameter_name, avg_value)
+
+    return model_clone
 
 if __name__ == '__main__':
 
@@ -76,10 +116,14 @@ if __name__ == '__main__':
 
         if i_rep == 0:
 
+            i_split = results['i_split']
+            n_folds = results['n_folds']
+
             subjects = results['subjects']
 
             dataset_names = results['dataset_names']
             n_datasets = results['n_datasets']
+            conf_name = results['conf_name']
 
             latent_dims_names = results['latent_dims_names']
             n_latent_dims = results['n_latent_dims']
@@ -87,81 +131,36 @@ if __name__ == '__main__':
             PC_names = results['PC_names']
             n_components_all = results['n_components_all']
 
-            udis = results['udis_datasets']
+            udis_datasets = results['udis_datasets']
             udis_conf = results['udis_conf']
-            n_folds = results['n_folds']
+
+            n_features_datasets = results['n_features_datasets']
+            n_features_conf = results['n_features_conf']
 
             # initialization
-            projections_combined = [[] for _ in range(n_datasets)]
-            loadings_combined = [[] for _ in range(n_datasets)]
-            weights_combined = [[] for _ in range(n_datasets)]
-            correlations_train_combined = []
+            models_combined = []
             correlations_val_combined = []
-            R2_PC_reg_train_combined = []
-            R2_PC_reg_val_combined = []
-            # subjects_train_combined = []
-            # subjects_val_combined = []
             i_train_combined = []
             i_val_combined = []
 
-        correlations_train = results['correlations_train']
+        models = results['models']
         correlations_val = results['correlations_val']
-        R2_PC_reg_train = results['R2_PC_reg_train']
-        R2_PC_reg_val = results['R2_PC_reg_val']
-        # subjects_train = results['subjects_train']
-        # subjects_val = results['subjects_val']
         i_train = results['i_train']
         i_val = results['i_val']
         
-        projections_val = results['projections_val']
-        loadings_val = results['loadings_val']
-        weights_train = results['weights_train']
-        
-        for i_dataset in range(n_datasets):
-            projections_combined[i_dataset].append(projections_val[i_dataset])
-            loadings_combined[i_dataset].append(loadings_val[i_dataset])
-            weights_combined[i_dataset].append(weights_train[i_dataset])
-
-        correlations_train_combined.append(correlations_train)
+        models_combined.extend(models)
         correlations_val_combined.append(correlations_val)
-        R2_PC_reg_train_combined.append(R2_PC_reg_train)
-        R2_PC_reg_val_combined.append(R2_PC_reg_val)
         i_train_combined.append(i_train)
         i_val_combined.append(i_val)
 
-    projections_extracted = {key: [] for key in extraction_methods.keys()}
-    loadings_extracted = {key: [] for key in extraction_methods.keys()}
-    weights_extracted = {key: [] for key in extraction_methods.keys()}
-    for i_dataset in range(n_datasets):
 
-        # convert to numpy array
-        projections_combined[i_dataset] = np.array(projections_combined[i_dataset])
-        loadings_combined[i_dataset] = np.array(loadings_combined[i_dataset])
-        weights_combined[i_dataset] = np.array(weights_combined[i_dataset]).reshape(
-            (-1, n_components_all[i_dataset], n_latent_dims),
-        )
-
-        if flip_sign:
-            weights_combined[i_dataset] = flip(weights_combined[i_dataset])
-            projections_combined[i_dataset] = flip(projections_combined[i_dataset])
-
-            loadings_combined[i_dataset] = flip(loadings_combined[i_dataset])
-
-        for method, fc_extraction in extraction_methods.items():
-            projections_extracted[method].append(fc_extraction(projections_combined[i_dataset]))
-            loadings_extracted[method].append(fc_extraction(loadings_combined[i_dataset]))
-            weights_extracted[method].append(fc_extraction(weights_combined[i_dataset]))
+    extracted_model = average_models(models_combined)
 
     # common measures
     results_to_save = {
-        'correlations_train_combined': correlations_train_combined,
-        'correlations_val_combined': correlations_val_combined,
-        'R2_PC_reg_train_combined': R2_PC_reg_train_combined,
-        'R2_PC_reg_val_combined': R2_PC_reg_val_combined,
-        # 'subjects_train_combined': subjects_train_combined,
-        # 'subjects_val_combined': subjects_val_combined,
-        # 'i_train_combined': i_train_combined,
-        # 'i_val_combined': i_val_combined,
+        'model': extracted_model,
+        'correlations_val_combined': np.array(correlations_val_combined),
+        'i_split': i_split,
         'dataset_names': dataset_names,
         'n_datasets': n_datasets,
         'subjects': subjects,
@@ -169,32 +168,22 @@ if __name__ == '__main__':
         'n_latent_dims': n_latent_dims,
         'PC_names': PC_names,
         'n_components_all': n_components_all,
-        'udis': udis,
+        'udis_datasets': udis_datasets,
         'udis_conf': udis_conf,
         'n_folds': n_folds,
         'n_reps': len(fnames),
     }
 
-    if save_extracted:
+    if not save_extracted:
         results_to_save.update({
-            'projections_extracted': projections_extracted,
-            'loadings_extracted': loadings_extracted,
-            'weights_extracted': weights_extracted,
+            'models_combined': models_combined,
+            'i_train_combined': i_train_combined,
+            'i_val_combined': i_val_combined,
         })
-        out_suffix = 'extracted'
+        out_suffix = '_combined'
 
-    else:
-        results_to_save.update({
-            'projections_combined': projections_combined,
-            'loadings_combined': loadings_combined,
-            'weights_combined': weights_combined,
-        })
-        out_suffix = 'combined'
-
-    if flip_sign:
-        out_suffix = f'{out_suffix}_{flip_suffix}'
-
-    fpath_out = os.path.join(dpath_out, f'{dname_reps}_results_{out_suffix}.pkl')
+    make_dir(dpath_out)
+    fpath_out = os.path.join(dpath_out, f'{dname_reps}_results{out_suffix}.pkl')
     with open(fpath_out, 'wb') as file_out:
         pickle.dump(results_to_save, file_out)
     print(f'Saved to {fpath_out}')
@@ -212,10 +201,7 @@ if __name__ == '__main__':
         for label, data in {'projections': projections_combined, 'loadings': loadings_combined, 'weights': weights_combined}.items():
             to_plot.update({f'{label}_{dataset_name}': data[i_dataset][:, :n_rows, :n_cols] for i_dataset, dataset_name in enumerate(dataset_names)})
         
-        if not flip_sign:
-            fname_plot_data = f'plot_data_{dname_reps}.pkl'
-        else:
-            fname_plot_data = f'plot_data_{dname_reps}_{flip_suffix}.pkl'
+        fname_plot_data = f'plot_data_{dname_reps}.pkl'
         with open(os.path.join(dpath_fig_data, fname_plot_data), 'wb') as file_out:
             pickle.dump(to_plot, file_out)
 
@@ -237,10 +223,7 @@ if __name__ == '__main__':
             
             fig.tight_layout()
 
-            if not flip_sign:
-                fname_fig = f'{label}_{dname_reps}.png'
-            else:
-                fname_fig = f'{label}_{dname_reps}_{flip_suffix}.png'
+            fname_fig = f'{label}_{dname_reps}.png'
             fpath_fig = os.path.join(dpath_figs, fname_fig)
             fig.savefig(fpath_fig, dpi=300, bbox_inches='tight')
             print(f'Saved figure to {fpath_fig}')

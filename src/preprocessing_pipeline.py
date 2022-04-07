@@ -1,5 +1,6 @@
 
 from sklearn.utils.metaestimators import _BaseComposition
+from sklearn.utils import Bunch
 from sklearn.pipeline import Pipeline
 
 class PipelineXY(Pipeline):
@@ -13,22 +14,67 @@ class PipelineXY(Pipeline):
                 Xt = transform.transform(Xt, y)
         return Xt
 
+class PipelineList(_BaseComposition):
+    def __init__(self, pipelines):
+        self.pipelines = pipelines
+        self._validate_names([name for name, _ in pipelines])
+
+    def get_params(self, deep=True):
+        return self._get_params('pipelines', deep=deep)
+
+    def set_params(self, **kwargs):
+        self._set_params('pipelines', **kwargs)
+        return self
+
+    def __len__(self):
+        '''Returns the length of the list.'''
+        return len(self.pipelines)
+
+    def __getitem__(self, ind):
+        '''
+        Returns a pipeline from the list. 
+        Index can be either an int or the name of the pipeline.
+        '''
+        if isinstance(ind, slice):
+            raise ValueError('PipelineList does not support indexing by slice')
+        try:
+            name, pipeline = self.pipelines[ind]
+        except TypeError:
+            # Not an int, try get step by name
+            return self.named_pipelines[ind]
+        return pipeline
+
+    @property
+    def named_pipelines(self):
+        '''
+        Access the pipelines by name.
+        Read-only attribute to access any pipeline in the list by given name.
+        Keys are pipeline names and values are the pipeline objects.
+        '''
+        
+        # Use Bunch object to improve autocomplete
+        return Bunch(**dict(self.pipelines))
+
 class PreprocessingPipeline(_BaseComposition):
 
-    def __init__(self, 
-        dataset_names, data_pipelines,
-        conf_name='conf', conf_pipeline=None,
-        verbose=False):
+    def __init__(self, data_pipelines, conf_pipeline=None,
+        dataset_names=None, conf_name='conf', verbose=False):
 
         # input validation
-        if len(data_pipelines) != len(dataset_names):
+        if (dataset_names is not None) and (len(data_pipelines) != len(dataset_names)):
             print(f'Mismatch between number of data pipelines ({len(data_pipelines)}) and dataset names ({len(dataset_names)})')
+
+        if dataset_names is None:
+            dataset_names = [f'data{i+1}' for i in range(len(data_pipelines))]
 
         self.data_pipelines = data_pipelines
         self.dataset_names = dataset_names
         self.conf_pipeline = conf_pipeline
         self.conf_name = conf_name
         self.verbose = verbose
+
+        # to allow accessing the data/conf pipelines by name
+        self.pipelines = [(name, pipeline) for (name, pipeline) in vars(self).items() if 'pipeline' in name]
 
     def fit(self, X, y=None):
         self._fit(X)
@@ -42,10 +88,12 @@ class PreprocessingPipeline(_BaseComposition):
         conf_preprocessed = self._preprocess_confounds(X, fit=True)
 
         # preprocess each dataset separately
-        for dataset_name, data_pipeline in zip(self.dataset_names, self.data_pipelines):
+        for dataset_name in self.dataset_names:
 
             if self.verbose:
-             print(f'[Preprocessing pipeline] Processing {dataset_name}')
+                print(f'[Preprocessing pipeline] Processing {dataset_name}')
+
+            data_pipeline = self.data_pipelines[dataset_name]
             data_pipeline.fit(X[dataset_name], conf_preprocessed)
 
         return conf_preprocessed
@@ -59,7 +107,8 @@ class PreprocessingPipeline(_BaseComposition):
             conf_preprocessed = self._preprocess_confounds(X)
 
         views = []
-        for dataset_name, data_pipeline in zip(self.dataset_names, self.data_pipelines):
+        for dataset_name in self.dataset_names:
+            data_pipeline = self.data_pipelines[dataset_name]
             view = data_pipeline.transform(X[dataset_name], y=conf_preprocessed)
             views.append(view)
 
@@ -94,3 +143,29 @@ class PreprocessingPipeline(_BaseComposition):
             return self.conf_pipeline.fit_transform(conf)
         else:
             return self.conf_pipeline.transform(conf)
+
+    def __getitem__(self, ind):
+        '''
+        Returns a data/conf Pipeline or PipelineList. 
+        Index can be either an int or the name of the pipeline.
+        '''
+        if isinstance(ind, slice):
+            raise ValueError('PipelineList does not support indexing by slice')
+        try:
+            name, pipeline = self.pipelines[ind]
+        except TypeError:
+            # Not an int, try get step by name
+            return self.named_pipelines[ind]
+        return pipeline
+
+    @property
+    def named_pipelines(self):
+        '''
+        Access the pipelines by name.
+        Read-only attribute to access any pipeline in the list by given name.
+        Keys are pipeline names and values are the pipeline objects.
+        '''
+        
+        # Use Bunch object to improve autocomplete
+        return Bunch(**dict(self.pipelines))
+

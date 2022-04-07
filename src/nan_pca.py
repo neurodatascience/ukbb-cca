@@ -65,7 +65,7 @@ class NanPCA(TransformerMixin, BaseEstimator):
         self.n_components_ = n_components
         self.explained_variance_ = explained_variance_[:n_components]
         self.explained_variance_ratio_ = explained_variance_ratio_[:n_components]
-        self.eigenvalues = eigenvals[:n_components]
+        self.eigenvalues_ = eigenvals[:n_components]
 
         return self
 
