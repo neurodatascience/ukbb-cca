@@ -12,10 +12,10 @@ class NanPCA(TransformerMixin, BaseEstimator):
 
     def fit(self, X, y=None):
 
-        n_features, n_samples = X.shape
+        n_samples, n_features = X.shape
 
         if self.n_components is None:
-            n_components = min(n_features, n_samples)
+            n_components = min(n_samples, n_features)
         else:
             n_components = self.n_components
         
