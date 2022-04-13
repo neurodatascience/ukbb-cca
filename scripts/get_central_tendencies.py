@@ -148,6 +148,7 @@ if __name__ == '__main__':
     to_save = {
         'i_split': i_split,
         'n_datasets': n_datasets,
+        'dataset_names': dataset_names,
         'n_CAs': n_CAs,
         'n_PCs': n_PCs,
         'n_features': n_features,
