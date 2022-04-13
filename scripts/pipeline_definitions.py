@@ -34,16 +34,15 @@ def build_conf_pipeline(verbosity=0, **kwargs):
 
 def build_cca_pipeline(dataset_names=None, conf_name='conf', preprocessing_params=None, cca_params=None, verbosity=0):
 
-    #n_pca_components_all
-
     if dataset_names is None:
-        dataset_names = [f'data{i+1}' for i in range(len(n_pca_components_all))]
+        dataset_names = [f'data{i+1}' for i in range(len(dataset_names))]
 
     data_pipelines = [build_data_pipeline(verbosity=verbosity-2) for _ in dataset_names]
 
     steps = [
         ('preprocessor', PreprocessingPipeline(
             dataset_names=dataset_names,
+            conf_name=conf_name,
             data_pipelines=PipelineList(list(zip(dataset_names, data_pipelines))),
             conf_pipeline=build_conf_pipeline(verbosity=verbosity-2),
             verbose=process_verbosity(verbosity-1),
