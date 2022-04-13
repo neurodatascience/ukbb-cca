@@ -1,14 +1,24 @@
 
 import sys, os, pickle
-from pathlib import Path
+import numpy as np
 import matplotlib.pyplot as plt
-from src.ensemble_model import EnsembleCCA
+from src.ensemble_model import EnsembleCCA, apply_ensemble_method
 from src.utils import make_dir
 from paths import DPATHS, FPATHS
 
 rotate_CAs = True
 rotate_PCs = True
+rotate_deconfs = False
 ensemble_methods = ['mean', 'median']
+
+model_transform_cca = None
+model_transform_pca = (lambda model: model['preprocessor'])
+model_transform_deconfounder = (lambda model: 
+    model['preprocessor'].set_params(
+        data_pipelines__behavioural__pca='passthrough', 
+        data_pipelines__brain__pca='passthrough'
+    )
+)
 
 plot_distributions = True
 n_rows = 5
@@ -24,23 +34,19 @@ fpath_data = FPATHS['data_Xy']
 if __name__ == '__main__':
 
     if len(sys.argv) != 2:
-        print(f'Usage: {sys.argv[0]} fname_results')
+        print(f'Usage: {sys.argv[0]} results_prefix')
         sys.exit(1)
-    fname_models = sys.argv[1]
+    fname_prefix = sys.argv[1]
+    fname_models = f'{fname_prefix}_results_combined.pkl'
     fpath_models = os.path.join(dpath_cv, fname_models)
-
-    fname_prefix = []
-    for fname_component in Path(fname_models).stem.split('_'):
-        if fname_component == 'results':
-            break
-        fname_prefix.append(fname_component)
-    fname_prefix = '_'.join(fname_prefix)
 
     print('----- Parameters -----')
     print(f'fpath_models:\t{fpath_models}')
     print(f'fpath_data:\t{fpath_data}')
     print(f'rotate_CCA:\t{rotate_CAs}')
     print(f'rotate_PCs:\t{rotate_PCs}')
+    print(f'rotate_deconfs:\t{rotate_deconfs}')
+    print(f'ensemble_methods:\t{ensemble_methods}')
     print('----------------------')
 
     # load results file
@@ -51,6 +57,8 @@ if __name__ == '__main__':
         i_split = results['i_split']
         n_datasets = results['n_datasets']
         dataset_names = results['dataset_names']
+        n_CAs = results['n_latent_dims']
+        n_PCs = results['n_components_all']
 
     # load learning/test data
     with open(fpath_data, 'rb') as file_data:
@@ -61,6 +69,8 @@ if __name__ == '__main__':
         subjects = data['subjects']
         i_learn = data['i_train_all'][i_split]
         i_test = data['i_test_all'][i_split]
+        n_features = data['n_features_datasets']
+        feature_names = data['udis_datasets']
         subjects_learn = subjects[i_learn]
         subjects_test = subjects[i_test]
         X_learn = X.loc[subjects_learn]
@@ -71,17 +81,26 @@ if __name__ == '__main__':
         print(f'X_test: {X_test.shape}')
 
     # run models for CCA
-    ensemble_cca = EnsembleCCA(models, rotate=rotate_CAs)
-    CAs_learn_all = ensemble_cca.fit_transform(X_learn, apply_ensemble_method=False)
-    CAs_test_all = ensemble_cca.transform(X_test, apply_ensemble_method=False)
+    ensemble_cca = EnsembleCCA(models, rotate=rotate_CAs, model_transform=model_transform_cca)
+    CAs_learn_all = ensemble_cca.fit_transform(X_learn)
+    CAs_test_all = ensemble_cca.transform(X_test)
 
     # run models for PCA only
-    ensemble_pca = EnsembleCCA(models, rotate=rotate_PCs)
-    PCs_learn_all = ensemble_pca.fit_transform(X_learn, key='preprocessor', apply_ensemble_method=False)
-    PCs_test_all = ensemble_pca.transform(X_test, key='preprocessor', apply_ensemble_method=False)
+    ensemble_pca = EnsembleCCA(models, rotate=rotate_PCs, model_transform=model_transform_pca)
+    PCs_learn_all = ensemble_pca.fit_transform(X_learn)
+    PCs_test_all = ensemble_pca.transform(X_test)
+
+    # run models for preprocessor but only up to deconfounder (no PCA/CCA)
+    ensemble_deconfounder = EnsembleCCA(models, rotate=rotate_deconfs, model_transform=model_transform_deconfounder)
+    deconfs_learn_all = ensemble_deconfounder.fit_transform(X_learn)
+    deconfs_test_all = ensemble_deconfounder.transform(X_test)
 
     # print shapes
-    for data_label, data in {'CAs_learn_all':CAs_learn_all, 'CAs_test_all':CAs_test_all, 'PCs_learn_all':PCs_learn_all, 'PCs_test_all':PCs_test_all}.items():
+    for data_label, data in {
+        'CAs_learn_all':CAs_learn_all, 'CAs_test_all':CAs_test_all, 
+        'PCs_learn_all':PCs_learn_all, 'PCs_test_all':PCs_test_all,
+        'deconfs_learn_all':deconfs_learn_all, 'deconfs_test_all':deconfs_test_all,
+    }.items():
         print(f'{data_label}: {[d.shape for d in data]}')
 
     # extract central tendencies
@@ -89,11 +108,15 @@ if __name__ == '__main__':
     CAs_test = {}
     PCs_learn = {}
     PCs_test = {}
-    for ensemble_method in ensemble_methods:
-        CAs_learn[ensemble_method] = ensemble_cca.apply_ensemble_method(CAs_learn_all, ensemble_method=ensemble_method)
-        CAs_test[ensemble_method] = ensemble_cca.apply_ensemble_method(CAs_test_all, ensemble_method=ensemble_method)
-        PCs_learn[ensemble_method] = ensemble_pca.apply_ensemble_method(PCs_learn_all, ensemble_method=ensemble_method)
-        PCs_learn[ensemble_method] = ensemble_pca.apply_ensemble_method(PCs_test_all, ensemble_method=ensemble_method)
+    deconfs_learn = {}
+    deconfs_test = {}
+    for component_dict, data_all in zip(
+        [CAs_learn, CAs_test, PCs_learn, PCs_test, deconfs_learn, deconfs_test], 
+        [CAs_learn_all, CAs_test_all, PCs_learn_all, PCs_test_all, deconfs_learn_all, deconfs_test_all]
+    ):
+        for ensemble_method in ensemble_methods:
+            component_dict[ensemble_method] = apply_ensemble_method(data_all, ensemble_method=ensemble_method)
+        # print([x.shape for x in component_dict[ensemble_method]])
 
     # optional plotting
     if plot_distributions:
@@ -103,38 +126,46 @@ if __name__ == '__main__':
             data_all = {
                 'CAs': [CAs_learn_all[i_dataset], CAs_test_all[i_dataset]],
                 'PCs': [PCs_learn_all[i_dataset], PCs_test_all[i_dataset]],
+                'deconfs': [deconfs_learn_all[i_dataset], deconfs_test_all[i_dataset]],
             }
 
             for component_type in data_all.keys():
-                fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(n_cols*ax_size, n_rows*ax_size))
-
-                for i_row in range(n_rows):
-                    for i_col in range(n_cols):
-                        ax = axes[i_row][i_col]
-                        for i_data, data in enumerate(data_all[component_type]):
+                for i_data, data in enumerate(data_all[component_type]):
+                    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(n_cols*ax_size, n_rows*ax_size), sharey='all')
+                    for i_row in range(n_rows):
+                        for i_col in range(n_cols):
                             ax_data = data[:, i_row, i_col]
-                            ax.hist(ax_data, bins=bins, alpha=0.5, label=labels[i_data])
-                        ax.legend()
-                fig.tight_layout()
+                            ax_data = ax_data[~np.isnan(ax_data)] # remove NAs, if any
+                            ax = axes[i_row][i_col]
+                            ax.hist(ax_data, bins=bins, alpha=0.5)
+                    fig.tight_layout()
 
-                # generate figure file name
-                fpath_fig = os.path.join(dpath_figs, f'{fname_prefix}_{component_type}_{dataset_name}.png')
-                fig.savefig(fpath_fig, dpi=300, bbox_inches='tight')
-                print(f'Saved figure to {fpath_fig}')
+                    # generate figure file name
+                    fpath_fig = os.path.join(dpath_figs, f'{fname_prefix}_{component_type}_{dataset_name}_{labels[i_data]}.png')
+                    fig.savefig(fpath_fig, dpi=300, bbox_inches='tight')
+                    print(f'Saved figure to {fpath_fig}')
 
     to_save = {
         'i_split': i_split,
         'n_datasets': n_datasets,
+        'n_CAs': n_CAs,
+        'n_PCs': n_PCs,
+        'n_features': n_features,
+        'feature_names': feature_names,
         'subjects_learn': subjects_learn,
         'subjects_test': subjects_test,
         'CAs_learn': CAs_learn,
         'CAs_test': CAs_test,
         'PCs_learn': PCs_learn,
         'PCs_test': PCs_test,
+        'deconfs_learn': deconfs_learn,
+        'deconfs_test': deconfs_test,
         # 'CAs_learn_all': CAs_learn_all, 
         # 'CAs_test_all': CAs_test_all,
         # 'PCs_learn_all': PCs_learn_all,
         # 'PCs_test_all': PCs_test_all,
+        # 'deconfs_learn_all': deconfs_learn_all,
+        # 'deconfs_test_all': deconfs_test_all,
         'holdout_learn': holdout_learn,
         'holdout_test': holdout_test,
     }
