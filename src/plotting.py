@@ -71,12 +71,14 @@ def plot_corrs(corrs, labels, colors=None, errs=None, err_measure='error',
         ax.legend(handles_sorted, labels_sorted)
     else:
         ax.legend()
+
+    ax.set_xlim(left=min(x)-1, right=max(x)+1)
     ax.set_xlabel('Canonical axes')
     ax.set_ylabel('Correlation')
 
     return fig_corr, n_CAs_to_plot
 
-def plot_lr_results_comparison(scores_all, dims=None, ylabel=None, fmts=None, colors=None, max_components=50):
+def plot_lr_results_comparison(scores_all, dims=None, ylabel=None, fmts=None, colors=None, max_components=50, alpha=0.9):
 
     if dims is not None:
         n_rows, n_cols = dims
@@ -84,7 +86,10 @@ def plot_lr_results_comparison(scores_all, dims=None, ylabel=None, fmts=None, co
         n_rows = 2
         n_cols = ceil(len(scores_all) / n_rows)
 
-    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(n_cols*6, n_rows*4), sharey='all')
+    ax_width = max(max_components//10, 4)
+    ax_height = 4
+
+    fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(n_cols*ax_width, n_rows*ax_height), sharey='all')
     if n_rows == 1:
         axes = np.array([axes])
     if n_cols == 1:
@@ -105,10 +110,12 @@ def plot_lr_results_comparison(scores_all, dims=None, ylabel=None, fmts=None, co
                     color = None
                 data = scores_all[component_type][cumulative_label][set_name]
                 n_components_to_plot = min(len(data), max_components)
-                ax.plot(data[:n_components_to_plot], fmt, color=color, label=f'{cumulative_label.capitalize()}, {set_name}')
+                x = np.arange(n_components_to_plot) + 1
+                ax.plot(x, data[:n_components_to_plot], fmt, color=color, label=f'{cumulative_label.capitalize()}, {set_name}', alpha=alpha)
         ax.set_title(component_type)
         ax.set_xlabel('Components')
         ax.set_ylabel(ylabel)
+        ax.set_xlim(left=min(x)-1, right=max(x)+1)
         ax.legend()
         i_ax += 1
 
