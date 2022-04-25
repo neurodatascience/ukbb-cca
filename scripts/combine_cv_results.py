@@ -4,10 +4,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.base import clone, BaseEstimator
 from cca_zoo.models._cca_base import _CCA_Base
-from paths import DPATHS
 from src.utils import make_dir
 
-save_extracted = True # if True, saved only averaged model instead of all individual models
+from paths import DPATHS
+
+save_extracted = False # if True, saved only averaged model instead of all individual models
 out_suffix = '' # may be updated later
 
 plot_sample_distributions = False #True
@@ -163,6 +164,7 @@ if __name__ == '__main__':
         'i_split': i_split,
         'dataset_names': dataset_names,
         'n_datasets': n_datasets,
+        'conf_name': conf_name,
         'subjects': subjects,
         'latent_dims_names': latent_dims_names,
         'n_latent_dims': n_latent_dims,
@@ -170,6 +172,8 @@ if __name__ == '__main__':
         'n_components_all': n_components_all,
         'udis_datasets': udis_datasets,
         'udis_conf': udis_conf,
+        'n_features_datasets': n_features_datasets,
+        'n_features_conf': n_features_conf,
         'n_folds': n_folds,
         'n_reps': len(fnames),
     }

@@ -8,6 +8,8 @@ from paths import DPATHS, FPATHS
 
 rotate_CAs = True
 rotate_PCs = True
+# rotate_CAs = False
+# rotate_PCs = False
 rotate_deconfs = False
 ensemble_methods = ['mean', 'median']
 
@@ -54,6 +56,7 @@ if __name__ == '__main__':
         results = pickle.load(file_results)
 
         models = results['models_combined']
+        n_models = len(models)
         i_split = results['i_split']
         n_datasets = results['n_datasets']
         dataset_names = results['dataset_names']
@@ -81,25 +84,25 @@ if __name__ == '__main__':
         print(f'X_test: {X_test.shape}')
 
     # run models for CCA
-    ensemble_cca = EnsembleCCA(models, rotate=rotate_CAs, model_transform=model_transform_cca)
-    CAs_learn_all = ensemble_cca.fit_transform(X_learn)
-    CAs_test_all = ensemble_cca.transform(X_test)
+    ensemble_model = EnsembleCCA(models, rotate=rotate_CAs, model_transform=model_transform_cca)
+    CAs_learn_all = ensemble_model.fit_transform(X_learn)
+    CAs_test_all = ensemble_model.transform(X_test)
 
     # run models for PCA only
-    ensemble_pca = EnsembleCCA(models, rotate=rotate_PCs, model_transform=model_transform_pca)
-    PCs_learn_all = ensemble_pca.fit_transform(X_learn)
-    PCs_test_all = ensemble_pca.transform(X_test)
+    ensemble_model = EnsembleCCA(models, rotate=rotate_PCs, model_transform=model_transform_pca)
+    PCs_learn_all = ensemble_model.fit_transform(X_learn)
+    PCs_test_all = ensemble_model.transform(X_test)
 
     # run models for preprocessor but only up to deconfounder (no PCA/CCA)
-    ensemble_deconfounder = EnsembleCCA(models, rotate=rotate_deconfs, model_transform=model_transform_deconfounder)
-    deconfs_learn_all = ensemble_deconfounder.fit_transform(X_learn)
-    deconfs_test_all = ensemble_deconfounder.transform(X_test)
+#    ensemble_model = EnsembleCCA(models, rotate=rotate_deconfs, model_transform=model_transform_deconfounder)
+#    deconfs_learn_all = ensemble_model.fit_transform(X_learn)
+#    deconfs_test_all = ensemble_model.transform(X_test)
 
     # print shapes
     for data_label, data in {
         'CAs_learn_all':CAs_learn_all, 'CAs_test_all':CAs_test_all, 
         'PCs_learn_all':PCs_learn_all, 'PCs_test_all':PCs_test_all,
-        'deconfs_learn_all':deconfs_learn_all, 'deconfs_test_all':deconfs_test_all,
+ #       'deconfs_learn_all':deconfs_learn_all, 'deconfs_test_all':deconfs_test_all,
     }.items():
         print(f'{data_label}: {[d.shape for d in data]}')
 
@@ -111,8 +114,8 @@ if __name__ == '__main__':
     deconfs_learn = {}
     deconfs_test = {}
     for component_dict, data_all in zip(
-        [CAs_learn, CAs_test, PCs_learn, PCs_test, deconfs_learn, deconfs_test], 
-        [CAs_learn_all, CAs_test_all, PCs_learn_all, PCs_test_all, deconfs_learn_all, deconfs_test_all]
+        [CAs_learn, CAs_test, PCs_learn, PCs_test],#, deconfs_learn, deconfs_test], 
+        [CAs_learn_all, CAs_test_all, PCs_learn_all, PCs_test_all],#, deconfs_learn_all, deconfs_test_all]
     ):
         for ensemble_method in ensemble_methods:
             component_dict[ensemble_method] = apply_ensemble_method(data_all, ensemble_method=ensemble_method)
@@ -126,7 +129,7 @@ if __name__ == '__main__':
             data_all = {
                 'CAs': [CAs_learn_all[i_dataset], CAs_test_all[i_dataset]],
                 'PCs': [PCs_learn_all[i_dataset], PCs_test_all[i_dataset]],
-                'deconfs': [deconfs_learn_all[i_dataset], deconfs_test_all[i_dataset]],
+#                'deconfs': [deconfs_learn_all[i_dataset], deconfs_test_all[i_dataset]],
             }
 
             for component_type in data_all.keys():
@@ -147,6 +150,7 @@ if __name__ == '__main__':
 
     to_save = {
         'i_split': i_split,
+        'n_models': n_models,
         'n_datasets': n_datasets,
         'dataset_names': dataset_names,
         'n_CAs': n_CAs,

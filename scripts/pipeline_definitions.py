@@ -27,6 +27,7 @@ def build_conf_pipeline(verbosity=0, **kwargs):
         ('imputer', SimpleImputer(strategy='median')),
         ('inv_norm', QuantileTransformer(output_distribution='normal')),
         ('scaler', StandardScaler()),
+        # ('pca', NanPCA()),
     ]
     pipeline = Pipeline(steps, verbose=process_verbosity(verbosity))
     pipeline.set_params(**kwargs)
