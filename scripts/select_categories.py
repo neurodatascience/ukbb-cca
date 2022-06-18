@@ -16,14 +16,16 @@ configs = {
     'behavioural': {
         'categories': [100026], # [100026, 116]
         'title_substring': None,
+        'title_substrings_reject': [],
         'instances': [2],
         'keep_instance': 'all',
         'fpath_out': FPATHS['data_behavioural'],
     },
     'brain': {
-        'categories': [134, 135],
+        'categories': [135],
         # 'title_substring': 'Mean FA', # dMRI measure
         'title_substring': None,
+        'title_substrings_reject': ['L1', 'L2', 'L3'],
         'instances': [2],
         'keep_instance': 'all',
         'fpath_out': FPATHS['data_brain'],
@@ -31,6 +33,7 @@ configs = {
     'demographic': {
         'categories': [1001, 1002, 1006],
         'title_substring': None,
+        'title_substrings_reject': [],
         'instances': [0, 2],
         'keep_instance': 'max',
         'fpath_out': FPATHS['data_demographic'],
@@ -51,6 +54,7 @@ if __name__ == '__main__':
 
     categories = config['categories']
     title_substring = config['title_substring']
+    title_substrings_reject = config['title_substrings_reject']
     instances = config['instances']
     keep_instance = config['keep_instance']
     fpath_out = config['fpath_out']
@@ -60,6 +64,7 @@ if __name__ == '__main__':
     print(f'categories:\t{categories}')
     print(f'value_types:\t{value_types}')
     print(f'title_substring:\t{title_substring}')
+    print(f'title_substrings_reject:\t{title_substrings_reject}')
     print(f'instances:\t{instances}')
     print(f'keep_instance:\t{keep_instance}')
     print(f'fpath_data:\t{fpath_data}')
@@ -70,7 +75,8 @@ if __name__ == '__main__':
     db_helper = DatabaseHelper(dpath_schema, fpath_udis)
 
     udis = db_helper.get_udis_from_categories(categories, value_types=value_types, 
-        title_substring=title_substring, instances=instances, keep_instance=keep_instance)
+        title_substring=title_substring, title_substrings_reject=title_substrings_reject,
+        instances=instances, keep_instance=keep_instance)
 
     print(f'Selected {len(udis)} UDIs')
 

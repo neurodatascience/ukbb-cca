@@ -36,6 +36,7 @@ class DatabaseHelper():
     def get_udis_from_categories(self, category_ids, 
         value_types='all', keep_value_types=True,
         title_substring=None, keep_title_substring=True,
+        title_substrings_reject=[],
         instances='all', keep_instance='all'):
 
         # get all fields from list of categories
@@ -48,6 +49,9 @@ class DatabaseHelper():
         # filter fields by title
         if title_substring is not None:
             fields = self.field_helper.filter_by_title(fields, title_substring, keep=keep_title_substring)
+
+        for title_substring_reject in title_substrings_reject:
+            fields = self.field_helper.filter_by_title(fields, title_substring_reject, keep=False)
 
         # get all UDIs from fields
         udis = self.udi_helper.get_udis_from_fields(fields)
