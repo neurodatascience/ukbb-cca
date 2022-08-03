@@ -1,5 +1,6 @@
 
 import warnings
+import os
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -9,6 +10,10 @@ def make_dir(dpath):
 
 def make_parent_dir(fpath):
     Path(fpath).parents[0].mkdir(parents=True, exist_ok=True)
+
+def add_suffix(path, suffix, sep='_'):
+    root, ext = os.path.splitext(path)
+    return f'{root}{sep}{suffix}{ext}'
 
 def load_data_df(fpath, index_col=0, nrows=None, encoded=False):
     header = [0, 1] if encoded else 0
@@ -101,3 +106,34 @@ def rotate_to_match(weights, weights_ref):
     U, _, Vt = np.linalg.svd(weights.T @ weights_ref)
     Q = U @ Vt
     return weights @ Q
+
+def traverse_nested_dict(d, fn=None, with_keys=False, keys=[]):
+    if not isinstance(d, dict):
+        if fn is None:
+            val = None
+        elif not with_keys:
+            val = fn(d)
+        else:
+            val = fn(d, keys)
+        return val
+    return {k: traverse_nested_dict(v, fn=fn, with_keys=with_keys, keys=keys+[k]) for k, v in d.items()}
+
+def traverse_nested_list(l, fn, pass_index=False):
+    out_l = []
+    for i, sub_l in enumerate(l):
+        if pass_index:
+            out = fn(sub_l, i)
+        else:
+            out = fn(sub_l)
+        out_l.append(out)
+    return out_l
+
+def sublist_append(l1, l2):
+    traverse_nested_list(l1, (lambda l, i: l.append(l2[i])), pass_index=True)
+
+def sublist_mean(l, axis=0):
+    return traverse_nested_list(l, (lambda x: np.nanmean(x, axis=axis)))
+
+def sublist_std(l, axis=0):
+    return traverse_nested_list(l, (lambda x: np.nanstd(x, axis=axis)))
+    

@@ -1,9 +1,10 @@
 
 import itertools
 import numpy as np
+import pandas as pd # use pandas corr() is much faster than np.ma.corrcoef()
 
 def cca_correlations(transformed_views):
-    '''Same as cca_zoo's _cca_base.correlations() except takes in already transformed views.'''
+    '''Same as cca_zoo's _BaseCCA.pairwise_correlations() except takes in already transformed views.'''
 
     n_views = len(transformed_views)
     n_latent_dims = transformed_views[0].shape[1]
@@ -35,23 +36,26 @@ def cca_score(transformed_views):
     ) / (n_views ** 2 - n_views)
     return dim_corrs
 
-def get_loadings(views, transformed_views, normalize=False):
+def cca_get_loadings(views, transformed_views, normalize=False):
     '''
     Same as cca_zoo's _cca_base.get_loadings() except 
     takes in both original views and transformed views.
     Also, handles missing data in original views.
     '''
-    view = np.ma.masked_invalid(view)
     if normalize:
         loadings = [
-            np.ma.corrcoef(view, transformed_view, rowvar=False)[
+            pd.concat([pd.DataFrame(view), pd.DataFrame(transformed_view)], axis=1).corr().to_numpy()[
                 : view.shape[1], view.shape[1] :
             ]
+            # np.ma.corrcoef(view, transformed_view, rowvar=False)[ # slow!
+            #     : view.shape[1], view.shape[1] :
+            # ]
             for view, transformed_view in zip(views, transformed_views)
         ]
     else:
+        views = [np.ma.masked_invalid(view) for view in views]
         loadings = [
-            np.ma.dot(view.T, transformed_view)
+            np.ma.dot(view.T, transformed_view).filled(np.nan)
             for view, transformed_view in zip(views, transformed_views)
         ]
     return loadings
