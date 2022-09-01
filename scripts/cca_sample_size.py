@@ -1,6 +1,7 @@
 import sys
 import os
 import pickle
+import warnings
 
 import numpy as np
 
@@ -12,6 +13,8 @@ from paths import FPATHS, DPATHS
 np.set_printoptions(precision=4, linewidth=100, suppress=True, sign=' ')
 
 fpath_data = FPATHS['data_Xy']
+
+suppress_warnings = True
 
 # for repeated CV
 cv_n_repetitions = 10
@@ -36,7 +39,17 @@ if __name__ == '__main__':
     n_sample_sizes, n_bootstrap_repetitions, i_sample_size, i_bootstrap_repetition = sys.argv[1:5]
     i_sample_size = int(i_sample_size) - 1 # zero-indexing
     i_bootstrap_repetition = int(i_bootstrap_repetition) - 1 # zero-indexing
-    n_PCs_all = [int(n) if n != 'None' else None for n in sys.argv[5:]] # number of PCA components
+    # n_PCs_all = [int(n) if n != 'None' else None for n in sys.argv[5:]] # number of PCA components
+    n_PCs_all = []
+    for n_PCs_str in sys.argv[5:]:
+        if n_PCs_str == 'None':
+            n_PCs = None
+        else:
+            try:
+                n_PCs = int(n_PCs_str)
+            except ValueError:
+                n_PCs = float(n_PCs_str)
+        n_PCs_all.append(n_PCs)
     fpath_bootstrap_samples = os.path.join(DPATHS['clean'], f'bootstrap_samples_{n_sample_sizes}steps_{n_bootstrap_repetitions}times.pkl')
 
     # load X/y data
@@ -80,7 +93,7 @@ if __name__ == '__main__':
     print('----------------------')
 
     # figure out the number of latent dimensions in CCA
-    n_CAs = min(n_PCs_all)
+    n_CAs = 10#min(n_PCs_all)
     print(f'Using {n_CAs} latent dimensions')
 
     # build pipeline/model
@@ -104,11 +117,10 @@ if __name__ == '__main__':
     # rng
     random_state = np.random.RandomState(cv_seed)
 
-    # cca_without_cv(X, i_train, i_test, model, preprocess=True, normalize_loadings=True, return_fitted_model=False)
-    # cca_repeated_cv(X, i_learn, i_val, model, n_repetitions, n_folds, 
-    #     preprocess_before_cv=False, rotate_CAs=True, rotate_deconfs=False, 
-    #     model_transform_cca=None, model_transform_deconfounder=None,
-    #     ensemble_method='nanmean', normalize_loadings=True, random_state=None)
+    if suppress_warnings:
+        # this warnings occurs when n_samples < 1000 (default n_quantiles in sklearn QuantileTransformer)
+        warnings.filterwarnings('ignore', '.*n_quantiles is set to n_samples')
+    
     results_cca_without_cv = cca_without_cv(
         X, i_learn, i_val, cca_pipeline, 
         preprocess=True, normalize_loadings=True,
@@ -120,6 +132,8 @@ if __name__ == '__main__':
         normalize_loadings=True,
         random_state=random_state,
     )
+
+    # TODO combine rotate with no_rotate to avoid rerunning CCA
     results_cca_repeated_cv_no_rotate = cca_repeated_cv(
         X, i_learn, i_val, cca_pipeline,
         cv_n_repetitions, cv_n_folds,
@@ -132,6 +146,10 @@ if __name__ == '__main__':
     for label, results in {'CCA without CV': results_cca_without_cv, 'CCA with repeated CV': results_cca_repeated_cv, 'CCA with repeated CV (no rotate)': results_cca_repeated_cv_no_rotate}.items():
         for set_name, set_results in results['corrs'].items():
             print(f'Corrs for {label} ({set_name}):\t{set_results[:10]}')
+
+            # TODO remove
+            print(f'\tNaNs in CAs: {[np.sum(np.isnan(result)) for result in results["CAs"][set_name]]}')
+            print(f'\tNaNs in loadings: {[np.sum(np.isnan(result)) for result in results["loadings"][set_name]]}')
 
     results_all = {
         'sample_size': sample_size,
