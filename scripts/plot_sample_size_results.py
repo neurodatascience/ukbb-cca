@@ -43,9 +43,9 @@ def plot_sample_size_results(n_pcs, i_axis):
     df_results = pd.DataFrame(data_for_df)
     
     fig = sns.relplot(
-        data=df_results, x='corr_learn', y='corr_val',
+        data=df_results, x='corr_val', y='corr_learn',
         col='cca_type', hue='sample_size',
-        kind='scatter',
+        kind='scatter', s=100,
     )
 
     dpath_out = Path(DPATHS['sample_size_figs'])
