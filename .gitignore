@@ -1,3 +1,5 @@
+# dotenv file
+.env
 
 # data/result files
 data
