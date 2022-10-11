@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 from pathlib import Path
 import click
+from src.utils import add_suffix
 
 @click.command()
-@click.argument('dpath-project')
+@click.argument('dpath-project', default='.')
 @click.option('-f', '--fname-dotenv', default='.env')
 @click.option('-v', '--verbose', default=True)
 def create_default_dotenv(dpath_project, fname_dotenv, verbose):
@@ -31,8 +32,11 @@ def create_default_dotenv(dpath_project, fname_dotenv, verbose):
     constants['DPATH_CCA_SAMPLE_SIZE'] = constants['DPATH_RESULTS'] / 'cca_sample_size'
 
     # UK Biobank tabular data
+    constants['FPATH_UDIS'] = constants['DPATH_RAW'] / 'UDIs.csv'
+    constants['FPATH_SUBJECTS_WITHDRAWN'] = constants['DPATH_RAW'] / 'subjects_to_remove.csv'
     constants['FPATH_TABULAR_RAW'] = constants['DPATH_RAW'] / 'ukbb_tabular.csv'
-    constants['FPATH_TABULAR_MRI'] = constants['DPATH_RAW'] / 'ukbb_tabular_mri.csv'
+    constants['FPATH_TABULAR_MRI'] = add_suffix(constants['FPATH_TABULAR_RAW'], 'mri')
+    constants['FPATH_TABULAR_MRI_FILTERED'] = add_suffix(constants['FPATH_TABULAR_MRI'], 'filtered')
 
     # write dotenv file
     fpath_out = Path(constants['DPATH_PROJECT'], fname_dotenv)
@@ -41,8 +45,8 @@ def create_default_dotenv(dpath_project, fname_dotenv, verbose):
             line = f'{key}={value}\n'
             file_dotenv.write(line)
         
-        if verbose:
-            click.echo(f'Variables written to {fpath_out}')
+    if verbose:
+        click.echo(f'Variables written to {fpath_out}')
 
 if __name__ == '__main__':
     create_default_dotenv()

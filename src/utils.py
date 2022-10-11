@@ -1,9 +1,16 @@
-
 import warnings
-import os
 from pathlib import Path
+from typing import Union
 import pandas as pd
 import numpy as np
+
+def print_params(parameters: dict[str, str]):
+    max_len = max([len(p) for p in parameters]) # for alignment
+    print('----- Parameters -----')
+    for name, value in parameters.items():
+        name = f'{name}:' # add colon
+        print(f'{name.ljust(max_len+1)}\t{value}')
+    print('----------------------')
 
 def make_dir(dpath):
     Path(dpath).mkdir(parents=True, exist_ok=True)
@@ -11,11 +18,15 @@ def make_dir(dpath):
 def make_parent_dir(fpath):
     Path(fpath).parents[0].mkdir(parents=True, exist_ok=True)
 
-def add_suffix(path, suffix, sep='_'):
-    root, ext = os.path.splitext(path)
-    return f'{root}{sep}{suffix}{ext}'
+# def add_suffix(path, suffix, sep='_'):
+#     root, ext = os.path.splitext(path)
+#     return f'{root}{sep}{suffix}{ext}'
 
-def load_data_df(fpath, index_col=0, nrows=None, encoded=False):
+def add_suffix(path: Union[Path, str], suffix: str, sep='_') -> Path:
+    path = Path(path)
+    return Path(path.parent, f'{path.stem}{sep}{suffix}{path.suffix}')
+
+def load_data_df(fpath, index_col=0, nrows=None, encoded=False) -> pd.DataFrame:
     header = [0, 1] if encoded else 0
     return pd.read_csv(fpath, index_col=index_col, nrows=nrows, header=header)
 

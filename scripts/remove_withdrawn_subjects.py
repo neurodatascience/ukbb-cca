@@ -1,22 +1,16 @@
-
+#!/usr/bin/env python
+import click
 import pandas as pd
 from src.data_processing import write_subset
-from paths import FPATHS
+from src.utils import print_params
 
-chunksize=10000
-
-fpath_data = FPATHS['data_tabular_mri_subjects']
-fpath_subjects = FPATHS['subjects_to_remove']
-fpath_out = FPATHS['data_tabular_mri_subjects_filtered']
-
-if __name__ == '__main__':
-
-    print('----- Parameters -----')
-    print(f'chunksize:\t{chunksize}')
-    print(f'fpath_subjects:\t{fpath_subjects}')
-    print(f'fpath_data:\t{fpath_data}')
-    print(f'fpath_out:\t{fpath_out}')
-    print('----------------------')
+@click.command()
+@click.argument('fpath-data', required=True, envvar='FPATH_TABULAR_MRI')
+@click.argument('fpath-out', required=True, envvar='FPATH_TABULAR_MRI_FILTERED')
+@click.option('--fpath-subjects', required=True, envvar='FPATH_SUBJECTS_WITHDRAWN')
+@click.option('--chunksize', default=10000)
+def remove_withdrawn_subjects(fpath_data, fpath_out, fpath_subjects, chunksize):
+    print_params(locals())
 
     subjects_to_remove = pd.read_csv(fpath_subjects)['eid']
     print(f'Number of subjects to remove from dataset: {len(subjects_to_remove)}')
@@ -26,3 +20,5 @@ if __name__ == '__main__':
     )
     print(f'Wrote {n_rows} rows and {n_cols} columns')
 
+if __name__ == '__main__':
+    remove_withdrawn_subjects()
