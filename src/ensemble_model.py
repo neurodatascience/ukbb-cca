@@ -64,8 +64,8 @@ class EnsembleCCA(BaseEstimator, TransformerMixin):
             X_transformed_all = self._rotate_X_transformed(X_transformed_all)
         
         if apply_ensemble_method:
-            print(f'apply_method:\t{[np.array(X).shape for X in X_transformed_all]}')
-            print(f'\tall nan:\t{[np.sum(np.all(np.isnan(X), axis=0)) for X in X_transformed_all]}')
+            # print(f'apply_method:\t{[np.array(X).shape for X in X_transformed_all]}')
+            # print(f'\tall nan:\t{[np.sum(np.all(np.isnan(X), axis=0)) for X in X_transformed_all]}')
             X_transformed_all = apply_method(X_transformed_all, ensemble_method=ensemble_method)
 
         for i_dataset in range(self.n_datasets_):

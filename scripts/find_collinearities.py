@@ -112,7 +112,7 @@ if __name__ == '__main__':
         original_data = results_svd[category]['U'] @ np.diag(s) @ V.T
         for i_coefs, i_udi_collinear in enumerate(e[:n_small]):
             udi_collinear = udis[i_udi_collinear]
-            labelled_coefs = pd.Series(data=coefs[:, i_coefs], index=[udis[i] for i in e[n_small:]])
+            labelled_coefs = pd.Series(data=coefs[:, i_coefs], index=[udis[i] for i in e[n_small:]]) # TODO use multiindex here
 
             # make sure that the linear combination is correct
             if not np.allclose(original_data[:, i_udi_collinear], original_data[:, e[n_small:]] @ labelled_coefs):

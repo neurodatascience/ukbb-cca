@@ -3,8 +3,10 @@ import os
 import numpy as np
 from paths import FPATHS, DPATHS
 
+max_n_PCs = 100 # to determine smallest allowed sample size
+
 n_bootstrap_repetitions = 100
-n_sample_sizes = 20
+n_sample_sizes = 30
 val_sample_fraction = 0.5
 n_folds = 5 # for CV
 seed = 3791
@@ -36,7 +38,9 @@ if __name__ == '__main__':
 
     # bounds for sample size
     n_subjects = len(subjects)
-    sample_size_min = np.ceil(np.min(n_features_datasets) / (1 - (1/n_folds)))
+    if max_n_PCs is None:
+        max_n_PCs = np.min(n_features_datasets)
+    sample_size_min = np.ceil(max_n_PCs / (1 - (1/n_folds)))
     sample_size_max = int(val_sample_fraction * n_subjects)
 
     # log-spaced sample sizes

@@ -2,6 +2,7 @@ import sys
 import os
 import pickle
 import warnings
+from copy import deepcopy
 
 import numpy as np
 
@@ -15,6 +16,7 @@ np.set_printoptions(precision=4, linewidth=100, suppress=True, sign=' ')
 fpath_data = FPATHS['data_Xy']
 
 suppress_warnings = True
+debug = False#True # if True, save models
 
 # for repeated CV
 cv_n_repetitions = 10
@@ -25,7 +27,7 @@ cv_shuffle = True
 # for ensemble models (repeated-CV CCA)
 model_transform_cca = None
 model_transform_deconfounder = (lambda model: 
-    model['preprocessor'].set_params(
+    deepcopy(model)['preprocessor'].set_params(
         data_pipelines__behavioural__pca='passthrough', 
         data_pipelines__brain__pca='passthrough'
     )
@@ -93,7 +95,8 @@ if __name__ == '__main__':
     print('----------------------')
 
     # figure out the number of latent dimensions in CCA
-    n_CAs = 10#min(n_PCs_all)
+    # n_CAs = 10#min(n_PCs_all)
+    n_CAs = min(n_PCs_all)
     print(f'Using {n_CAs} latent dimensions')
 
     # build pipeline/model
@@ -124,6 +127,7 @@ if __name__ == '__main__':
     results_cca_without_cv = cca_without_cv(
         X, i_learn, i_val, cca_pipeline, 
         preprocess=True, normalize_loadings=True,
+        debug=debug,
     )
     results_cca_repeated_cv = cca_repeated_cv(
         X, i_learn, i_val, cca_pipeline,
@@ -131,6 +135,7 @@ if __name__ == '__main__':
         model_transform_deconfounder=model_transform_deconfounder,
         normalize_loadings=True,
         random_state=random_state,
+        debug=debug,
     )
 
     # TODO combine rotate with no_rotate to avoid rerunning CCA
@@ -141,6 +146,7 @@ if __name__ == '__main__':
         rotate_CAs=False,
         normalize_loadings=True,
         random_state=random_state,
+        debug=debug,
     )
 
     for label, results in {'CCA without CV': results_cca_without_cv, 'CCA with repeated CV': results_cca_repeated_cv, 'CCA with repeated CV (no rotate)': results_cca_repeated_cv_no_rotate}.items():
@@ -158,6 +164,7 @@ if __name__ == '__main__':
         'i_val': i_val,
         'cca_without_cv': results_cca_without_cv,
         'cca_repeated_cv': results_cca_repeated_cv,
+        'cca_repeated_cv_no_rotate': results_cca_repeated_cv_no_rotate,
         'dataset_names': dataset_names,
         'n_datasets': n_datasets,
         'conf_name': conf_name,
@@ -168,8 +175,12 @@ if __name__ == '__main__':
     }
 
     # save
+    if not debug:
+        dpath_cca = DPATHS['cca_sample_size']
+    else:
+        dpath_cca = f'{DPATHS["cca_sample_size"]}_debug'
     fpath_out = os.path.join(
-        DPATHS['cca_sample_size'], f'sample_size_{sample_size}', 
+        dpath_cca, f'PCs_{"_".join([str(n) for n in n_PCs_all])}', f'sample_size_{sample_size}', 
         f'sample_size_{sample_size}_rep{i_bootstrap_repetition+1}.pkl'
     )
     make_parent_dir(fpath_out)
