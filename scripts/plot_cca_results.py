@@ -14,15 +14,18 @@ np.set_printoptions(
     sign=' ', 
 )
 
+lr_score_method = 'MSE'
+
 color_learn = '#009193'
 color_test = '#ED7D31'
-label_holdout = f'$\mathregular{{r_{{age}}}}$'
+# label_holdout = f'$\mathregular{{r_{{age}}}}$'
+label_holdout = f'RMSE'
 
 dpath_cv = DPATHS['cv']
 extraction_method = 'mean'
 n_to_print = 10
 
-n_components_for_scatter = np.arange(3)
+n_components_for_scatter = np.arange(1)#np.arange(3)
 
 if __name__ == '__main__':
 
@@ -53,8 +56,8 @@ if __name__ == '__main__':
         CAs_test = results['CAs_test'][extraction_method]
         PCs_learn = results['PCs_learn'][extraction_method]
         PCs_test = results['PCs_test'][extraction_method]
-        deconfs_learn = results['deconfs_learn'][extraction_method]
-        deconfs_test = results['deconfs_test'][extraction_method]
+#        deconfs_learn = results['deconfs_learn'][extraction_method]
+#        deconfs_test = results['deconfs_test'][extraction_method]
         holdout_learn = results['holdout_learn']
         holdout_test = results['holdout_test']
 
@@ -69,7 +72,7 @@ if __name__ == '__main__':
 
     # plot correlations
     n_CAs = len(CA_corrs_learn)
-    fig_corrs, n_CAs_plotted = plot_corrs([CA_corrs_learn, CA_corrs_test], ['Learning', 'Test'], [color_learn, color_test])
+    fig_corrs, n_CAs_plotted = plot_corrs([CA_corrs_learn, CA_corrs_test], ['Learning', 'Test'], [color_learn, color_test], max_CAs=100)
     if n_CAs_plotted != n_CAs:
         fpath_fig_corrs = os.path.join(DPATHS['cca'], f'corrs_{fname_prefix}_first{n_CAs_plotted}.png')
     else:
@@ -83,7 +86,8 @@ if __name__ == '__main__':
     component_type_data_map = {
         'CAs': {'learn': CAs_learn, 'test': CAs_test},
         'PCs': {'learn': PCs_learn, 'test': PCs_test},
-        'CAs_PCs': {'learn': CAs_learn + PCs_learn, 'test': CAs_test + PCs_test},
+        'CAs_added_to_all_PCs': {'learn': CAs_learn, 'test': CAs_test},
+#        'CAs_PCs': {'learn': CAs_learn + PCs_learn, 'test': CAs_test + PCs_test},
     }
     for i_dataset, dataset_name in enumerate(dataset_names):
         component_type_data_map[f'PCs_{dataset_name}'] = {
@@ -99,8 +103,17 @@ if __name__ == '__main__':
     for component_type, cumulative in itertools.product(component_type_data_map.keys(), [False, True]):
         component_data = component_type_data_map[component_type]
 
+        if component_type == 'CAs_added_to_all_PCs':
+            always_include_learn = component_type_data_map['PCs']['learn']
+            always_include_test = component_type_data_map['PCs']['test']
+        else:
+            always_include_learn = None
+            always_include_test = None
+
         scores_learn, scores_test = get_lr_score_components(
-            component_data['learn'], holdout_learn, component_data['test'], holdout_test, 
+            component_data['learn'], holdout_learn, component_data['test'], holdout_test,
+            method=lr_score_method,
+            always_include_learn=always_include_learn, always_include_test=always_include_test,
             n_to_check=n_CAs, cumulative=cumulative,
         )
         cumulative_label = cumulative_label_map[cumulative]
@@ -109,10 +122,26 @@ if __name__ == '__main__':
         scores_all[component_type][cumulative_label]['test'] = scores_test
         print(f'\t{component_type}, {cumulative_label}, test: {scores_all[component_type][cumulative_label]["test"][:n_to_print]}', end='')
         print(f'(max: {np.nanmax(scores_all[component_type][cumulative_label]["test"]):.4f})')
+        print(f'\t\tShape (test): {[tmp.shape for tmp in component_data["test"]]}')
+
+    # get max test value for each set of results (to be plotted as dashed line)
+    max_values = {}
+    for component_type in scores_all.keys():
+        max_values[component_type] = {}
+        for cumulative_label in scores_all[component_type].keys():
+            max_values[component_type][cumulative_label] = {}
+            for set_name in scores_all[component_type][cumulative_label].keys():
+                if set_name == 'test':
+                    if lr_score_method == 'MSE':
+                        max_score = np.nanmin(scores_all[component_type][cumulative_label][set_name])
+                    else:
+                        max_score = np.nanmax(scores_all[component_type][cumulative_label][set_name])
+
+                    max_values[component_type][cumulative_label][set_name] = max_score
 
     # plot regression results comparison
-    fig_lr, n_components_plotted = plot_lr_results_comparison(scores_all, 
-        ylabel=label_holdout, fmts=['x', 'o'], colors=[color_learn, color_test])
+    fig_lr, n_components_plotted = plot_lr_results_comparison(scores_all, max_values=max_values,
+        ylabel=label_holdout, fmts=['x', 'o'], colors=[color_learn, color_test], max_components=50)
     if n_components_plotted == n_CAs:
         fpath_fig_lr = os.path.join(DPATHS['cca'], f'lr_comparison_{fname_prefix}.png')
     else:
@@ -139,4 +168,17 @@ if __name__ == '__main__':
         fpath_fig_scatter = os.path.join(DPATHS['cca'], f'scatter_{fname_prefix}_CA{i_component+1}.png')
         fig_scatter.savefig(fpath_fig_scatter, dpi=300, bbox_inches='tight')
         print(f'Saved scatter plot to {fpath_fig_scatter}')
+
+    # save data (needed for first 2 plots)
+    fpath_plot_data = os.path.join(DPATHS['cv'], f'plot_data_{fname_prefix}.pkl')
+    to_dump = {
+        'CA_corrs_learn': CA_corrs_learn,
+        'CA_corrs_test': CA_corrs_test,
+        'scores_all': scores_all,
+        'max_values': max_values,
+        'CAs_learn': CAs_learn,
+        'CAs_test': CAs_test,
+    }
+    with open(fpath_plot_data, 'wb') as file_out:
+        pickle.dump(to_dump, file_out)
 

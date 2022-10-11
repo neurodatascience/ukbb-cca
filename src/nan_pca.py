@@ -1,4 +1,6 @@
 
+# TODO use pandas cov
+import warnings
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
@@ -18,6 +20,10 @@ class NanPCA(TransformerMixin, BaseEstimator):
             n_components = min(n_samples, n_features)
         else:
             n_components = self.n_components
+
+        # check if features have at least 1 finite value
+        if np.sum(np.all(np.isnan(X), axis=0)) > 0:
+            warnings.warn('Some columns only contain NaNs')
         
         # mask NaNs/infinite values
         X = np.ma.masked_invalid(X)
@@ -78,7 +84,7 @@ class NanPCA(TransformerMixin, BaseEstimator):
 
         X_transformed = np.ma.dot(X, self.components_.T).filled()
 
-        if np.isnan(X_transformed).sum() != 0:
+        if np.sum(np.isnan(X_transformed)) != 0:
             raise Exception('PCA transform is returning NaNs')
 
         return X_transformed

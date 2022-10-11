@@ -5,6 +5,7 @@ from src import PreprocessingPipeline, PipelineXY, PipelineList
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import QuantileTransformer
 from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 from src import NanDeconfounder, NanPCA
 from cca_zoo.models import CCA
 
@@ -13,11 +14,18 @@ def process_verbosity(verbosity):
 
 def build_data_pipeline(verbosity=0, **kwargs):
     steps = [
-        ('inv_norm', QuantileTransformer(output_distribution='normal')),
+        # ('inv_norm', QuantileTransformer(output_distribution='normal')),
         ('scaler', StandardScaler()),
         ('deconfounder', NanDeconfounder()),
         ('pca', NanPCA()),
     ]
+    # steps = [
+    #     ('imputer', SimpleImputer(strategy='median')),
+    #     ('inv_norm', QuantileTransformer(output_distribution='normal')),
+    #     ('scaler', StandardScaler()),
+    #     ('deconfounder', NanDeconfounder()),
+    #     ('pca', PCA()),
+    # ]
     pipeline = PipelineXY(steps, verbose=process_verbosity(verbosity))
     pipeline.set_params(**kwargs)
     return pipeline
@@ -25,7 +33,7 @@ def build_data_pipeline(verbosity=0, **kwargs):
 def build_conf_pipeline(verbosity=0, **kwargs):
     steps = [
         ('imputer', SimpleImputer(strategy='median')),
-        ('inv_norm', QuantileTransformer(output_distribution='normal')),
+        # ('inv_norm', QuantileTransformer(output_distribution='normal')),
         ('scaler', StandardScaler()),
         # ('pca', NanPCA()),
     ]

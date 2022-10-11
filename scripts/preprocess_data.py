@@ -1,6 +1,7 @@
 
+# TODO delete this script
+
 import os, sys, pickle
-from pathlib import Path
 from scripts.pipeline_definitions import build_cca_pipeline
 from paths import DPATHS, FPATHS
 

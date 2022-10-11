@@ -78,7 +78,7 @@ def plot_corrs(corrs, labels, colors=None, errs=None, err_measure='error',
 
     return fig_corr, n_CAs_to_plot
 
-def plot_lr_results_comparison(scores_all, dims=None, ylabel=None, fmts=None, colors=None, max_components=50, alpha=0.9):
+def plot_lr_results_comparison(scores_all, max_values=None, dims=None, ylabel=None, fmts=None, colors=None, max_colors=['black', 'grey'], max_components=50, alpha=0.9):
 
     if dims is not None:
         n_rows, n_cols = dims
@@ -98,9 +98,9 @@ def plot_lr_results_comparison(scores_all, dims=None, ylabel=None, fmts=None, co
     i_ax = 0
     for component_type in scores_all.keys():
         ax = axes.ravel()[i_ax]
-        for i_cum, cumulative_label in enumerate(scores_all[component_type].keys()):
+        for i_fmt, cumulative_label in enumerate(scores_all[component_type].keys()):
             if fmts is not None:
-                fmt = fmts[i_cum]
+                fmt = fmts[i_fmt]
             else:
                 fmt = None
             for i_set, set_name in enumerate(scores_all[component_type][cumulative_label].keys()):
@@ -112,6 +112,11 @@ def plot_lr_results_comparison(scores_all, dims=None, ylabel=None, fmts=None, co
                 n_components_to_plot = min(len(data), max_components)
                 x = np.arange(n_components_to_plot) + 1
                 ax.plot(x, data[:n_components_to_plot], fmt, color=color, label=f'{cumulative_label.capitalize()}, {set_name}', alpha=alpha)
+                try:
+                    max_value = max_values[component_type][cumulative_label][set_name]
+                    ax.axhline(max_value, linestyle='--', color=max_colors[i_fmt], label=f'{cumulative_label.capitalize()}, {set_name} (max)', zorder=-10)
+                except:
+                    continue
         ax.set_title(component_type)
         ax.set_xlabel('Components')
         ax.set_ylabel(ylabel)

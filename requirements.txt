@@ -13,6 +13,7 @@ certifi==2021.10.8+computecanada
 cffi==1.15.0+computecanada
 chardet==4.0.0+computecanada
 charset_normalizer==2.0.11+computecanada
+click==8.1.3+computecanada
 cryptography==36.0.1+computecanada
 cycler==0.11.0+computecanada
 Cython==0.29.27+computecanada
