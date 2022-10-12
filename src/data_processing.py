@@ -2,7 +2,7 @@ import re
 import numpy as np
 import pandas as pd
 from scipy import stats
-from .utils import zscore_df, load_data_df
+from .utils import make_parent_dir, zscore_df, load_data_df
 
 def parse_udis(fpath_in) -> pd.DataFrame:
 
@@ -41,6 +41,8 @@ def write_subset(fpath_data, fpath_out, colnames=None, fn_to_apply=None, header=
 
     n_rows = 0
     n_cols = 0
+
+    make_parent_dir(fpath_out)
 
     for df_chunk in df_chunks:
 
