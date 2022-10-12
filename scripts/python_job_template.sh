@@ -21,6 +21,7 @@ DOWNLOADED_PACKAGES=( \
 echo '========== START =========='
 echo `date`
 echo "${COMMAND}"
+echo "${SLURM_JOB_ID}"
 echo "SLURM_MEM_PER_NODE=${SLURM_MEM_PER_NODE}"
 TIMELIMIT="$(squeue -j ${SLURM_JOB_ID} -h --Format TimeLimit | xargs)"
 echo "TIMELIMIT=${TIMELIMIT}"
