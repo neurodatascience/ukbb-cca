@@ -5,8 +5,8 @@ from src.data_processing import write_subset
 from src.utils import print_params
 
 @click.command()
-@click.argument('fpath-data', required=True, envvar='FPATH_TABULAR_MRI')
-@click.argument('fpath-out', required=True, envvar='FPATH_TABULAR_MRI_FILTERED')
+@click.option('--fpath-data', required=True, envvar='FPATH_TABULAR_MRI')
+@click.option('--fpath-out', required=True, default='.', envvar='FPATH_TABULAR_MRI_FILTERED')
 @click.option('--fpath-subjects', required=True, envvar='FPATH_SUBJECTS_WITHDRAWN')
 @click.option('--chunksize', default=10000)
 def remove_withdrawn_subjects(fpath_data, fpath_out, fpath_subjects, chunksize):

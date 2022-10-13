@@ -5,8 +5,8 @@ from src.data_processing import write_subset
 from src.utils import print_params
 
 @click.command()
-@click.argument('fpath-raw', required=True, envvar='FPATH_TABULAR_RAW')
-@click.argument('fpath-out', required=True, envvar='FPATH_TABULAR_MRI')
+@click.option('--fpath-raw', required=True, envvar='FPATH_TABULAR_RAW')
+@click.option('--fpath-out', required=True, default='.', envvar='FPATH_TABULAR_MRI')
 @click.option('--fpath-udis', required=True, envvar='FPATH_UDIS')
 @click.option('--dpath-schema', required=True, envvar='DPATH_SCHEMA')
 @click.option('--add-category', 'categories', multiple=True, default=[1014])

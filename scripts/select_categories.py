@@ -31,9 +31,9 @@ CONFIGS = {
 }
 
 @click.command()
-@click.argument('domain', required=True)
-@click.argument('fpath-data', required=True, envvar='FPATH_TABULAR_MRI_FILTERED')
-@click.argument('dpath-processed', required=True, envvar='DPATH_PROCESSED')
+@click.argument('domain')
+@click.option('--fpath-data', required=True, envvar='FPATH_TABULAR_MRI_FILTERED')
+@click.option('--dpath-processed', required=True, default='.', envvar='DPATH_PROCESSED')
 @click.option('--fpath-udis', required=True, envvar='FPATH_UDIS')
 @click.option('--dpath-schema', required=True, envvar='DPATH_SCHEMA')
 @click.option('--value-types', default='numeric')

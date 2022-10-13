@@ -8,8 +8,8 @@ DOMAIN_DEMOGRAPHIC = 'demographic'
 DOMAINS = ['behavioural', 'brain', DOMAIN_DEMOGRAPHIC]
 
 @click.command()
-@click.argument('dpath-data', required=True, default='.', envvar='DPATH_PROCESSED')
-@click.argument('dpath-figs', required=True, default='.', envvar='DPATH_PREPROCESSING')
+@click.option('--dpath-data', required=True, envvar='DPATH_PROCESSED')
+@click.option('--dpath-figs', required=True, default='.', envvar='DPATH_PREPROCESSING')
 @click.option('--domain', 'domains', multiple=True)
 @click.option('--domain-to-square', 'domains_to_square', multiple=True)
 @click.option('--holdout', 'holdouts', multiple=True, default=[21003, 34]) # age, year of birth

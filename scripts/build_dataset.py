@@ -7,7 +7,7 @@ DATASET_NAMES = ['behavioural', 'brain']
 CONF_NAME = 'demographic'
 
 @click.command()
-@click.argument('dpath-data', required=True, envvar='DPATH_PROCESSED')
+@click.option('--dpath-data', required=True, envvar='DPATH_PROCESSED')
 @click.option('--dataset-name', 'dataset_names', multiple=True)
 @click.option('--conf-name', default=CONF_NAME)
 @click.option('--udi-holdout', default=UDI_AGE)

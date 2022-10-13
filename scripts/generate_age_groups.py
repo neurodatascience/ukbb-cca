@@ -6,7 +6,7 @@ from src.utils import print_params
 YEAR_STEP = 5
 
 @click.command()
-@click.argument('dpath-data', required=True, envvar='DPATH_PROCESSED')
+@click.option('--dpath-data', required=True, envvar='DPATH_PROCESSED')
 @click.option('--year-step', default=YEAR_STEP)
 @click.option('--plot/--no-plot', default=True)
 @click.option('--dpath-figs', default='.', envvar='DPATH_PREPROCESSING')

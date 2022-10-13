@@ -3,8 +3,8 @@ import click
 from src.data_processing import parse_udis
 
 @click.command()
-@click.argument('fpath-raw', envvar='FPATH_TABULAR_RAW')
-@click.argument('fpath-udis', envvar='FPATH_UDIS')
+@click.option('--fpath-raw', required=True, envvar='FPATH_TABULAR_RAW')
+@click.option('--fpath-udis', required=True, envvar='FPATH_UDIS')
 def process_udis(fpath_raw, fpath_udis):
     df_udis = parse_udis(fpath_raw)
     df_udis.to_csv(fpath_udis, header=True, index=False)
