@@ -25,7 +25,7 @@ def select_mri_subjects(fpath_raw, fpath_out, fpath_udis, dpath_schema,
         fn_to_apply=(lambda df: df.dropna(axis='index', how='all', subset=udis_brain))
     )
 
-    print(f'Wrote {n_rows} rows and {n_cols} columns')
+    print(f'Wrote {n_rows} rows and {n_cols} columns to {fpath_out}')
 
 if __name__ == '__main__':
     select_mri_subjects()

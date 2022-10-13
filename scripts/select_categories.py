@@ -63,7 +63,7 @@ def select_categories(domain, fpath_data, dpath_processed, fpath_udis, dpath_sch
     print(f'Selected {len(udis)} UDIs')
 
     n_rows, n_cols = write_subset(fpath_data, fpath_out, colnames=udis, chunksize=chunksize)
-    print(f'Wrote {n_rows} rows and {n_cols} columns')
+    print(f'Wrote {n_rows} rows and {n_cols} columns to {fpath_data}')
 
 if __name__ == '__main__':
     select_categories()

@@ -18,7 +18,7 @@ def remove_withdrawn_subjects(fpath_data, fpath_out, fpath_subjects, chunksize):
     n_rows, n_cols = write_subset(fpath_data, fpath_out, colnames=None, chunksize=chunksize,
         fn_to_apply=(lambda df: df.drop(index=subjects_to_remove, errors='ignore'))
     )
-    print(f'Wrote {n_rows} rows and {n_cols} columns')
+    print(f'Wrote {n_rows} rows and {n_cols} columns to {fpath_out}')
 
 if __name__ == '__main__':
     remove_withdrawn_subjects()
