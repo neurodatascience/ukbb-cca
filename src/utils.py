@@ -1,8 +1,11 @@
 import warnings
+import pickle
 from pathlib import Path
 from typing import Union
 import pandas as pd
 import numpy as np
+
+EXT_PICKLE='.pkl'
 
 def print_params(parameters: dict[str, str], skip: list[str] = None):
 
@@ -32,13 +35,27 @@ def get_parent_dir(fpath: Union[str, Path]) -> Path:
 #     root, ext = os.path.splitext(path)
 #     return f'{root}{sep}{suffix}{ext}'
 
-def add_suffix(path: Union[Path, str], suffix: str, sep='_') -> Path:
+def add_suffix(path: Union[Path, str], suffix: str, sep='-') -> Path:
     path = Path(path)
     return Path(path.parent, f'{path.stem}{sep}{suffix}{path.suffix}')
 
 def load_data_df(fpath, index_col=0, nrows=None, encoded=False) -> pd.DataFrame:
     header = [0, 1] if encoded else 0
     return pd.read_csv(fpath, index_col=index_col, nrows=nrows, header=header)
+
+def save_pickle(obj, fpath, ext=EXT_PICKLE, verbose=True):
+    fpath = Path(fpath).with_suffix(ext)
+    make_parent_dir(fpath)
+    with fpath.open('wb') as file:
+        pickle.dump(obj, file)
+    if verbose:
+        print(f'Saved to {fpath}')
+
+def load_pickle(fpath, ext=EXT_PICKLE):
+    fpath = Path(fpath).with_suffix(ext)
+    with fpath.open('rb') as file:
+        obj = pickle.load(file)
+    return obj
 
 def demean_df(df, axis='index'):
     means = df.mean(axis=axis, skipna=True)

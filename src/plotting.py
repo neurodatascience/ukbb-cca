@@ -1,7 +1,14 @@
-
 from math import ceil
+from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+
+def save_fig(fig: Figure, fpath, dpi=300, bbox_inches='tight', ext='.png', verbose=True):
+    fpath = Path(fpath).with_suffix(ext)
+    fig.savefig(fpath, dpi=dpi, bbox_inches=bbox_inches)
+    if verbose:
+        print(f'Figure saved to {fpath}')
 
 def plot_na_histograms(df, return_freqs=False):
 
@@ -28,6 +35,14 @@ def plot_na_histograms(df, return_freqs=False):
         return fig, freqs_na_row, freqs_na_col
     else:
         return fig
+
+def plot_group_histograms(data, bins):
+    fig, ax = plt.subplots(figsize=(4, 4))
+    ax.hist(data, bins=bins)
+    ax.set_title('Age distribution')
+    ax.set_xlabel('Age')
+    ax.set_ylabel('Count')
+    return fig
 
 def plot_corrs(corrs, labels, colors=None, errs=None, err_measure='error', 
         bootstrap_corrs=None, max_CAs=100, bootstrap_alpha=0.05,

@@ -3,20 +3,25 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from scipy import stats
+
 from .database_helpers import DatabaseHelper
-from .plotting import plot_na_histograms
-from .utils import add_suffix, make_parent_dir, zscore_df, load_data_df
+from .plotting import plot_na_histograms, plot_group_histograms, save_fig
+from .utils import add_suffix, load_pickle, make_parent_dir, save_pickle, zscore_df, load_data_df
 
 FILE_EXT = '.csv'
 SUFFIX_CLEAN = 'clean'
 MULTIINDEX_NAMES = ['udi', 'udi_encoded']
 
 PREFIX_HOLDOUT = 'holdouts'
+PREFIX_AGE_GROUP = 'age_group'
 PREFIX_DROPPED_SUBJECTS = 'dropped_subjects'
 PREFIX_DROPPED_UDIS = 'dropped_udis'
 
+UDI_AGE = '21003-2.0'
+
 # plotting
-PREFIX_FIG = 'hist_na'
+PREFIX_FIG_NA = 'hist_na'
+PREFIX_FIG_AGE_GROUP = f'hist_{PREFIX_AGE_GROUP}'
 
 def parse_udis(fpath_in) -> pd.DataFrame:
 
@@ -154,12 +159,12 @@ def generate_fname_data(dataset_name, clean=False):
 
 def clean_datasets(
     db_helper: DatabaseHelper,
-    dpath_data, 
+    dpath_data,
     dpath_figs,
-    domains: list[str], 
-    holdout_fields: list[int] = None, 
-    square_conf: bool = True, 
-    domains_square: list[str] = None,
+    domains: list[str],
+    holdout_fields: list[int] = None,
+    square_conf: bool = True,
+    domains_to_square: list[str] = None,
     threshold_na=0.5,
     threshold_high_freq=0.95,
     threshold_outliers=100,
@@ -167,8 +172,8 @@ def clean_datasets(
 
     if holdout_fields is None:
         holdout_fields = []
-    if domains_square is None:
-        domains_square = []
+    if domains_to_square is None:
+        domains_to_square = []
 
     fpath_holdout = Path(dpath_data, generate_fname_data(PREFIX_HOLDOUT, clean=True))
     fpath_dropped_udis = Path(dpath_data, generate_fname_data(PREFIX_DROPPED_UDIS))
@@ -228,7 +233,7 @@ def clean_datasets(
         print(f'\t\tShape after one-hot encoding: {df_data.shape}')
 
         # square confounders
-        if square_conf and domain in domains_square:
+        if square_conf and domain in domains_to_square:
             # only square non-categorical (i.e., integer/continuous) columns
             non_categorical_udis = db_helper.filter_udis_by_value_type(udis, [11, 31])
             print(f'\tSquaring {len(non_categorical_udis)} numerical, non-categorical columns')
@@ -241,10 +246,9 @@ def clean_datasets(
         fig.suptitle(f'{domain.capitalize()} dataset {df_data.shape}')
 
         # save figure
-        fpath_fig = Path(dpath_figs, f'{PREFIX_FIG}_{domain}_before.png')
+        fpath_fig = Path(dpath_figs, f'{PREFIX_FIG_NA}_{domain}_before.png')
         make_parent_dir(fpath_fig)
-        fig.savefig(fpath_fig, dpi=300, bbox_inches='tight')
-        print(f'\tFigure saved: {fpath_fig}')
+        save_fig(fig, fpath_fig)
 
         # add rows to drop later
         subjects_to_drop.update(freqs_na_row.loc[np.isclose(freqs_na_row, 1)].index)
@@ -301,9 +305,8 @@ def clean_datasets(
             subjects_to_drop_new.update(freqs_na_row.loc[np.isclose(freqs_na_row, 1)].index)
 
             # save figure
-            fpath_fig = Path(dpath_figs, f'{PREFIX_FIG}_{domain}_after.png')
-            fig.savefig(fpath_fig, dpi=300, bbox_inches='tight')
-            print(f'\tFigure saved: {fpath_fig}')
+            fpath_fig = Path(dpath_figs, f'{PREFIX_FIG_NA}_{domain}_after.png')
+            save_fig(fig, fpath_fig)
 
             dfs_data[domain] = df_clean # to be saved in csv file
 
@@ -323,6 +326,183 @@ def clean_datasets(
 
     # log dropped columns
     pd.concat(dfs_dropped_cols).to_csv(fpath_dropped_udis, header=True, index=False)
+
+def get_age_groups_from_holdouts(dpath, udi_age=UDI_AGE, year_step=5, plot=False, dpath_figs='.'):
+    dpath = Path(dpath)
+    dpath_figs = Path(dpath_figs)
+    fpath_holdout = dpath / generate_fname_data(PREFIX_HOLDOUT, clean=True)
+    df_holdout = load_data_df(fpath_holdout, encoded=False)
+
+    print(f'{udi_age} statistics:')
+    print(f'\tMin: {df_holdout[udi_age].min()}')
+    print(f'\tMax: {df_holdout[udi_age].max()}')
+    print(f'\tMean: {df_holdout[udi_age].mean()}')
+    print(f'\tStd: {df_holdout[udi_age].std()}')
+    print(f'\tMedian: {df_holdout[udi_age].median()}')
+    print('----------------------')
+
+    age_groups = df_holdout[udi_age].map(lambda age: age // year_step)
+    age_groups.name = PREFIX_AGE_GROUP
+    group_ids = set(age_groups) # unique
+
+    print(f'Dataset has {len(group_ids)} age groups: {group_ids}')
+
+    # plot and save age histogram
+    if plot:
+        bins = np.arange(year_step*min(group_ids), year_step*(max(group_ids)+2), year_step)
+        fig = plot_group_histograms(df_holdout[udi_age], bins)
+        fpath_fig = dpath_figs / PREFIX_FIG_AGE_GROUP
+        save_fig(fig, fpath_fig)
+
+    # save
+    fpath_out = dpath / generate_fname_data(PREFIX_AGE_GROUP, clean=True)
+    age_groups.to_csv(fpath_out, header=True, index=True)
+    print(f'Dataframe saved to {fpath_out}')
+
+class _BaseData():
+    def __init__(self) -> None:
+        self.dataset_names = []
+        self.conf_name = None
+        self.udis_datasets = []
+        self.udis_conf = None
+        self.n_features_datasets = []
+        self.n_features_conf = None
+        self.subjects = None
+
+    def _str_helper(self, components=None, sep=', '):
+        if components is None:
+            components = []
+        return f'{type(self).__name__}({sep.join(components)})'
+
+    def __str__(self) -> str:
+        return self._str_helper()
+
+class XyData(_BaseData):
+    fname = 'Xy'
+    def __init__(
+        self,
+        dpath,
+        dataset_names,
+        conf_name=None,
+        udi_holdout=None,
+        group_name=None,
+        column_level_to_drop=None,
+    ) -> None:
+
+        super().__init__()
+
+        if column_level_to_drop is None:
+            column_level_to_drop = MULTIINDEX_NAMES[0]
+
+        self.dpath = Path(dpath)
+        self.dataset_names = dataset_names
+        self.conf_name = conf_name
+        self.udi_holdout = udi_holdout
+        self.group_name = group_name
+        self.column_level_to_drop = column_level_to_drop
+
+        self.X: pd.DataFrame = None
+        self.group = None
+        self.holdout = None
+
+        for dataset_name in dataset_names:
+            self.add_dataset(dataset_name)
+
+        if conf_name is not None:
+            self.set_conf(self.conf_name)
+
+        if udi_holdout is not None:
+            self.set_holdout(udi_holdout)
+
+        if group_name is not None:
+            self.set_group(group_name)
+
+    def _add_data(self, name, fpath) -> pd.DataFrame:
+
+        print(f'Adding {name} data')
+        print(f'\tPath: {fpath}')
+
+        # load data
+        df = load_data_df(fpath, encoded=True)
+
+        # make sure all datasets contain the same subjects
+        subjects = set(df.index)
+        if self.subjects is None:
+            self.subjects = np.sort(list(subjects))
+        else:
+            if subjects != set(self.subjects):
+                raise ValueError(f'Datasets do not have exactly the same subjects')
+
+        # drop multiindex level
+        df = df.droplevel(self.column_level_to_drop, axis='columns')
+        # add level for dataset/conf name
+        df.columns = pd.MultiIndex.from_product([[name], df.columns])
+
+        # add to X
+        df = df.loc[self.subjects] # make sure subject order is the same
+        if self.X is not None:
+            self.X = self.X.loc[self.subjects]
+        self.X = pd.concat([self.X, df], axis='columns')
+
+        print(f'\tX shape: {self.X.shape}')
+
+        return df
+
+    def add_dataset(self, name):
+        fpath = self.dpath / generate_fname_data(name, clean=True)
+        df = self._add_data(name, fpath)
+        self.udis_datasets.append(df.columns)
+        self.n_features_datasets.append(df.shape[1])
+
+    def set_conf(self, name):
+        if self.udis_conf is not None:
+            raise RuntimeError(f'conf data have already been added')
+        fpath = self.dpath / generate_fname_data(name, clean=True)
+        df = self._add_data(name, fpath)
+        self.udis_conf = df.columns
+        self.n_features_conf = df.shape[1]
+
+    def set_group(self, name):
+        if self.group is not None:
+            raise RuntimeError(f'groups have already been added')
+        print(f'Adding group data ({name})')
+        fpath = self.dpath / generate_fname_data(name, clean=True)
+        print(f'\tPath: {fpath}')
+        self.group = load_data_df(fpath, encoded=False).squeeze('columns')[self.subjects]
+
+    def set_holdout(self, udi):
+        if self.holdout is not None:
+            raise RuntimeError(f'self.holdout already exists')
+        fpath = self.dpath / generate_fname_data(PREFIX_HOLDOUT, clean=True)
+        
+        print(f'Adding holdout data')
+        print(f'\tPath: {fpath}')
+        self.holdout = load_data_df(fpath).loc[self.subjects, udi]
+        self.udi_holdout = udi
+
+    def save(self, dpath=None, verbose=True):
+        if dpath is None:
+            dpath = self.dpath
+        fpath = Path(dpath, self.fname)
+        save_pickle(self, fpath, verbose=verbose)
+
+    def __str__(self) -> str:
+        components = []
+        for df_name in ['X', 'group', 'holdout']:
+            df = getattr(self, df_name)
+            if df is not None:
+                value = df.shape
+            else:
+                value = None
+            components.append(f'{df_name}={value}')
+
+        return self._str_helper(components)
+
+    @classmethod
+    def load(cls, dpath):
+        dpath = Path(dpath)
+        fpath = dpath / cls.fname
+        return load_pickle(fpath)
 
 # not used (?)
 def deconfound_df(df_data, df_conf):
