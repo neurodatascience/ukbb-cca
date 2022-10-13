@@ -1,3 +1,4 @@
+from __future__ import annotations
 import re
 from pathlib import Path
 import numpy as np
@@ -5,8 +6,9 @@ import pandas as pd
 from scipy import stats
 
 from .database_helpers import DatabaseHelper
+from .base import _BaseData
 from .plotting import plot_na_histograms, plot_group_histograms, save_fig
-from .utils import add_suffix, load_pickle, make_parent_dir, save_pickle, zscore_df, load_data_df
+from .utils import add_suffix, make_parent_dir, zscore_df, load_data_df
 
 FILE_EXT = '.csv'
 SUFFIX_CLEAN = 'clean'
@@ -359,30 +361,14 @@ def get_age_groups_from_holdouts(dpath, udi_age=UDI_AGE, year_step=5, plot=False
     age_groups.to_csv(fpath_out, header=True, index=True)
     print(f'Dataframe saved to {fpath_out}')
 
-class _BaseData():
-    def __init__(self) -> None:
-        self.dataset_names = []
-        self.conf_name = None
-        self.udis_datasets = []
-        self.udis_conf = None
-        self.n_features_datasets = []
-        self.n_features_conf = None
-        self.subjects = None
-
-    def _str_helper(self, components=None, sep=', '):
-        if components is None:
-            components = []
-        return f'{type(self).__name__}({sep.join(components)})'
-
-    def __str__(self) -> str:
-        return self._str_helper()
-
 class XyData(_BaseData):
+
     fname = 'Xy'
+
     def __init__(
         self,
         dpath,
-        dataset_names,
+        dataset_names=None,
         conf_name=None,
         udi_holdout=None,
         group_name=None,
@@ -391,10 +377,13 @@ class XyData(_BaseData):
 
         super().__init__()
 
+        dpath = Path(dpath)
         if column_level_to_drop is None:
             column_level_to_drop = MULTIINDEX_NAMES[0]
+        if dataset_names is None:
+            dataset_names = []
 
-        self.dpath = Path(dpath)
+        self.dpath = dpath
         self.dataset_names = dataset_names
         self.conf_name = conf_name
         self.udi_holdout = udi_holdout
@@ -480,11 +469,8 @@ class XyData(_BaseData):
         self.holdout = load_data_df(fpath).loc[self.subjects, udi]
         self.udi_holdout = udi
 
-    def save(self, dpath=None, verbose=True):
-        if dpath is None:
-            dpath = self.dpath
-        fpath = Path(dpath, self.fname)
-        save_pickle(self, fpath, verbose=verbose)
+    def load(self) -> XyData:
+        return super().load()
 
     def __str__(self) -> str:
         components = []
@@ -498,11 +484,11 @@ class XyData(_BaseData):
 
         return self._str_helper(components)
 
-    @classmethod
-    def load(cls, dpath):
-        dpath = Path(dpath)
-        fpath = dpath / cls.fname
-        return load_pickle(fpath)
+    # @classmethod
+    # def load(cls, dpath):
+    #     dpath = Path(dpath)
+    #     fpath = dpath / cls.fname
+    #     return load_pickle(fpath)
 
 # not used (?)
 def deconfound_df(df_data, df_conf):
