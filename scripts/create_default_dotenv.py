@@ -22,6 +22,7 @@ def create_default_dotenv(dpath_project, fname_dotenv, verbose):
     constants['DPATH_RESULTS'] = constants['DPATH_PROJECT'] / 'results'
     constants['DPATH_SCRIPTS'] = constants['DPATH_PROJECT'] / 'scripts'
     constants['DPATH_SCRATCH'] = constants['DPATH_PROJECT'] / 'scratch'
+    constants['DPATH_TOOLBOX'] = constants['DPATH_PROJECT'] / 'toolbox'
 
     # data subdirectories
     constants['DPATH_SCHEMA'] = constants['DPATH_DATA'] / 'schema'
@@ -31,6 +32,15 @@ def create_default_dotenv(dpath_project, fname_dotenv, verbose):
     # results subdirectories
     constants['DPATH_CCA_SAMPLE_SIZE'] = constants['DPATH_RESULTS'] / 'cca_sample_size'
 
+    # scripts subdirectories
+    constants['DPATH_LOGS'] = constants['DPATH_SCRIPTS'] / 'logs'
+
+    # requirements.txt
+    constants['FPATH_REQUIREMENTS'] = constants['DPATH_PROJECT'] / 'requirements.txt'
+
+    # job template file
+    constants['FPATH_TEMPLATE'] = constants['DPATH_SCRIPTS'] / 'python_job_template.sh'
+
     # UK Biobank tabular data
     constants['FPATH_UDIS'] = constants['DPATH_RAW'] / 'UDIs.csv'
     constants['FPATH_SUBJECTS_WITHDRAWN'] = constants['DPATH_RAW'] / 'subjects_to_remove.csv'
@@ -39,7 +49,7 @@ def create_default_dotenv(dpath_project, fname_dotenv, verbose):
     constants['FPATH_TABULAR_MRI_FILTERED'] = add_suffix(constants['FPATH_TABULAR_MRI'], 'filtered')
 
     # write dotenv file
-    fpath_out = Path(constants['DPATH_PROJECT'], fname_dotenv)
+    fpath_out = Path(constants['DPATH_SCRIPTS'], fname_dotenv)
     with fpath_out.open('w') as file_dotenv:
         for key, value in constants.items():
             line = f'{key}={value}\n'
