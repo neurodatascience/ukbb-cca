@@ -1,25 +1,17 @@
-
-import sys
+#!/usr/bin/env python
+from pathlib import Path
+import click
 from src.database_helpers import DatabaseHelper
-from src.data_processing import write_subset
-from paths import DPATHS, FPATHS
+from src.data_processing import write_subset, generate_fname_data
+from src.utils import print_params
 
-value_types = 'numeric' # integer, categorical (single/multiple), continuous
-
-dpath_schema = DPATHS['schema']
-fpath_udis = FPATHS['udis_tabular_raw']
-fpath_data = FPATHS['data_tabular_mri_subjects_filtered']
-
-chunksize = 10000
-
-configs = {
+CONFIGS = {
     'behavioural': {
         'categories': [100026], # [100026, 116]
         'title_substring': None,
         'title_substrings_reject': [],
         'instances': [2],
         'keep_instance': 'all',
-        'fpath_out': FPATHS['data_behavioural'],
     },
     'brain': {
         'categories': [135],
@@ -28,7 +20,6 @@ configs = {
         'title_substrings_reject': ['L1', 'L2', 'L3'],
         'instances': [2],
         'keep_instance': 'all',
-        'fpath_out': FPATHS['data_brain'],
     },
     'demographic': {
         'categories': [1001, 1002, 1006],
@@ -36,41 +27,32 @@ configs = {
         'title_substrings_reject': [],
         'instances': [0, 2],
         'keep_instance': 'max',
-        'fpath_out': FPATHS['data_demographic'],
     },
 }
 
-if __name__ == '__main__':
-
-    if len(sys.argv) != 2:
-        raise ValueError(f'Usage: {sys.argv[0]} <domain>')
-
-    domain = sys.argv[1]
+@click.command()
+@click.argument('domain', required=True)
+@click.argument('fpath-data', required=True, envvar='FPATH_TABULAR_MRI_FILTERED')
+@click.argument('dpath-processed', required=True, envvar='DPATH_PROCESSED')
+@click.option('--fpath-udis', required=True, envvar='FPATH_UDIS')
+@click.option('--dpath-schema', required=True, envvar='DPATH_SCHEMA')
+@click.option('--value-types', default='numeric')
+@click.option('--chunksize', default=10000)
+def select_categories(domain, fpath_data, dpath_processed, fpath_udis, dpath_schema, value_types, chunksize):
 
     try:
-        config = configs[domain]
+        config = CONFIGS[domain]
     except KeyError:
-        raise ValueError(f'Invalid domain "{domain}". Accepted domains are: {configs.keys()}')
+        raise ValueError(f'Invalid domain "{domain}". Accepted domains are: {CONFIGS.keys()}')
 
     categories = config['categories']
     title_substring = config['title_substring']
     title_substrings_reject = config['title_substrings_reject']
     instances = config['instances']
     keep_instance = config['keep_instance']
-    fpath_out = config['fpath_out']
+    fpath_out = Path(dpath_processed, generate_fname_data(domain))
 
-    print('----- Parameters -----')
-    print(f'domain:\t{domain}')
-    print(f'categories:\t{categories}')
-    print(f'value_types:\t{value_types}')
-    print(f'title_substring:\t{title_substring}')
-    print(f'title_substrings_reject:\t{title_substrings_reject}')
-    print(f'instances:\t{instances}')
-    print(f'keep_instance:\t{keep_instance}')
-    print(f'fpath_data:\t{fpath_data}')
-    print(f'fpath_out:\t{fpath_out}')
-    print(f'chunksize:\t{chunksize}')
-    print('----------------------')
+    print_params(locals(), skip='config')
 
     db_helper = DatabaseHelper(dpath_schema, fpath_udis)
 
@@ -82,3 +64,6 @@ if __name__ == '__main__':
 
     n_rows, n_cols = write_subset(fpath_data, fpath_out, colnames=udis, chunksize=chunksize)
     print(f'Wrote {n_rows} rows and {n_cols} columns')
+
+if __name__ == '__main__':
+    select_categories()

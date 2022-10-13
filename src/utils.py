@@ -4,19 +4,29 @@ from typing import Union
 import pandas as pd
 import numpy as np
 
-def print_params(parameters: dict[str, str]):
+def print_params(parameters: dict[str, str], skip: list[str] = None):
+
+    if skip is None:
+        skip = []
+
     max_len = max([len(p) for p in parameters]) # for alignment
     print('----- Parameters -----')
     for name, value in parameters.items():
+        if name in skip:
+            continue
         name = f'{name}:' # add colon
         print(f'{name.ljust(max_len+1)}\t{value}')
     print('----------------------')
 
-def make_dir(dpath):
+def make_dir(dpath: Union[str, Path]):
     Path(dpath).mkdir(parents=True, exist_ok=True)
 
-def make_parent_dir(fpath):
-    Path(fpath).parents[0].mkdir(parents=True, exist_ok=True)
+def make_parent_dir(fpath: Union[str, Path]):
+    dpath_parent = get_parent_dir(fpath)
+    dpath_parent.mkdir(parents=True, exist_ok=True)
+
+def get_parent_dir(fpath: Union[str, Path]) -> Path:
+    return Path(fpath).parents[0]
 
 # def add_suffix(path, suffix, sep='_'):
 #     root, ext = os.path.splitext(path)
