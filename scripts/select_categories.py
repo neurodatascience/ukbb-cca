@@ -2,7 +2,7 @@
 from pathlib import Path
 import click
 from src.database_helpers import DatabaseHelper
-from src.data_processing import write_subset
+from src.data_processing import write_subset, generate_fname_data
 from src.utils import print_params
 
 CONFIGS = {
@@ -50,7 +50,7 @@ def select_categories(domain, fpath_data, dpath_processed, fpath_udis, dpath_sch
     title_substrings_reject = config['title_substrings_reject']
     instances = config['instances']
     keep_instance = config['keep_instance']
-    fpath_out = Path(dpath_processed, f'{domain}.csv')
+    fpath_out = Path(dpath_processed, generate_fname_data(domain))
 
     print_params(locals(), skip='config')
 

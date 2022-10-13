@@ -6,7 +6,7 @@ from src.utils import add_suffix
 @click.command()
 @click.argument('dpath-project', default='.')
 @click.option('-f', '--fname-dotenv', default='.env')
-@click.option('-v', '--verbose', default=True)
+@click.option('--verbose/--quiet', default=True)
 def create_default_dotenv(dpath_project, fname_dotenv, verbose):
 
     dpath_project = Path(dpath_project).resolve()
@@ -31,6 +31,7 @@ def create_default_dotenv(dpath_project, fname_dotenv, verbose):
 
     # results subdirectories
     constants['DPATH_CCA_SAMPLE_SIZE'] = constants['DPATH_RESULTS'] / 'cca_sample_size'
+    constants['DPATH_PREPROCESSING'] = constants['DPATH_RESULTS'] / 'preprocessing'
 
     # scripts subdirectories
     constants['DPATH_LOGS'] = constants['DPATH_SCRIPTS'] / 'logs'
