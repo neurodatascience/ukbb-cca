@@ -373,9 +373,10 @@ class XyData(_BaseData):
         udi_holdout=None,
         group_name=None,
         column_level_to_drop=None,
+        **kwargs,
     ) -> None:
 
-        super().__init__()
+        super().__init__(**kwargs)
 
         dpath = Path(dpath)
         if column_level_to_drop is None:

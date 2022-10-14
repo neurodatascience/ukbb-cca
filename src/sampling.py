@@ -15,8 +15,10 @@ class BootstrapSamples(_Base):
         n_folds=5,
         seed=None,
         max_n_PCs=100,
-        verbose=True,
+        **kwargs,
     ) -> None:
+
+        super().__init__(**kwargs)
         
         self.dpath = Path(dpath)
         self.n_bootstrap_repetitions = n_bootstrap_repetitions
@@ -25,7 +27,6 @@ class BootstrapSamples(_Base):
         self.n_folds = n_folds
         self.seed = seed
         self.max_n_PCs = max_n_PCs
-        self.verbose = verbose
 
         self.sample_sizes = None
         self.i_samples_learn_all = None
@@ -53,8 +54,6 @@ class BootstrapSamples(_Base):
 
         # log-spaced sample sizes
         sample_sizes = np.geomspace(sample_size_min, sample_size_max, self.n_sample_sizes, dtype=np.int64)
-        if self.verbose:
-            print(f'Sample sizes: {sample_sizes}')
 
         if len(set(sample_sizes)) != len(sample_sizes):
             warnings.warn('Duplicate sample sizes')
