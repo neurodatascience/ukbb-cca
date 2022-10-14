@@ -7,10 +7,12 @@ import numpy as np
 
 EXT_PICKLE='.pkl'
 
-def print_params(parameters: dict[str, str], skip: list[str] = None):
+def print_params(parameters: dict[str, str], skip: Union[str, list[str]] = None):
 
     if skip is None:
         skip = []
+    if type(skip) == str:
+        skip = [skip]
 
     max_len = max([len(p) for p in parameters]) # for alignment
     print('----- Parameters -----')
@@ -56,6 +58,24 @@ def load_pickle(fpath, ext=EXT_PICKLE):
     with fpath.open('rb') as file:
         obj = pickle.load(file)
     return obj
+
+def select_rows(data, indices):
+
+    # pandas dataframe
+    if hasattr(data, 'iloc'):
+        return data.iloc[indices]
+
+    # numpy array
+    elif hasattr(data, 'shape'):
+        return data[indices]
+
+    # list of numpy arrays
+    elif isinstance(data, list) and hasattr(data[0], 'shape'):
+        return [select_rows(d) for d in data]
+
+    # error
+    else:
+        raise ValueError(f"Data type not handled: {data}")
 
 def demean_df(df, axis='index'):
     means = df.mean(axis=axis, skipna=True)

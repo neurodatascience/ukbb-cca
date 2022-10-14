@@ -4,18 +4,21 @@ from .utils import save_pickle, load_pickle
 
 class _Base(ABC):
 
-    def __init__(self, verbose=False) -> None:
+    fname = None
+
+    def __init__(self, dpath=None, verbose=False) -> None:
         super().__init__()
+        self.dpath = dpath
         self.verbose = verbose
 
     def generate_fpath(self, dpath=None, fname=None):
         if dpath is None:
-            dpath = getattr(self, 'dpath', None)
+            dpath = self.dpath
         if fname is None:
-            fname = getattr(self, 'fname', None)
+            fname = self.fname
 
         if dpath is None or fname is None:
-            raise ValueError(f'Either dpath ({dpath}) or fpath ({fname}) is undefined')
+            raise ValueError(f'dpath ({dpath}) and fpath ({fname}) cannot be None')
         
         return Path(dpath, fname)
 
@@ -40,12 +43,31 @@ class _Base(ABC):
         return self._str_helper()
 
 class _BaseData(_Base, ABC):
-    def __init__(self, **kwargs) -> None:
+    def __init__(
+        self, 
+        dataset_names=None,
+        conf_name=None,
+        udis_datasets=None,
+        udis_conf=None,
+        n_features_datasets=None,
+        n_features_conf=None,
+        subjects=None,
+        **kwargs,
+    ) -> None:
+
         super().__init__(**kwargs)
-        self.dataset_names = []
-        self.conf_name = None
-        self.udis_datasets = []
-        self.udis_conf = None
-        self.n_features_datasets = []
-        self.n_features_conf = None
-        self.subjects = None
+
+        if dataset_names is None:
+            dataset_names = []
+        if udis_datasets is None:
+            udis_datasets = []
+        if n_features_datasets is None:
+            n_features_datasets = []
+
+        self.dataset_names = dataset_names
+        self.conf_name = conf_name
+        self.udis_datasets = udis_datasets
+        self.udis_conf = udis_conf
+        self.n_features_datasets = n_features_datasets
+        self.n_features_conf = n_features_conf
+        self.subjects = subjects

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from copy import deepcopy
 import re
 from pathlib import Path
 import numpy as np
@@ -8,7 +9,7 @@ from scipy import stats
 from .database_helpers import DatabaseHelper
 from .base import _BaseData
 from .plotting import plot_na_histograms, plot_group_histograms, save_fig
-from .utils import add_suffix, make_parent_dir, zscore_df, load_data_df
+from .utils import add_suffix, make_parent_dir, zscore_df, load_data_df, select_rows
 
 FILE_EXT = '.csv'
 SUFFIX_CLEAN = 'clean'
@@ -364,6 +365,7 @@ def get_age_groups_from_holdouts(dpath, udi_age=UDI_AGE, year_step=5, plot=False
 class XyData(_BaseData):
 
     fname = 'Xy'
+    df_names = ['X', 'group', 'holdout']
 
     def __init__(
         self,
@@ -470,12 +472,21 @@ class XyData(_BaseData):
         self.holdout = load_data_df(fpath).loc[self.subjects, udi]
         self.udi_holdout = udi
 
+    def subset(self, indices):
+        data_subset = deepcopy(self)
+        for df_name in self.df_names:
+            df = getattr(data_subset, df_name)
+            df = select_rows(df, indices)
+            setattr(data_subset, df_name, df)
+        data_subset.subjects = data_subset.X.index.to_numpy()
+        return data_subset
+
     def load(self) -> XyData:
         return super().load()
 
     def __str__(self) -> str:
         components = []
-        for df_name in ['X', 'group', 'holdout']:
+        for df_name in self.df_names:
             df = getattr(self, df_name)
             if df is not None:
                 value = df.shape

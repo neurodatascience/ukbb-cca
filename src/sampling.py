@@ -1,10 +1,24 @@
+from __future__ import annotations
 import warnings
 from pathlib import Path
+from abc import ABC, abstractmethod
 import numpy as np
 from .base import _Base
 from .data_processing import XyData
 
-class BootstrapSamples(_Base):
+class _Samples(_Base, ABC):
+
+    def __init__(self, seed=None, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+        self.seed = seed
+        self.rng = np.random.default_rng(self.seed)
+
+    @abstractmethod
+    def generate(self, data: XyData):
+        raise NotImplementedError
+
+class BootstrapSamples(_Samples):
 
     def __init__(
         self,
@@ -12,21 +26,20 @@ class BootstrapSamples(_Base):
         n_bootstrap_repetitions,
         n_sample_sizes,
         val_sample_fraction=0.5,
+        max_n_PCs=100,
         n_folds=5,
         seed=None,
-        max_n_PCs=100,
-        **kwargs,
+        verbose=False,
     ) -> None:
 
-        super().__init__(**kwargs)
+        super().__init__(seed=seed, verbose=verbose)
         
         self.dpath = Path(dpath)
         self.n_bootstrap_repetitions = n_bootstrap_repetitions
         self.n_sample_sizes = n_sample_sizes
         self.val_sample_fraction = val_sample_fraction
-        self.n_folds = n_folds
-        self.seed = seed
         self.max_n_PCs = max_n_PCs
+        self.n_folds = n_folds
 
         self.sample_sizes = None
         self.i_samples_learn_all = None
@@ -37,10 +50,7 @@ class BootstrapSamples(_Base):
             f'_{n_bootstrap_repetitions}times'
         )
 
-    def generate(self):
-
-        rng = np.random.default_rng(self.seed)
-        data = XyData(self.dpath).load()
+    def generate(self, data: XyData):
 
         # bounds for sample size
         n_subjects = len(data.subjects)
@@ -65,7 +75,7 @@ class BootstrapSamples(_Base):
         for i_bootstrap_repetition in range(self.n_bootstrap_repetitions):
 
             # split dataset into in/out-sample sets
-            i_samples_in = rng.choice(i_samples, size=sample_size_max, replace=False)
+            i_samples_in = self.rng.choice(i_samples, size=sample_size_max, replace=False)
             i_samples_val = np.array(list(set(i_samples) - set(i_samples_in)))
 
             i_samples_val_all.append(i_samples_val)
@@ -74,12 +84,15 @@ class BootstrapSamples(_Base):
             for sample_size in sample_sizes:
 
                 # sample with replacement
-                i_samples_learn = rng.choice(i_samples_in, size=sample_size, replace=True)
+                i_samples_learn = self.rng.choice(i_samples_in, size=sample_size, replace=True)
                 i_samples_learn_all[i_bootstrap_repetition][sample_size] = i_samples_learn
 
         self.sample_sizes = sample_sizes
         self.i_samples_learn_all = i_samples_learn_all
         self.i_samples_val_all = i_samples_val_all
+
+    def load(self) -> BootstrapSamples:
+        return super().load()
 
     def __str__(self) -> str:
         names = [
