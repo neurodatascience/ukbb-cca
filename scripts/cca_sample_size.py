@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import warnings
 import click
+import numpy as np
 from src.pipeline_definitions import build_cca_pipeline
 from src.cca import CcaAnalysis, CcaResultsPipelines
 from src.data_processing import XyData
@@ -14,7 +15,7 @@ DEBUG = False
 NORMALIZE_LOADINGS = True
 
 # for repeated CV
-CV_N_REPETITIONS = 1
+CV_N_REPETITIONS = 10
 CV_N_FOLDS = 5
 CV_SEED = 3791
 CV_SHUFFLE = True
@@ -130,4 +131,8 @@ def cca_sample_size(n_sample_sizes, n_bootstrap_repetitions,
     
     # save results
     cca_results.save()
+
+if __name__ == '__main__':
+    np.set_printoptions(precision=4, suppress=True, linewidth=100, sign=' ')
+    cca_sample_size()
     
