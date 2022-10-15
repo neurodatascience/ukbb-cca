@@ -1,0 +1,23 @@
+# CCA sample size analysis pipeline
+# assumes working directory is the root directory of the project
+
+./scripts/create_default_dotenv.py . # creates file with environment variables for paths, etc.
+
+./scripts/dispatch_job.sh scripts/process_UDIs.py
+./scripts/dispatch_job.sh scripts/select_mri_subjects.py -m 10G -t 1:30:00
+
+./scripts/dispatch_job.sh scripts/remove_withdrawn_subjects.py -m 20G -t 0:30:00
+
+./scripts/dispatch_job.sh scripts/select_categories.py -m 7G -t 0:10:00 demographic
+./scripts/dispatch_job.sh scripts/select_categories.py -m 7G -t 0:10:00 brain
+./scripts/dispatch_job.sh scripts/select_categories.py -m 7G -t 0:10:00 behavioural
+
+./scripts/dispatch_job.sh scripts/clean_data.py -m 5G -t 0:10:00
+./scripts/dispatch_job.sh scripts/generate_age_groups.py -t 0:10:00
+
+./scripts/dispatch_job.sh scripts/build_dataset.py -m 2G -t 0:10:00
+
+./scripts/dispatch_job.sh scripts/generate_bootstrap_samples.py -t 0:10:00 100 30
+
+# calls dispath_job.sh with cca_sample_size.py in a nested loop
+./scripts/run_sample_size_analysis.sh 
