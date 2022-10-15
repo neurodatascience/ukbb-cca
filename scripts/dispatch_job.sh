@@ -41,6 +41,11 @@ do
                         shift # past argument
                         shift # past value
                         ;;
+                -d|--dir)
+                        SUBDIRS_LOG="$2"
+                        shift # past argument
+                        shift # past value
+                        ;;
                 *)
                         if [ -z "${ARGS}" ]
                         then
@@ -84,7 +89,7 @@ ARGS_PROCESSED="${ARGS}"
 ARGS_PROCESSED="${ARGS_PROCESSED// /_}" # replace space by underscore
 ARGS_PROCESSED="${ARGS_PROCESSED//-}" # remove dashes
 ARGS_PROCESSED="${ARGS_PROCESSED//=/_}" # replace equal signs by underscore
-DPATH_OUT="${DPATH_LOGS}/${BASENAME_COMMAND}"
+DPATH_OUT="${DPATH_LOGS}/${BASENAME_COMMAND}/${SUBDIRS_LOG}"
 mkdir -p $DPATH_OUT
 
 # slurm log file
