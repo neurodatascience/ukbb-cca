@@ -1,6 +1,9 @@
 # dotenv file
 .env
 
+# log files from e.g. slurm jobs
+logs
+
 # data/result files
 data
 *.csv
@@ -10,24 +13,14 @@ data
 *.pkl
 *.mat
 
-# for path variables
-scripts/paths.py
-scripts/generate_paths.m
-
 # old/testing code
-scripts/old/*
+old
 
 # tools
 toolbox
 
-# logfiles from e.g. slurm jobs
-scripts/logs
-
 # link to scratch folder
 scratch
-
-# MATLAB temporary files
-*.asv
 
 # macOS system files
 .DS_Store
