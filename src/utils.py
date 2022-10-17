@@ -56,7 +56,10 @@ def save_pickle(obj, fpath, ext=EXT_PICKLE, verbose=True):
 def load_pickle(fpath, ext=EXT_PICKLE):
     fpath = Path(fpath).with_suffix(ext)
     with fpath.open('rb') as file:
-        obj = pickle.load(file)
+        try:
+            obj = pickle.load(file)
+        except pickle.UnpicklingError as e:
+            raise RuntimeError(f'Error unpickling {fpath} ({e})')
     return obj
 
 def select_rows(data, indices):
