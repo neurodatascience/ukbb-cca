@@ -8,7 +8,7 @@ import seaborn as sns
 
 from src.cca import CcaResultsSampleSize
 from src.plotting import save_fig
-from src.utils import make_parent_dir
+from src.utils import make_parent_dir, print_params
 
 DNAME_FIGS = 'figs'
 
@@ -17,6 +17,9 @@ DNAME_FIGS = 'figs'
 @click.option('--dpath-cca', required=True, envvar='DPATH_CCA_SAMPLE_SIZE')
 @click.option('--CA', 'i_component', default=1)
 def plot_sample_size_results(n_pcs_all, dpath_cca, i_component):
+
+    print_params(locals())
+
     n_PCs_str = CcaResultsSampleSize.get_dname_PCs(n_pcs_all)
     i_component = i_component - 1 # zero-indexing
     dpath_PCs = Path(dpath_cca, n_PCs_str)
