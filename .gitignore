@@ -31,5 +31,8 @@ scratch
 # pycache
 __pycache__
 
+# Jupyter notebook checkpoints
+.ipynb_checkpoints
+
 # IDE files
 .vscode
