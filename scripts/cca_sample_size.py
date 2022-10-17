@@ -3,7 +3,7 @@ import warnings
 import click
 import numpy as np
 from src.pipeline_definitions import build_cca_pipeline
-from src.cca import CcaAnalysis, CcaResultsPipelines
+from src.cca import CcaAnalysis, CcaResultsSampleSize
 from src.data_processing import XyData
 from src.sampling import BootstrapSamples
 from src.utils import print_params
@@ -87,7 +87,9 @@ def cca_sample_size(n_sample_sizes, n_bootstrap_repetitions,
         warnings.filterwarnings('ignore', '.*n_quantiles is set to n_samples')
     
     # initialize results
-    cca_results = CcaResultsPipelines(
+    cca_results = CcaResultsSampleSize(
+        sample_size=sample_size,
+        i_bootstrap_repetition=i_bootstrap_repetition,
         data=data,
         verbose=verbose,
     ).set_fpath_sample_size(dpath_cca, n_pcs_all, sample_size, i_bootstrap_repetition)

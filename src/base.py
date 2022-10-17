@@ -22,13 +22,22 @@ class _Base(ABC):
         
         return Path(dpath, fname)
 
-    def save(self, dpath=None):
+    def save(self, dpath=None, verbose=None):
+        if verbose is None and hasattr(self, 'verbose'):
+            verbose = self.verbose
         fpath = self.generate_fpath(dpath=dpath)
-        save_pickle(self, fpath, verbose=self.verbose)
+        save_pickle(self, fpath, verbose=verbose)
 
     def load(self):
         fpath = self.generate_fpath()
-        return load_pickle(fpath)
+        return self.load_fpath(fpath)
+
+    @classmethod
+    def load_fpath(cls, fpath):
+        obj = load_pickle(fpath)
+        if not isinstance(obj, cls):
+            raise RuntimeError(f'Object loaded from {fpath} is not an instance of {cls}')
+        return obj
 
     def _str_helper(self, components=None, names=None, sep=', '):
         if components is None:
