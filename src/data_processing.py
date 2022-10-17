@@ -104,6 +104,10 @@ def find_cols_with_outliers(df: pd.DataFrame, threshold=100) -> list:
 
     return df.columns[df.apply(has_outliers, axis='index')].tolist()
 
+def find_cols_with_large(df: pd.DataFrame, threshold=None) -> list:
+    is_large = (df > threshold).any(axis='index')
+    return df.columns[is_large].tolist()
+
 def one_hot_encode(df: pd.DataFrame, multiindex_names: list[str]) -> pd.DataFrame:
 
     def fn_rename(colname):
@@ -131,25 +135,34 @@ def square_df(df: pd.DataFrame, multiindex_names: list[str]) -> pd.DataFrame:
     )
     return df
 
-def remove_bad_cols(df: pd.DataFrame, threshold_na=0.5, threshold_high_freq=0.95, threshold_outliers=100, return_colnames=False):
+def remove_bad_cols(df: pd.DataFrame, threshold_na=0.5, threshold_high_freq=0.95, threshold_outliers=100, threshold_large=None, return_colnames=False):
 
     # identify columns with too much missing data
     cols_with_missing = find_cols_with_missing(df, threshold=threshold_na)
     df = df.drop(columns=cols_with_missing)
-    print(f'\t\tRemoved {len(cols_with_missing)} columns with too much missing data')
+    print(f'\t\tRemoved {len(cols_with_missing)} column(s) with too much missing data')
 
     # identify columns with not enough variability
     cols_without_variability = find_cols_with_high_freq(df, threshold=threshold_high_freq)
     df = df.drop(columns=cols_without_variability)
-    print(f'\t\tRemoved {len(cols_without_variability)} columns with not enough variability')
+    print(f'\t\tRemoved {len(cols_without_variability)} column(s) with not enough variability')
 
     # identify columns with outliers
     cols_with_outliers = find_cols_with_outliers(df, threshold=threshold_outliers)
-    print(f'\t\tRemoved {len(cols_with_outliers)} columns with outlier(s)')
+    print(f'\t\tRemoved {len(cols_with_outliers)} column(s) with outlier(s)')
     df = df.drop(columns=cols_with_outliers)
 
+    cols_with_large = find_cols_with_large(df, threshold=threshold_large)
+    print(f'\t\tRemoved {len(cols_with_large)} column(s) with large value(s)')
+    df = df.drop(columns=cols_with_large)
+
     if return_colnames:
-        bad_colnames = set(cols_with_missing).union(cols_without_variability).union(cols_with_outliers)
+        bad_colnames = (
+            set(cols_with_missing) | 
+            set(cols_without_variability) |
+            set(cols_with_outliers) |
+            set(cols_with_large)
+        )
         return df, list(bad_colnames)
 
     return df
@@ -171,6 +184,7 @@ def clean_datasets(
     threshold_na=0.5,
     threshold_high_freq=0.95,
     threshold_outliers=100,
+    threshold_large=10000000,
 ):
 
     if holdout_fields is None:
@@ -285,7 +299,9 @@ def clean_datasets(
             # remove bad columns
             print('\tLooking for bad columns...')
             df_clean, bad_cols = remove_bad_cols(df_clean, return_colnames=True,
-                threshold_na=threshold_na, threshold_high_freq=threshold_high_freq, threshold_outliers=threshold_outliers)
+                threshold_na=threshold_na, threshold_high_freq=threshold_high_freq, 
+                threshold_outliers=threshold_outliers, threshold_large=threshold_large,
+            )
 
             # save in df, to write later
             bad_cols = pd.MultiIndex.from_tuples(bad_cols, names=df_clean.columns.names)

@@ -4,23 +4,32 @@ from src.database_helpers import DatabaseHelper
 from src.data_processing import clean_datasets
 from src.utils import print_params
 
+# default settings
 DOMAIN_DEMOGRAPHIC = 'demographic'
 DOMAINS = ['behavioural', 'brain', DOMAIN_DEMOGRAPHIC]
+DOMAINS_TO_SQUARE = [DOMAIN_DEMOGRAPHIC]
+HOLDOUTS = [21003, 34]
+SQUARE_CONF = True
+THRESHOLD_NA = 0.5
+THRESHOLD_HIGH_FREQ = 0.95
+THRESHOLD_OUTLIERS = 100
+THRESHOLD_LARGE = 10000000
 
 @click.command()
 @click.option('--dpath-data', required=True, envvar='DPATH_PROCESSED')
 @click.option('--dpath-figs', required=True, default='.', envvar='DPATH_PREPROCESSING')
 @click.option('--domain', 'domains', multiple=True)
 @click.option('--domain-to-square', 'domains_to_square', multiple=True)
-@click.option('--holdout', 'holdouts', multiple=True, default=[21003, 34]) # age, year of birth
-@click.option('--square-conf', default=True)
-@click.option('--threshold-na', default=0.5)
-@click.option('--threshold-high-freq', default=0.95)
-@click.option('--threshold-outliers', default=100)
+@click.option('--holdout', 'holdouts', multiple=True, default=HOLDOUTS) # age, year of birth
+@click.option('--square-conf', default=SQUARE_CONF)
+@click.option('--threshold-na', default=THRESHOLD_NA)
+@click.option('--threshold-high-freq', default=THRESHOLD_HIGH_FREQ)
+@click.option('--threshold-outliers', default=THRESHOLD_OUTLIERS)
+@click.option('--threshold-large', default=THRESHOLD_LARGE)
 @click.option('--dpath-schema', required=True, envvar='DPATH_SCHEMA')
 @click.option('--fpath-udis', required=True, envvar='FPATH_UDIS')
 def clean_data(dpath_data, dpath_figs, domains, domains_to_square, holdouts, square_conf, 
-    threshold_na, threshold_high_freq, threshold_outliers,
+    threshold_na, threshold_high_freq, threshold_outliers, threshold_large,
     dpath_schema, fpath_udis
 ):
 
@@ -28,7 +37,7 @@ def clean_data(dpath_data, dpath_figs, domains, domains_to_square, holdouts, squ
     if len(domains) == 0:
         domains = DOMAINS
     if len(domains_to_square) == 0:
-        domains_to_square = [DOMAIN_DEMOGRAPHIC]
+        domains_to_square = DOMAINS_TO_SQUARE
 
     print_params(locals())
 
@@ -43,6 +52,7 @@ def clean_data(dpath_data, dpath_figs, domains, domains_to_square, holdouts, squ
         threshold_na=threshold_na,
         threshold_high_freq=threshold_high_freq,
         threshold_outliers=threshold_outliers,
+        threshold_large=threshold_large,
     )
 
 if __name__ == '__main__':
