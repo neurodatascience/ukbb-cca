@@ -1,11 +1,12 @@
 import warnings
-import pickle
+import pickle, json
 from pathlib import Path
 from typing import Union
 import pandas as pd
 import numpy as np
 
 EXT_PICKLE='.pkl'
+EXT_JSON = '.json'
 
 def print_params(parameters: dict[str, str], skip: Union[str, list[str]] = None):
 
@@ -45,22 +46,37 @@ def load_data_df(fpath, index_col=0, nrows=None, encoded=False) -> pd.DataFrame:
     header = [0, 1] if encoded else 0
     return pd.read_csv(fpath, index_col=index_col, nrows=nrows, header=header)
 
-def save_pickle(obj, fpath, ext=EXT_PICKLE, verbose=True):
-    fpath = Path(fpath).with_suffix(ext)
-    make_parent_dir(fpath)
-    with fpath.open('wb') as file:
-        pickle.dump(obj, file)
-    if verbose:
-        print(f'Saved to {fpath}')
-
-def load_pickle(fpath, ext=EXT_PICKLE):
-    fpath = Path(fpath).with_suffix(ext)
+def save_pickle(obj, fpath, verbose=True):
+    return save_obj(
+        obj, fpath, 
+        module=pickle, ext=EXT_PICKLE, format='b',
+        verbose=verbose,
+    )
+    
+def load_pickle(fpath):
+    fpath = Path(fpath).with_suffix(EXT_PICKLE)
     with fpath.open('rb') as file:
         try:
             obj = pickle.load(file)
         except pickle.UnpicklingError as e:
             raise RuntimeError(f'Error unpickling {fpath} ({e})')
     return obj
+
+def save_json(obj, fpath, indent=4, verbose=True):
+    return save_obj(
+        obj, fpath, 
+        module=json, ext=EXT_JSON,
+        indent=indent,
+        verbose=verbose,
+    )
+
+def save_obj(obj, fpath, module, ext, format='', verbose=True, **kwargs):
+    fpath = Path(fpath).with_suffix(ext)
+    make_parent_dir(fpath)
+    with fpath.open(f'w{format}') as file:
+        module.dump(obj, file, **kwargs)
+    if verbose:
+        print(f'Saved to {fpath}')
 
 def select_rows(data, indices):
 

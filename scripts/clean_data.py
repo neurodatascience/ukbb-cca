@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import click
+from pathlib import Path
 from src.database_helpers import DatabaseHelper
 from src.data_processing import clean_datasets
-from src.utils import print_params
+from src.utils import print_params, save_json
 
 # default settings
 DOMAIN_DEMOGRAPHIC = 'demographic'
@@ -14,6 +15,8 @@ THRESHOLD_NA = 0.5
 THRESHOLD_HIGH_FREQ = 0.95
 THRESHOLD_OUTLIERS = 100
 THRESHOLD_LARGE = 10000000
+
+FNAME_PARAMS = 'clean_data'
 
 @click.command()
 @click.option('--dpath-data', required=True, envvar='DPATH_PROCESSED')
@@ -33,13 +36,16 @@ def clean_data(dpath_data, dpath_figs, domains, domains_to_square, holdouts, squ
     dpath_schema, fpath_udis
 ):
 
-    db_helper = DatabaseHelper(dpath_schema, fpath_udis)
     if len(domains) == 0:
         domains = DOMAINS
     if len(domains_to_square) == 0:
         domains_to_square = DOMAINS_TO_SQUARE
 
-    print_params(locals())
+    params = locals()
+    print_params(params)
+    save_json(params, Path(dpath_data) / FNAME_PARAMS)
+
+    db_helper = DatabaseHelper(dpath_schema, fpath_udis)
 
     clean_datasets(
         db_helper=db_helper,
