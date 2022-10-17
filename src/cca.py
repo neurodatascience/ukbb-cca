@@ -1,4 +1,5 @@
 from __future__ import annotations
+import re
 import warnings
 from pathlib import Path
 from copy import deepcopy
@@ -12,7 +13,7 @@ from .base import _Base, _BaseData
 from .data_processing import XyData
 from .ensemble_model import EnsembleCCA
 from .cca_utils import cca_score, cca_get_loadings
-from .utils import add_suffix, select_rows
+from .utils import add_suffix, load_pickle, select_rows
 
 LEARN_SET = 'learn'
 VAL_SET = 'val'
@@ -85,12 +86,45 @@ class CcaResultsPipelines(_BaseData):
     def set_fpath_sample_size(self, dpath_cca, n_PCs_all, 
         sample_size, i_bootstrap_repetition) -> CcaResultsPipelines:
 
-        n_PCs_str = '_'.join([str(n) for n in n_PCs_all])
-        sample_size_str = f'sample_size_{sample_size}'
-        self.dpath = Path(dpath_cca) / f'PCs_{n_PCs_str}' / sample_size_str
+        sample_size_str = self.get_dname_sample_size(sample_size)
+        self.dpath = Path(dpath_cca) / self.get_dname_PCs(n_PCs_all) / sample_size_str
         self.fname = add_suffix(sample_size_str, f'rep{i_bootstrap_repetition}')
 
         return self
+
+    @staticmethod
+    def get_dname_PCs(n_PCs_all):
+        n_PCs_str = '_'.join([str(n) for n in n_PCs_all])
+        return f'PCs_{n_PCs_str}'
+
+    @staticmethod
+    def get_dname_sample_size(sample_size):
+        return f'sample_size_{sample_size}'
+
+class CcaResultsSampleSize(CcaResultsPipelines):
+
+    re_fname = re.compile(f'sample[_-]size[_-](\d+)[_-]rep(\d+)')
+
+    def __init__(self, sample_size, i_bootstrap_repetition, dpath=None, data: XyData = None, **kwargs) -> None:
+        super().__init__(dpath, data, **kwargs)
+        self.sample_size = sample_size
+        self.i_bootstrap_repetition = i_bootstrap_repetition
+
+    @classmethod
+    def load_and_cast(cls, fpath) -> CcaResultsSampleSize:
+        fpath = Path(fpath)
+        try:
+            return cls.load_fpath(fpath)
+        except RuntimeError:
+            results = CcaResultsPipelines.load_fpath(fpath)
+        results.__class__ = cls
+        
+        # get info from filename
+        fname = fpath.stem
+        sample_size, i_bootstrap_repetition = cls.re_fname.match(fname).groups()
+        results.sample_size = sample_size
+        results.i_bootstrap_repetition = i_bootstrap_repetition
+        return results
 
 class CcaAnalysis(_Base):
 
