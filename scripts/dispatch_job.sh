@@ -4,6 +4,7 @@
 FNAME_DOTENV=".env"
 FNAME_DISPATCH_LOG="dispatch_job.log"
 COMMAND_EXT=".py"
+USE_TEMPLATE=true
 
 DEFAULT_MEMORY="1G"
 DEFAULT_TIMELIMIT="0:5:00"
@@ -12,7 +13,7 @@ JOB_ID_SYMBOL="%j"
 # input validation
 if [ $# -lt 1 ]
 then
-        echo "Usage: $0 FPATH_COMMAND [ARG1 ARG2 ...] [-m/--mem MEMORY] [-t/--time TIMELIMIT]"
+        echo "Usage: $0 FPATH_COMMAND [ARG1 ARG2 ...] [-m/--mem MEMORY] [-t/--time TIMELIMIT] [-d/--dir SUBDIRS_LOG] [--shell]"
         exit 1
 fi
 
@@ -46,6 +47,11 @@ do
                         shift # past argument
                         shift # past value
                         ;;
+                --shell)
+                        COMMAND_EXT=".sh"
+                        USE_TEMPLATE=false
+                        shift # past argument
+                        ;;
                 *)
                         if [ -z "${ARGS}" ]
                         then
@@ -74,7 +80,7 @@ then
     FPATH_CURRENT="$0"
 else
     # check the original location through scontrol and $SLURM_JOB_ID
-    FPATH_CURRENT=`scontrol show job "${SLURM_JOB_ID}" | awk -F= '/Command=/{print $2}'`
+    FPATH_CURRENT=`scontrol show job "${SLURM_JOB_ID}" | awk -F= '/Command=/{print $2}' | awk '{print $1}'`
 fi
 FPATH_CURRENT=`realpath ${FPATH_CURRENT}`
 DPATH_CURRENT=`dirname ${FPATH_CURRENT}`
@@ -100,7 +106,7 @@ else
         FPATH_OUT="${DPATH_OUT}/slurm_${JOB_ID_SYMBOL}-${BASENAME_COMMAND}-${ARGS_PROCESSED}.out"
 fi
 
-# create log for dispatch_job if necessary
+# create logfile for dispatch_job if necessary
 FPATH_DISPATCH_LOG="${DPATH_LOGS}/${FNAME_DISPATCH_LOG}"
 if [ ! -f "${FPATH_DISPATCH_LOG}" ]
 then
@@ -108,7 +114,13 @@ then
         echo -e "id\tdate\tscript\targs\tmemory\ttime\tlog" > $FPATH_DISPATCH_LOG
 fi
 
-COMMAND="sbatch --parsable --output=${FPATH_OUT} --mem=${DISPATCH_MEMORY} --time=${DISPATCH_TIMELIMIT} ${FPATH_TEMPLATE}"
+COMMAND="sbatch --parsable --output=${FPATH_OUT} --mem=${DISPATCH_MEMORY} --time=${DISPATCH_TIMELIMIT}"
+if [ $USE_TEMPLATE = true ]
+then
+        COMMAND="${COMMAND} ${FPATH_TEMPLATE}"
+else
+        COMMAND="${COMMAND} ${FPATH_COMMAND} ${ARGS}" # no template
+fi
 
 echo "${COMMAND}"
 DISPATCH_JOB_ID=`eval "${COMMAND}"`
