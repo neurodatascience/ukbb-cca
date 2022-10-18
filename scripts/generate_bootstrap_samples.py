@@ -2,6 +2,7 @@
 import click
 import numpy as np
 from src.sampling import BootstrapSamples
+from src.data_processing import XyData
 from src.utils import print_params
 
 VAL_SAMPLE_FRACTION = 0.5
@@ -39,7 +40,9 @@ def generate_bootstrap_samples(
         max_n_PCs=max_n_PCs,
         verbose=verbose,
     )
-    samples.generate()
+
+    data = XyData(dpath=dpath_data).load()
+    samples.generate(data)
     print(samples)
     samples.save()
 
