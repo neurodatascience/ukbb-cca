@@ -30,6 +30,13 @@ CONFIGS = {
         'instances': [0, 2],
         'keep_instance': 'max',
     },
+    'diagnoses': {
+        'categories': [2002],
+        'title_substring': ['ICD10'],
+        'title_substrings_reject': [],
+        'instances': [0, 1, 2],
+        'keep_instance': 'all',
+    },
 }
 
 @click.command()
