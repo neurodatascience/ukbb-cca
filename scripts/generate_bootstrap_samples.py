@@ -8,7 +8,7 @@ from src.utils import print_params
 VAL_SAMPLE_FRACTION = 0.5
 N_FOLDS = 5
 SEED = 3791
-MAX_N_PCS = 100
+MAX_N_PCS = 300
 
 @click.command()
 @click.argument('n-bootstrap-repetitions', type=int)
@@ -40,9 +40,7 @@ def generate_bootstrap_samples(
         max_n_PCs=max_n_PCs,
         verbose=verbose,
     )
-
-    data = XyData(dpath=dpath_data).load()
-    samples.generate(data)
+    samples.generate()
     print(samples)
     samples.save()
 

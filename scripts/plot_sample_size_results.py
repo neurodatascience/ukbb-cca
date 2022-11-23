@@ -36,7 +36,7 @@ def plot_sample_size_results(n_pcs_all, dpath_cca, i_component):
 
         # convert to new type
         results = CcaResultsSampleSize.load_and_cast(fpath_results)
-        results.save(verbose=False)
+        # results.save(verbose=False)
 
         for cca_type in results.method_names:
             try:

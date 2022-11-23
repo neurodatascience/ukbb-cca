@@ -114,7 +114,12 @@ class CcaResultsSampleSize(CcaResultsPipelines):
     def load_and_cast(cls, fpath) -> CcaResultsSampleSize:
         fpath = Path(fpath)
         try:
-            return cls.load_fpath(fpath)
+            results = cls.load_fpath(fpath)
+            if type(results.sample_size) == str:
+                results.sample_size = int(results.sample_size)
+            if type(results.i_bootstrap_repetition) == str:
+                results.i_bootstrap_repetition = int(results.i_bootstrap_repetition)
+            return results
         except RuntimeError:
             results = CcaResultsPipelines.load_fpath(fpath)
         results.__class__ = cls
@@ -122,8 +127,8 @@ class CcaResultsSampleSize(CcaResultsPipelines):
         # get info from filename
         fname = fpath.stem
         sample_size, i_bootstrap_repetition = cls.re_fname.match(fname).groups()
-        results.sample_size = sample_size
-        results.i_bootstrap_repetition = i_bootstrap_repetition
+        results.sample_size = int(sample_size)
+        results.i_bootstrap_repetition = int(i_bootstrap_repetition)
         return results
 
 class CcaAnalysis(_Base):

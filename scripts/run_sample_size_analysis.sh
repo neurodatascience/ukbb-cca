@@ -88,15 +88,43 @@ then
     exit 2
 fi
 
+echo '========== START =========='
+echo `date`
+
 for (( I_SAMPLE_SIZE=${I_SAMPLE_SIZE_MIN}; I_SAMPLE_SIZE <= ${I_SAMPLE_SIZE_MAX}; I_SAMPLE_SIZE += 1 ))
 do
     for (( I_BOOTSTRAP_REPETITION=${I_BOOTSTRAP_REPETITION_MIN}; I_BOOTSTRAP_REPETITION <= ${I_BOOTSTRAP_REPETITION_MAX}; I_BOOTSTRAP_REPETITION += 1 ))
     do
-        if [ $I_SAMPLE_SIZE -le 20 ]
+        if [ "${N_PCS}" = "100 100" ]
         then
-            DISPATCH_MEMORY="20G"
-            DISPATCH_TIME="0:30:00"
+            if [ $I_SAMPLE_SIZE -le 10 ]
+            then
+                DISPATCH_MEMORY="30G" #"20G"
+                DISPATCH_TIME="0:30:00"
+            elif [ $I_SAMPLE_SIZE -le 20 ]
+            then
+                DISPATCH_MEMORY="30G"
+                DISPATCH_TIME="0:45:00"
+            else
+                DISPATCH_MEMORY="40G"
+                DISPATCH_TIME="0:55:00"
+            fi
+        elif [ "${N_PCS}" = "300 300" ]
+        then
+            if [ $I_SAMPLE_SIZE -le 10 ]
+            then
+                DISPATCH_MEMORY="30G"
+                DISPATCH_TIME="0:40:00"
+            elif [ $I_SAMPLE_SIZE -le 20 ]
+            then
+                DISPATCH_MEMORY="30G"
+                DISPATCH_TIME="0:50:00"
+            else
+                DISPATCH_MEMORY="40G"
+                DISPATCH_TIME="1:10:00"
+            fi
         else
+            echo "No memory/time settings for PCs=${N_PCS}. Using defaults"
             DISPATCH_MEMORY="40G"
             DISPATCH_TIME="0:45:00"
         fi
@@ -108,3 +136,6 @@ do
         eval ${COMMAND}
     done
 done
+
+echo '========== DONE =========='
+echo `date`

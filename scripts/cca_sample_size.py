@@ -46,13 +46,22 @@ def cca_sample_size(n_sample_sizes, n_bootstrap_repetitions,
 
     # load data
     data = XyData(dpath_data).load()
+    print(data)
     n_datasets = len(data.dataset_names)
 
+    # check/process number of PCs/CAs
+    if len(n_pcs_all) != n_datasets:
+        raise ValueError(f'Mismatch between n_PCs_all (size {len(n_pcs_all)}) and data ({n_datasets} datasets)')
+    for i_dataset in range(len(data.dataset_names)):
+        if n_pcs_all[i_dataset] == 0:
+            n_pcs_all[i_dataset] = data.n_features_datasets[i_dataset]
+    
     # load bootstrap sample
     bootstrap_samples = BootstrapSamples(
         dpath=dpath_data,
         n_bootstrap_repetitions=n_bootstrap_repetitions,
         n_sample_sizes=n_sample_sizes,
+        max_n_PCs=max(n_pcs_all),
     ).load()
 
     # get learn/val indices
@@ -61,12 +70,6 @@ def cca_sample_size(n_sample_sizes, n_bootstrap_repetitions,
     i_val = bootstrap_samples.i_samples_val_all[i_bootstrap_repetition-1]
     print(f'Sample size: {sample_size}')
 
-    # check/process number of PCs/CAs
-    if len(n_pcs_all) != n_datasets:
-        raise ValueError(f'Mismatch between n_PCs_all (size {len(n_pcs_all)}) and data ({n_datasets} datasets)')
-    for i_dataset in range(len(data.dataset_names)):
-        if n_pcs_all[i_dataset] == 0:
-            n_pcs_all[i_dataset] = data.n_features_datasets[i_dataset]
     n_CAs = min(n_pcs_all)
     print(f'Using {n_CAs} latent dimensions')
 
