@@ -3,7 +3,9 @@ from pathlib import Path
 import click
 from src.database_helpers import DatabaseHelper
 from src.data_processing import write_subset, generate_fname_data
-from src.utils import print_params
+from src.utils import print_params, save_json, add_suffix
+
+PREFIX_FNAME_CONFIG = 'select'
 
 CONFIGS = {
     'behavioural': {
@@ -14,10 +16,10 @@ CONFIGS = {
         'keep_instance': 'all',
     },
     'brain': {
-        'categories': [135],
+        'categories': [135], # [135, 134]
         # 'title_substring': 'Mean FA', # dMRI measure
         'title_substring': None,
-        'title_substrings_reject': ['L1', 'L2', 'L3'],
+        'title_substrings_reject': ['L1', 'L2', 'L3'],#['L1', 'L2', 'L3'],
         'instances': [2],
         'keep_instance': 'all',
     },
@@ -64,6 +66,9 @@ def select_categories(domain, fpath_data, dpath_processed, fpath_udis, dpath_sch
 
     n_rows, n_cols = write_subset(fpath_data, fpath_out, colnames=udis, chunksize=chunksize)
     print(f'Wrote {n_rows} rows and {n_cols} columns to {fpath_out}')
+
+    # save config
+    save_json(config, Path(dpath_processed, add_suffix(PREFIX_FNAME_CONFIG, domain)))
 
 if __name__ == '__main__':
     select_categories()
