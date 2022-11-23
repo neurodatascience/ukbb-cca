@@ -501,7 +501,10 @@ class XyData(_BaseData):
         return super().load()
 
     def __str__(self) -> str:
-        components = []
+        components = [
+            f'n_features_datasets={self.n_features_datasets}', 
+            f'n_features_conf={self.n_features_conf}'
+        ]
         for df_name in self.df_names:
             df = getattr(self, df_name)
             if df is not None:
