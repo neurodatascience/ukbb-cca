@@ -30,7 +30,7 @@ CONFIGS = {
         'instances': [0, 2],
         'keep_instance': 'max',
     },
-    'diagnoses': {
+    'disease': {
         'categories': [2002],
         'title_substring': 'ICD10',
         'title_substrings_reject': [],
