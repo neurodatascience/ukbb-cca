@@ -2,6 +2,8 @@ from __future__ import annotations
 from copy import deepcopy
 import re
 from pathlib import Path
+from typing import Callable, Iterable
+
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -178,6 +180,7 @@ def clean_datasets(
     dpath_data,
     dpath_figs,
     domains: list[str],
+    domains_extra: list[str],
     holdout_fields: list[int] = None,
     square_conf: bool = True,
     domains_to_square: list[str] = None,
@@ -272,7 +275,20 @@ def clean_datasets(
 
         dfs_data[domain] = df_data
 
-    df_holdout = pd.concat(dfs_holdout, axis='columns')
+    if len(dfs_holdout) == 0:
+        df_holdout = None
+    else:
+        df_holdout = pd.concat(dfs_holdout, axis='columns')
+
+    # load extra dataframes
+    # don't do anything else
+    print('----- Loading extra data (will keep all columns) -----')
+    for domain in domains_extra:
+        fpath_extra = Path(dpath_data, generate_fname_data(domain))
+        fpaths_map[domain] = fpath_extra
+        df_extra = load_data_df(fpath_extra)
+        print(f'{domain}: {df_extra.shape}')
+        dfs_data[domain] = df_extra
 
     print('----- Cleaning data -----')
     mode = 'w'
@@ -285,7 +301,12 @@ def clean_datasets(
         mode = 'a' # append for subsequent iterations
 
         # drop subjects from holdouts dataframe
-        df_holdout = df_holdout.drop(index=subjects_to_drop)
+        if df_holdout is not None:
+            df_holdout = df_holdout.drop(index=subjects_to_drop)
+
+        # drop subjects from extra dataframes
+        for domain in domains_extra:
+            dfs_data[domain] = dfs_data[domain].drop(index=subjects_to_drop)
 
         subjects_to_drop_new = set()
         for domain in domains:
@@ -332,16 +353,19 @@ def clean_datasets(
         subjects_to_drop = subjects_to_drop_new
         print('-------------------------')
 
-    print(f'Holdout dataframe shape: {df_holdout.shape}')
+    if df_holdout is not None:
+        print(f'Holdout dataframe shape: {df_holdout.shape}')
 
     # save cleaned data
-    for domain in domains:
+    for domain in dfs_data.keys():
+        print(f'{domain} dataframe shape: {dfs_data[domain].shape}')
         fpath_out = Path(dpath_data, generate_fname_data(domain, clean=True))
         dfs_data[domain].to_csv(fpath_out, header=True, index=True)
         print(f'Saved {domain} data to {fpath_out}')
 
     # save cleaned holdouts dataframe
-    df_holdout.to_csv(fpath_holdout, header=True, index=True)
+    if df_holdout is not None:
+        df_holdout.to_csv(fpath_holdout, header=True, index=True)
 
     # log dropped columns
     pd.concat(dfs_dropped_cols).to_csv(fpath_dropped_udis, header=True, index=False)
@@ -387,6 +411,7 @@ class XyData(_BaseData):
         self,
         dpath,
         dataset_names=None,
+        extra_dataset_names=None,
         conf_name=None,
         udi_holdout=None,
         group_name=None,
@@ -401,23 +426,30 @@ class XyData(_BaseData):
             column_level_to_drop = MULTIINDEX_NAMES[0]
         if dataset_names is None:
             dataset_names = []
+        if extra_dataset_names is None:
+            extra_dataset_names = []
 
         self.dpath = dpath
         self.dataset_names = dataset_names
+        self.extra_dataset_names = extra_dataset_names
         self.conf_name = conf_name
         self.udi_holdout = udi_holdout
         self.group_name = group_name
         self.column_level_to_drop = column_level_to_drop
 
         self.X: pd.DataFrame = None
+        self.extra: dict[str, pd.DataFrame] = {}
         self.group = None
         self.holdout = None
 
         for dataset_name in dataset_names:
             self.add_dataset(dataset_name)
 
+        for extra_dataset_name in extra_dataset_names:
+            self.add_extra_dataset(extra_dataset_name)
+
         if conf_name is not None:
-            self.set_conf(self.conf_name)
+            self.set_conf(conf_name)
 
         if udi_holdout is not None:
             self.set_holdout(udi_holdout)
@@ -456,11 +488,26 @@ class XyData(_BaseData):
 
         return df
 
+    def check_index_order(self):
+        for name, df_extra in self.extra.items():
+            if not self.X.index.equals(df_extra.index):
+                raise RuntimeError(
+                    f'Index of extra dataset {name} does not match index of X'
+                )
+
     def add_dataset(self, name):
         fpath = self.dpath / generate_fname_data(name, clean=True)
         df = self._add_data(name, fpath)
         self.udis_datasets.append(df.columns)
         self.n_features_datasets.append(df.shape[1])
+
+    def add_extra_dataset(self, name):
+        fpath = self.dpath / generate_fname_data(name, clean=True)
+        print('Adding extra dataset')
+        print(f'\tPath: {fpath}')
+        df = load_data_df(fpath)
+        df = df.loc[self.subjects]
+        self.extra[name] = df
 
     def set_conf(self, name):
         if self.udis_conf is not None:
@@ -492,10 +539,15 @@ class XyData(_BaseData):
         data_subset = deepcopy(self)
         for df_name in self.df_names:
             df = getattr(data_subset, df_name)
+            if df is None:
+                continue
             df = select_rows(df, indices)
             setattr(data_subset, df_name, df)
         data_subset.subjects = data_subset.X.index.to_numpy()
         return data_subset
+
+    def filter_samples(self, fn: Callable[[XyData], Iterable]):
+        return self.subset(fn(self))
 
     def load(self) -> XyData:
         return super().load()
@@ -506,12 +558,14 @@ class XyData(_BaseData):
             f'n_features_conf={self.n_features_conf}'
         ]
         for df_name in self.df_names:
-            df = getattr(self, df_name)
+            df: pd.DataFrame = getattr(self, df_name)
             if df is not None:
                 value = df.shape
             else:
                 value = None
             components.append(f'{df_name}={value}')
+        
+        components.append(f'extra={ {k: v.shape for k, v in self.extra.items()} }')
 
         return self._str_helper(components)
 

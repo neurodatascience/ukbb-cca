@@ -42,9 +42,11 @@ def add_suffix(path: Union[Path, str], suffix: str, sep='-') -> Path:
     path = Path(path)
     return Path(path.parent, f'{path.stem}{sep}{suffix}{path.suffix}')
 
-def load_data_df(fpath, index_col=0, nrows=None, encoded=False) -> pd.DataFrame:
+def load_data_df(fpath, index_col=0, nrows=None, encoded=False, low_memory=False) -> pd.DataFrame:
     header = [0, 1] if encoded else 0
-    return pd.read_csv(fpath, index_col=index_col, nrows=nrows, header=header)
+    df = pd.read_csv(fpath, index_col=index_col, nrows=nrows, 
+                     header=header, low_memory=low_memory)
+    return df
 
 def save_pickle(obj, fpath, verbose=True):
     return save_obj(
