@@ -83,11 +83,11 @@ class CcaResultsPipelines(_BaseData):
     def __getitem__(self, pipeline_name) -> CcaResultsSets:
         return self.__getattribute__(pipeline_name)
 
-    def set_fpath_sample_size(self, dpath_cca, n_PCs_all, 
+    def set_fpath_sample_size(self, dpath_cca, n_PCs_all, tag, 
         sample_size, i_bootstrap_repetition) -> CcaResultsPipelines:
 
         sample_size_str = self.get_dname_sample_size(sample_size)
-        self.dpath = Path(dpath_cca) / self.get_dname_PCs(n_PCs_all) / sample_size_str
+        self.dpath = Path(dpath_cca) / self.get_dname_PCs(n_PCs_all) / tag / sample_size_str
         self.fname = add_suffix(sample_size_str, f'rep{i_bootstrap_repetition}')
 
         return self

@@ -15,7 +15,7 @@ class _Samples(_Base, ABC):
         self.rng = np.random.default_rng(self.seed)
 
     @abstractmethod
-    def generate(self):
+    def _generate_samples(self):
         raise NotImplementedError
 
 class BootstrapSamples(_Samples):
@@ -23,13 +23,16 @@ class BootstrapSamples(_Samples):
     def __init__(
         self,
         dpath,
+        tag,
         n_bootstrap_repetitions,
         n_sample_sizes,
         val_sample_fraction=0.5,
         max_n_PCs=None,
         n_folds=5,
+        subset_fn = None,
         seed=None,
         verbose=False,
+        generate=True,
     ) -> None:
 
         super().__init__(seed=seed, verbose=verbose)
@@ -40,11 +43,13 @@ class BootstrapSamples(_Samples):
             max_n_PCs = np.min(data.n_features_datasets)
         
         self.dpath = Path(dpath)
+        self.tag = tag
         self.n_bootstrap_repetitions = n_bootstrap_repetitions
         self.n_sample_sizes = n_sample_sizes
         self.val_sample_fraction = val_sample_fraction
         self.max_n_PCs = max_n_PCs
         self.n_folds = n_folds
+        self.subset_fn = subset_fn
 
         self.sample_sizes = None
         self.i_samples_learn_all = None
@@ -52,17 +57,24 @@ class BootstrapSamples(_Samples):
 
         self.n_subjects = len(data.subjects)
         self.sample_size_min = int(np.ceil(max_n_PCs / (1 - (1/n_folds))))
-        self.sample_size_max = int(val_sample_fraction * len(data.subjects))
+        self.sample_size_max = self._get_upper_bound(len(data.subjects))
 
         self.fname = self.generate_fname()
 
+        if generate:
+            self._generate_samples(data)
+
     def generate_fname(self):
+        str_tag = f'-{self.tag}' if self.tag is not None else ''
         return (
-            f'bootstrap_samples-{self.sample_size_min}_{self.sample_size_max}'
+            f'bootstrap_samples{str_tag}-{self.sample_size_min}_{self.sample_size_max}'
             f'_{self.n_sample_sizes}steps_{self.n_bootstrap_repetitions}times'
         )
 
-    def generate(self):
+    def _get_upper_bound(self, n_samples):
+        return int(self.val_sample_fraction * n_samples)
+
+    def _generate_samples(self, data: XyData):            
 
         # bounds for sample size
         # n_subjects = len(data.subjects)
@@ -80,7 +92,16 @@ class BootstrapSamples(_Samples):
         if len(set(sample_sizes)) != len(sample_sizes):
             warnings.warn('Duplicate sample sizes')
 
-        i_samples = np.arange(self.n_subjects) # to be sampled from
+        if self.subset_fn is None:
+            i_samples = np.arange(self.n_subjects) # to be sampled from
+        else:
+            i_samples = self.subset_fn(data)
+            self.sample_size_max = self._get_upper_bound(len(i_samples))
+            sample_sizes = [s for s in sample_sizes if s <= self.sample_size_max]
+
+            print(f'Selected subset: {len(i_samples)} subjects')
+            print(f'Keeping {len(sample_sizes)} sample sizes')
+
         i_samples_learn_all = [] # list of dicts
         i_samples_val_all = [] # list only (val samples are same across sample sizes for each in/out split)
 

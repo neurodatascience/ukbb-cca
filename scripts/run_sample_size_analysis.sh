@@ -3,7 +3,7 @@
 FNAME_DISPATH_SCRIPT="dispatch_job.sh" # assumes all scripts are in same directory
 FNAME_CCA_SCRIPT="cca_sample_size.py"
 
-USAGE="Usage: $0 -s/--sample-sizes MIN MAX TOTAL -b/--bootstrap-repetitions MIN MAX TOTAL -p/--pcs N PC1 PC2 [...]"
+USAGE="Usage: $0 -t/--tag TAG -s/--sample-sizes MIN MAX TOTAL -b/--bootstrap-repetitions MIN MAX TOTAL -p/--pcs N PC1 PC2 [...]"
 
 # get path to slurm script directory
 if [ -z "${SLURM_JOB_ID}" ]
@@ -18,7 +18,7 @@ DPATH_CURRENT=`dirname ${FPATH_CURRENT}`
 FPATH_DISPATCH_SCRIPT="${DPATH_CURRENT}/${FNAME_DISPATH_SCRIPT}"
 FPATH_CCA_SCRIPT="${DPATH_CURRENT}/${FNAME_CCA_SCRIPT}"
 
-if [ "$#" -lt 12 ]
+if [ "$#" -lt 14 ]
 then
     echo $USAGE
     exit 1
@@ -28,6 +28,11 @@ fi
 while [[ "$#" -gt 0 ]]
 do
     case $1 in
+        -t|--tag)
+            TAG="$2"
+            shift # past argument
+            shift # past value
+            ;;
         -s|--sample_sizes)
             I_SAMPLE_SIZE_MIN="$2"
             I_SAMPLE_SIZE_MAX="$3"
@@ -129,9 +134,9 @@ do
             DISPATCH_TIME="0:45:00"
         fi
 
-        SUBDIRS_LOG="PCs_${N_PCS// /_}/i_sample_size_${I_SAMPLE_SIZE}"
+        SUBDIRS_LOG="PCs_${N_PCS// /_}/${TAG}/i_sample_size_${I_SAMPLE_SIZE}"
         
-        COMMAND="${FPATH_DISPATCH_SCRIPT} ${FPATH_CCA_SCRIPT} -m ${DISPATCH_MEMORY} -t ${DISPATCH_TIME} -d ${SUBDIRS_LOG} ${N_SAMPLE_SIZES} ${N_BOOTSTRAP_REPETITIONS} ${I_SAMPLE_SIZE} ${I_BOOTSTRAP_REPETITION} ${N_PCS}"
+        COMMAND="${FPATH_DISPATCH_SCRIPT} ${FPATH_CCA_SCRIPT} -m ${DISPATCH_MEMORY} -t ${DISPATCH_TIME} --tag ${TAG} -d ${SUBDIRS_LOG} ${N_SAMPLE_SIZES} ${N_BOOTSTRAP_REPETITIONS} ${I_SAMPLE_SIZE} ${I_BOOTSTRAP_REPETITION} ${N_PCS}"
         echo ${COMMAND}
         eval ${COMMAND}
     done

@@ -11,15 +11,18 @@
 ./scripts/dispatch_job.sh scripts/select_categories.py -m 7G -t 0:10:00 demographic
 ./scripts/dispatch_job.sh scripts/select_categories.py -m 7G -t 0:10:00 brain
 ./scripts/dispatch_job.sh scripts/select_categories.py -m 7G -t 0:10:00 behavioural
+./scripts/dispatch_job.sh scripts/select_categories.py -m 7G -t 0:10:00 disease
 
 ./scripts/dispatch_job.sh scripts/clean_data.py -m 5G -t 0:10:00
 ./scripts/dispatch_job.sh scripts/generate_age_groups.py -t 0:10:00
-
 ./scripts/dispatch_job.sh scripts/build_dataset.py -m 2G -t 0:10:00
 
-./scripts/dispatch_job.sh scripts/generate_bootstrap_samples.py -t 0:10:00 100 30
+./scripts/dispatch_job.sh scripts/generate_bootstrap_samples.py -t 0:10:00 100 30 --max-n-pcs 100 --subset all          # 30
+./scripts/dispatch_job.sh scripts/generate_bootstrap_samples.py -t 0:10:00 100 30 --max-n-pcs 100 --subset healthy      # 19
+./scripts/dispatch_job.sh scripts/generate_bootstrap_samples.py -t 0:10:00 100 30 --max-n-pcs 100 --subset psychoactive # 17
+./scripts/dispatch_job.sh scripts/generate_bootstrap_samples.py -t 0:10:00 100 30 --max-n-pcs 100 --subset hypertension # 20
 
 # args: -s/--sample-sizes MIN MAX TOTAL -b/--bootstrap-repetitions MIN MAX TOTAL -p/--pcs N PC1 PC2 [...]
-./scripts/dispatch_job.sh scripts/run_sample_size_analysis.sh -m 100M -t 0:10:00 --shell -s 7 7 30 -b 59 59 100 -p 2 100 100
+./scripts/dispatch_job.sh scripts/run_sample_size_analysis.sh -m 100M -t 0:01:00 --shell --tag psychoactive -s 1 1 30 -b 1 1 100 -p 2 100 100
 
-./scripts/dispatch_job.sh scripts/plot_sample_size_results.py 100 100 -m 2G -t 0:15:00
+./scripts/dispatch_job.sh scripts/plot_sample_size_results.py 100 100 -m 2G -t 1:00:00
