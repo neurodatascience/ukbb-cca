@@ -98,6 +98,10 @@ class CcaResultsPipelines(_BaseData):
         return f'PCs_{n_PCs_str}'
 
     @staticmethod
+    def get_dname_tag(tag):
+        return f'{tag}'
+
+    @staticmethod
     def get_dname_sample_size(sample_size):
         return f'sample_size_{sample_size}'
 
