@@ -27,6 +27,8 @@ class BootstrapSamples(_Samples):
         n_bootstrap_repetitions,
         n_sample_sizes,
         val_sample_fraction=0.5,
+        sample_size_min=None,
+        sample_size_max=None,
         max_n_PCs=None,
         n_folds=5,
         subset_fn = None,
@@ -56,8 +58,20 @@ class BootstrapSamples(_Samples):
         self.i_samples_val_all = None
 
         self.n_subjects = len(data.subjects)
-        self.sample_size_min = int(np.ceil(max_n_PCs / (1 - (1/n_folds))))
-        self.sample_size_max = self._get_upper_bound(len(data.subjects))
+
+        if sample_size_min is None:
+            sample_size_min = int(np.ceil(max_n_PCs / (1 - (1/n_folds))))
+
+        if sample_size_max is None:
+            sample_size_max =  self._get_upper_bound(self.n_subjects)
+        elif sample_size_max > self.n_subjects:
+            raise ValueError(
+                f'sample_size_max ({sample_size_max}) is larger than '
+                f'the total number of subjects ({self.n_subjects})!'
+            )
+
+        self.sample_size_min = sample_size_min
+        self.sample_size_max = sample_size_max
 
         self.fname = self.generate_fname()
 

@@ -3,7 +3,7 @@
 FNAME_DISPATH_SCRIPT="dispatch_job.sh" # assumes all scripts are in same directory
 FNAME_CCA_SCRIPT="cca_sample_size.py"
 
-USAGE="Usage: $0 -t/--tag TAG -s/--sample-sizes MIN MAX TOTAL -b/--bootstrap-repetitions MIN MAX TOTAL -p/--pcs N PC1 PC2 [...]"
+USAGE="Usage: $0 -t/--tag TAG -s/--sample-sizes MIN MAX TOTAL -b/--bootstrap-repetitions MIN MAX TOTAL --min MIN_SAMPLE_SIZE --max MAX_SAMPLE_SIZE -p/--pcs N PC1 PC2 [...]"
 
 # get path to slurm script directory
 if [ -z "${SLURM_JOB_ID}" ]
@@ -28,33 +28,33 @@ fi
 while [[ "$#" -gt 0 ]]
 do
     case $1 in
+        --min)
+            SAMPLE_SIZE_MIN="$2"
+            shift 2
+            ;;
+        --max)
+            SAMPLE_SIZE_MAX="$2"
+            shift 2
+            ;;
         -t|--tag)
             TAG="$2"
-            shift # past argument
-            shift # past value
+            shift 2
             ;;
         -s|--sample_sizes)
             I_SAMPLE_SIZE_MIN="$2"
             I_SAMPLE_SIZE_MAX="$3"
             N_SAMPLE_SIZES="$4"
-            shift # past argument
-            shift # past value
-            shift # past value
-            shift # past value
+            shift 4
             ;;
         -b|--bootstrap-repetitions)
             I_BOOTSTRAP_REPETITION_MIN="$2"
             I_BOOTSTRAP_REPETITION_MAX="$3"
             N_BOOTSTRAP_REPETITIONS="$4"
-            shift # past argument
-            shift # past value
-            shift # past value
-            shift # past value
+            shift 4
             ;;
         -p|--pcs)
             n="$2" # number of args to take
-            shift # past argument
-            shift # past n
+            shift 2
             for (( i=0; i < ${n}; i += 1 ))
             do
                 N_PC="$1"
@@ -91,6 +91,20 @@ if [ $I_SAMPLE_SIZE_MAX -gt $N_SAMPLE_SIZES ]
 then
     echo "Invalid I_BOOTSTRAP_REPETITION_MAX: $I_BOOTSTRAP_REPETITION_MAX (cannot be greater than ${N_BOOTSTRAP_REPETITIONS})"
     exit 2
+fi
+
+if [ -z $SAMPLE_SIZE_MIN ]
+then
+    SAMPLE_SIZE_MIN_STR=""
+else
+    SAMPLE_SIZE_MIN_STR="--min ${SAMPLE_SIZE_MIN}"
+fi
+
+if [ -z $SAMPLE_SIZE_MAX ]
+then
+    SAMPLE_SIZE_MAX_STR=""
+else
+    SAMPLE_SIZE_MAX_STR="--max ${SAMPLE_SIZE_MAX}"
 fi
 
 echo '========== START =========='
@@ -136,7 +150,12 @@ do
 
         SUBDIRS_LOG="PCs_${N_PCS// /_}/${TAG}/i_sample_size_${I_SAMPLE_SIZE}"
         
-        COMMAND="${FPATH_DISPATCH_SCRIPT} ${FPATH_CCA_SCRIPT} -m ${DISPATCH_MEMORY} -t ${DISPATCH_TIME} --tag ${TAG} -d ${SUBDIRS_LOG} ${N_SAMPLE_SIZES} ${N_BOOTSTRAP_REPETITIONS} ${I_SAMPLE_SIZE} ${I_BOOTSTRAP_REPETITION} ${N_PCS}"
+        COMMAND="
+            ${FPATH_DISPATCH_SCRIPT} ${FPATH_CCA_SCRIPT} -m ${DISPATCH_MEMORY} \
+            -t ${DISPATCH_TIME} --tag ${TAG} -d ${SUBDIRS_LOG} ${N_SAMPLE_SIZES} \
+            ${N_BOOTSTRAP_REPETITIONS} ${I_SAMPLE_SIZE} ${I_BOOTSTRAP_REPETITION} \
+            ${N_PCS} ${SAMPLE_SIZE_MIN_STR} ${SAMPLE_SIZE_MAX_STR} \
+        "
         echo ${COMMAND}
         eval ${COMMAND}
     done

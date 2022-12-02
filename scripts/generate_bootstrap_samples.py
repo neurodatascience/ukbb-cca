@@ -16,6 +16,8 @@ MAX_N_PCS = 300
 @click.argument('n-sample-sizes', type=int)
 @click.option('--dpath-data', required=True, envvar='DPATH_PROCESSED')
 @click.option('--subset')
+@click.option('--min', 'sample_size_min', type=int)
+@click.option('--max', 'sample_size_max', type=int)
 @click.option('--val-sample-fraction', default=VAL_SAMPLE_FRACTION)
 @click.option('--n-folds', default=N_FOLDS)
 @click.option('--seed', default=SEED)
@@ -26,6 +28,8 @@ def generate_bootstrap_samples(
     n_sample_sizes,
     dpath_data,
     subset,
+    sample_size_min, 
+    sample_size_max, 
     val_sample_fraction,
     n_folds,
     seed,
@@ -52,6 +56,8 @@ def generate_bootstrap_samples(
         n_sample_sizes=n_sample_sizes,
         tag=subset,
         subset_fn=subset_fn,
+        sample_size_min=sample_size_min,
+        sample_size_max=sample_size_max,
         val_sample_fraction=val_sample_fraction,
         n_folds=n_folds,
         seed=seed,

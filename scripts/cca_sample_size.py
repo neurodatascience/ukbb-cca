@@ -26,6 +26,8 @@ CV_SHUFFLE = True
 @click.argument('i_sample_size', type=int)
 @click.argument('i_bootstrap_repetition', type=int)
 @click.argument('n_PCs_all', type=int, nargs=-1) # if 0, will be set to number of features
+@click.option('--min', 'sample_size_min', type=int)
+@click.option('--max', 'sample_size_max', type=int)
 @click.option('--dpath-data', required=True, envvar='DPATH_PROCESSED')
 @click.option('--dpath-cca', default='.', envvar='DPATH_CCA_SAMPLE_SIZE')
 @click.option('--tag')
@@ -37,8 +39,8 @@ CV_SHUFFLE = True
 @click.option('--suppress-warnings/--with-warnings', default=SUPPRESS_WARNINGS)
 @click.option('--debug/--no-debug', default=DEBUG)
 @click.option('--verbose/--quiet', default=True)
-def cca_sample_size(n_sample_sizes, n_bootstrap_repetitions,
-    i_sample_size, i_bootstrap_repetition, n_pcs_all, dpath_data,
+def cca_sample_size(n_sample_sizes, n_bootstrap_repetitions, i_sample_size, 
+    i_bootstrap_repetition, n_pcs_all, sample_size_min, sample_size_max, dpath_data,
     dpath_cca, tag, normalize_loadings, cv_n_repetitions, cv_n_folds,
     cv_seed, cv_shuffle, suppress_warnings, debug, verbose,
 ):
@@ -48,6 +50,7 @@ def cca_sample_size(n_sample_sizes, n_bootstrap_repetitions,
     # load data
     data = XyData(dpath_data).load()
     print(data)
+    
     n_datasets = len(data.dataset_names)
 
     # check/process number of PCs/CAs
@@ -63,9 +66,12 @@ def cca_sample_size(n_sample_sizes, n_bootstrap_repetitions,
         n_bootstrap_repetitions=n_bootstrap_repetitions,
         n_sample_sizes=n_sample_sizes,
         max_n_PCs=max(n_pcs_all),
+        sample_size_min=sample_size_min,
+        sample_size_max=sample_size_max,
         tag=tag,
         generate=False, # don't generate samples, load from existing file
     ).load()
+    print(bootstrap_samples)
 
     # get learn/val indices
     sample_size = bootstrap_samples.sample_sizes[i_sample_size-1] # zero-indexing
