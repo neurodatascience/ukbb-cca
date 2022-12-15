@@ -3,7 +3,7 @@
 FNAME_DISPATH_SCRIPT="dispatch_job.sh" # assumes all scripts are in same directory
 FNAME_CCA_SCRIPT="cca_sample_size.py"
 
-USAGE="Usage: $0 -t/--tag TAG -s/--sample-sizes MIN MAX TOTAL -b/--bootstrap-repetitions MIN MAX TOTAL --min MIN_SAMPLE_SIZE --max MAX_SAMPLE_SIZE -p/--pcs N PC1 PC2 [...]"
+USAGE="Usage: $0 -t/--tag TAG -s/--sample-sizes MIN MAX TOTAL -b/--bootstrap-repetitions MIN MAX TOTAL --min MIN_SAMPLE_SIZE --max MAX_SAMPLE_SIZE [--match-val/--no-match-val] -p/--pcs N PC1 PC2 [...]"
 
 # get path to slurm script directory
 if [ -z "${SLURM_JOB_ID}" ]
@@ -24,6 +24,8 @@ then
     exit 1
 fi
 
+MATCH_VAL_STR='--no-match-val'
+
 # parse args
 while [[ "$#" -gt 0 ]]
 do
@@ -39,6 +41,14 @@ do
         -t|--tag)
             TAG="$2"
             shift 2
+            ;;
+        --match-val)
+            MATCH_VAL_STR='--match-val'
+            shift
+            ;;
+        --no-match-val)
+            MATCH_VAL_STR='--no-match-val'
+            shift
             ;;
         -s|--sample_sizes)
             I_SAMPLE_SIZE_MIN="$2"
@@ -154,7 +164,7 @@ do
             ${FPATH_DISPATCH_SCRIPT} ${FPATH_CCA_SCRIPT} -m ${DISPATCH_MEMORY} \
             -t ${DISPATCH_TIME} --tag ${TAG} -d ${SUBDIRS_LOG} ${N_SAMPLE_SIZES} \
             ${N_BOOTSTRAP_REPETITIONS} ${I_SAMPLE_SIZE} ${I_BOOTSTRAP_REPETITION} \
-            ${N_PCS} ${SAMPLE_SIZE_MIN_STR} ${SAMPLE_SIZE_MAX_STR} \
+            ${N_PCS} ${SAMPLE_SIZE_MIN_STR} ${SAMPLE_SIZE_MAX_STR} ${MATCH_VAL_STR} \
         "
         echo ${COMMAND}
         eval ${COMMAND}

@@ -28,6 +28,7 @@ CV_SHUFFLE = True
 @click.argument('n_PCs_all', type=int, nargs=-1) # if 0, will be set to number of features
 @click.option('--min', 'sample_size_min', type=int)
 @click.option('--max', 'sample_size_max', type=int)
+@click.option('--match-val/--no-match-val', 'match_val_set_size', default=True)
 @click.option('--dpath-data', required=True, envvar='DPATH_PROCESSED')
 @click.option('--dpath-cca', default='.', envvar='DPATH_CCA_SAMPLE_SIZE')
 @click.option('--tag')
@@ -40,8 +41,8 @@ CV_SHUFFLE = True
 @click.option('--debug/--no-debug', default=DEBUG)
 @click.option('--verbose/--quiet', default=True)
 def cca_sample_size(n_sample_sizes, n_bootstrap_repetitions, i_sample_size, 
-    i_bootstrap_repetition, n_pcs_all, sample_size_min, sample_size_max, dpath_data,
-    dpath_cca, tag, normalize_loadings, cv_n_repetitions, cv_n_folds,
+    i_bootstrap_repetition, n_pcs_all, sample_size_min, sample_size_max, match_val_set_size,
+    dpath_data, dpath_cca, tag, normalize_loadings, cv_n_repetitions, cv_n_folds,
     cv_seed, cv_shuffle, suppress_warnings, debug, verbose,
 ):
 
@@ -68,6 +69,7 @@ def cca_sample_size(n_sample_sizes, n_bootstrap_repetitions, i_sample_size,
         max_n_PCs=max(n_pcs_all),
         sample_size_min=sample_size_min,
         sample_size_max=sample_size_max,
+        match_val_set_size=match_val_set_size,
         tag=tag,
         generate=False, # don't generate samples, load from existing file
     ).load()
@@ -76,7 +78,10 @@ def cca_sample_size(n_sample_sizes, n_bootstrap_repetitions, i_sample_size,
     # get learn/val indices
     sample_size = bootstrap_samples.sample_sizes[i_sample_size-1] # zero-indexing
     i_learn = bootstrap_samples.i_samples_learn_all[i_bootstrap_repetition-1][sample_size]
-    i_val = bootstrap_samples.i_samples_val_all[i_bootstrap_repetition-1]
+    if bootstrap_samples.match_val_set_size:
+        i_val = bootstrap_samples.i_samples_val_all[i_bootstrap_repetition-1][sample_size]
+    else:
+        i_val = bootstrap_samples.i_samples_val_all[i_bootstrap_repetition-1]
     print(f'Sample size: {sample_size}')
 
     n_CAs = min(n_pcs_all)

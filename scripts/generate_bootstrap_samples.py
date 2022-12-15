@@ -6,7 +6,7 @@ from src.sampling import BootstrapSamples
 from src.subsets import SUBSET_FN_MAP
 from src.utils import print_params
 
-VAL_SAMPLE_FRACTION = 0.5
+UPPER_BOUND_FRACTION = 0.5
 N_FOLDS = 5
 SEED = 3791
 MAX_N_PCS = 300
@@ -18,7 +18,8 @@ MAX_N_PCS = 300
 @click.option('--subset')
 @click.option('--min', 'sample_size_min', type=int)
 @click.option('--max', 'sample_size_max', type=int)
-@click.option('--val-sample-fraction', default=VAL_SAMPLE_FRACTION)
+@click.option('--upper-bound-fraction', default=UPPER_BOUND_FRACTION)
+@click.option('--match-val/--no-match-val', 'match_val_set_size', default=False)
 @click.option('--n-folds', default=N_FOLDS)
 @click.option('--seed', default=SEED)
 @click.option('--max-n-pcs', 'max_n_PCs', default=MAX_N_PCS)
@@ -30,7 +31,8 @@ def generate_bootstrap_samples(
     subset,
     sample_size_min, 
     sample_size_max, 
-    val_sample_fraction,
+    upper_bound_fraction,
+    match_val_set_size,
     n_folds,
     seed,
     max_n_PCs,
@@ -58,7 +60,8 @@ def generate_bootstrap_samples(
         subset_fn=subset_fn,
         sample_size_min=sample_size_min,
         sample_size_max=sample_size_max,
-        val_sample_fraction=val_sample_fraction,
+        upper_bound_fraction=upper_bound_fraction,
+        match_val_set_size=match_val_set_size,
         n_folds=n_folds,
         seed=seed,
         max_n_PCs=max_n_PCs,

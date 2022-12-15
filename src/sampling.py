@@ -26,7 +26,8 @@ class BootstrapSamples(_Samples):
         tag,
         n_bootstrap_repetitions,
         n_sample_sizes,
-        val_sample_fraction=0.5,
+        upper_bound_fraction=0.5,
+        match_val_set_size=False,
         sample_size_min=None,
         sample_size_max=None,
         max_n_PCs=None,
@@ -48,7 +49,8 @@ class BootstrapSamples(_Samples):
         self.tag = tag
         self.n_bootstrap_repetitions = n_bootstrap_repetitions
         self.n_sample_sizes = n_sample_sizes
-        self.val_sample_fraction = val_sample_fraction
+        self.upper_bound_fraction = upper_bound_fraction
+        self.match_val_set_size = match_val_set_size
         self.max_n_PCs = max_n_PCs
         self.n_folds = n_folds
         self.subset_fn = subset_fn
@@ -80,13 +82,14 @@ class BootstrapSamples(_Samples):
 
     def generate_fname(self):
         str_tag = f'-{self.tag}' if self.tag is not None else ''
+        str_matchval = '_matchval' if self.match_val_set_size else ''
         return (
             f'bootstrap_samples{str_tag}-{self.sample_size_min}_{self.sample_size_max}'
-            f'_{self.n_sample_sizes}steps_{self.n_bootstrap_repetitions}times'
+            f'_{self.n_sample_sizes}steps_{self.n_bootstrap_repetitions}times{str_matchval}'
         )
 
     def _get_upper_bound(self, n_samples):
-        return int(self.val_sample_fraction * n_samples)
+        return int(self.upper_bound_fraction * n_samples)
 
     def _generate_samples(self, data: XyData):            
 
@@ -117,22 +120,29 @@ class BootstrapSamples(_Samples):
             print(f'Keeping {len(sample_sizes)} sample sizes')
 
         i_samples_learn_all = [] # list of dicts
-        i_samples_val_all = [] # list only (val samples are same across sample sizes for each in/out split)
+        i_samples_val_all = [] # list of dicts OR list only (val samples are same across sample sizes for each in/out split)
 
         for i_bootstrap_repetition in range(self.n_bootstrap_repetitions):
 
             # split dataset into in/out-sample sets
             i_samples_in = self.rng.choice(i_samples, size=self.sample_size_max, replace=False)
-            i_samples_val = np.array(list(set(i_samples) - set(i_samples_in)))
+            i_samples_out = np.array(list(set(i_samples) - set(i_samples_in)))
 
-            i_samples_val_all.append(i_samples_val)
             i_samples_learn_all.append({})
+            if self.match_val_set_size:
+                i_samples_val_all.append({})
+            else:
+                i_samples_val_all.append(i_samples_out)
 
             for sample_size in sample_sizes:
 
                 # sample with replacement
                 i_samples_learn = self.rng.choice(i_samples_in, size=sample_size, replace=True)
                 i_samples_learn_all[i_bootstrap_repetition][sample_size] = i_samples_learn
+
+                if self.match_val_set_size:
+                    i_samples_val = self.rng.choice(i_samples_out, size=sample_size, replace=True)
+                    i_samples_val_all[i_bootstrap_repetition][sample_size] = i_samples_val
 
         self.sample_sizes = sample_sizes
         self.i_samples_learn_all = i_samples_learn_all
