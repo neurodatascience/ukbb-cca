@@ -2,6 +2,7 @@
 # TODO use pandas cov
 import warnings
 import numpy as np
+import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.extmath import stable_cumsum
@@ -11,6 +12,14 @@ class NanPCA(TransformerMixin, BaseEstimator):
 
     def __init__(self, n_components=None):
         self.n_components = n_components
+
+    def format_transformed(self, X):
+        if hasattr(self, 'feature_names_in_'):
+            return pd.DataFrame(
+                data=X, 
+                columns=self.feature_names_in_,
+            )
+        return X
 
     def fit(self, X, y=None):
 
@@ -87,7 +96,7 @@ class NanPCA(TransformerMixin, BaseEstimator):
         if np.sum(np.isnan(X_transformed)) != 0:
             raise Exception('PCA transform is returning NaNs')
 
-        return X_transformed
+        return self.format_transformed(X_transformed)
 
     def fit_transform(self, X, y=None):
         return self.fit(X).transform(X)

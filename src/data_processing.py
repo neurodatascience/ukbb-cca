@@ -175,6 +175,10 @@ def generate_fname_data(dataset_name, clean=False):
         fname = add_suffix(fname, SUFFIX_CLEAN)
     return fname
 
+# def find_subjects_with_outliers(df: pd.DataFrame, k=3):
+#     df_z_score = (df - df.mean(axis='index')) / df.std(axis='index')
+#     return (df_z_score.abs() > k).any(axis='columns').index
+
 def clean_datasets(
     db_helper: DatabaseHelper,
     dpath_data,
@@ -317,18 +321,20 @@ def clean_datasets(
             print(f'\tRemoving {len(subjects_to_drop)} rows')
             df_clean = dfs_data[domain].drop(index=subjects_to_drop)
 
-            # remove bad columns
-            print('\tLooking for bad columns...')
-            df_clean, bad_cols = remove_bad_cols(df_clean, return_colnames=True,
-                threshold_na=threshold_na, threshold_high_freq=threshold_high_freq, 
-                threshold_outliers=threshold_outliers, threshold_large=threshold_large,
-            )
+            # # NOTE comment this
+            # # remove bad columns
+            # print('\tLooking for bad columns...')
+            # df_clean, bad_cols = remove_bad_cols(df_clean, return_colnames=True,
+            #     threshold_na=threshold_na, threshold_high_freq=threshold_high_freq, 
+            #     threshold_outliers=threshold_outliers, threshold_large=threshold_large,
+            # )
 
-            # save in df, to write later
-            bad_cols = pd.MultiIndex.from_tuples(bad_cols, names=df_clean.columns.names)
-            df_dropped_cols = pd.DataFrame({name: bad_cols.get_level_values(name) for name in bad_cols.names})
-            df_dropped_cols['domain'] = domain
-            dfs_dropped_cols.append(df_dropped_cols)
+            # # save in df, to write later
+            # bad_cols = pd.MultiIndex.from_tuples(bad_cols, names=df_clean.columns.names)
+            # df_dropped_cols = pd.DataFrame({name: bad_cols.get_level_values(name) for name in bad_cols.names})
+            # df_dropped_cols['domain'] = domain
+            # dfs_dropped_cols.append(df_dropped_cols)
+            # # NOTE end comment
 
             print(f'\tDataframe shape after removing bad rows/columns: {df_clean.shape}')
 
@@ -368,13 +374,28 @@ def clean_datasets(
         df_holdout.to_csv(fpath_holdout, header=True, index=True)
 
     # log dropped columns
-    pd.concat(dfs_dropped_cols).to_csv(fpath_dropped_udis, header=True, index=False)
+    if len(dfs_dropped_cols) > 0:
+        df_dropped_cols = pd.concat(dfs_dropped_cols)
+    else:
+        df_dropped_cols = pd.DataFrame()
+    df_dropped_cols.to_csv(fpath_dropped_udis, header=True, index=False)
 
-def get_age_groups_from_holdouts(dpath, udi_age=UDI_AGE, year_step=5, plot=False, dpath_figs='.'):
+def get_age_groups_from_holdouts(dpath, udi_age=UDI_AGE, year_step=5, plot=False, dpath_figs='.', alternative_dataset=None):
     dpath = Path(dpath)
     dpath_figs = Path(dpath_figs)
     fpath_holdout = dpath / generate_fname_data(PREFIX_HOLDOUT, clean=True)
-    df_holdout = load_data_df(fpath_holdout, encoded=False)
+    encoded = False
+
+    if not fpath_holdout.exists():
+        if alternative_dataset is None:
+            raise RuntimeError(f'Holdout file ({fpath_holdout}) not found and no alternative file was provided')
+        else:
+            fpath_holdout = dpath / generate_fname_data(alternative_dataset, clean=True)
+            encoded = True
+            if not fpath_holdout.exists():
+                raise RuntimeError(f'Alternative file ({fpath_holdout}) not found')
+
+    df_holdout = load_data_df(fpath_holdout, encoded=encoded)
 
     print(f'{udi_age} statistics:')
     print(f'\tMin: {df_holdout[udi_age].min()}')
@@ -575,7 +596,6 @@ class XyData(_BaseData):
     #     fpath = dpath / cls.fname
     #     return load_pickle(fpath)
 
-# not used (?)
 def deconfound_df(df_data, df_conf):
 
     # TODO add reference for deconfounding method
@@ -601,7 +621,6 @@ def deconfound_df(df_data, df_conf):
     # put back NaNs and rebuild dataframe
     return pd.DataFrame(data=data_deconfounded.filled(np.nan), index=data_index, columns=data_cols)
 
-# not used (?)
 def inv_norm(X, method='blom', rank_method='average'):
     '''Rank-based inverse normal transformation.'''
 
@@ -653,7 +672,6 @@ def inv_norm(X, method='blom', rank_method='average'):
 
     return X_transformed
 
-# not used (?)
 def inv_norm_df(df, method='blom', rank_method='average'):
 
     # deconstruct dataframe

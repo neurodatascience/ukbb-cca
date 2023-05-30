@@ -23,9 +23,18 @@ class DatabaseHelper():
         )
         self.df_merged = self.df_merged.set_index('udi')
 
-    def decode_udis(self, udis):
+    def parse_udis(self, udis):
         return [udi.split('_')[0] for udi in udis]
 
+    def udis_to_text(self, udis, encoded=True):
+        output = self.get_info(self.parse_udis(udis), colnames='title_field')
+        if encoded:
+            for i_udi, udi in enumerate(udis):
+                suffix = udi.split('_')[-1]
+                if suffix not in ['orig', 'squared']:
+                    output[i_udi] = f'{output[i_udi]} ({suffix})'
+        return output
+        
     def get_info(self, udis, colnames='all'):
 
         if colnames == 'all':
@@ -33,14 +42,20 @@ class DatabaseHelper():
         else:
             return self.df_merged.loc[udis, colnames]
 
-    def get_udis_from_categories(self, category_ids, 
+    def get_udis_from_categories_and_fields(self, category_ids, fields=None,
         value_types='all', keep_value_types=True,
         title_substring=None, keep_title_substring=True,
         title_substrings_reject=[],
         instances='all', keep_instance='all'):
 
+        if fields is None:
+            fields = []
+
         # get all fields from list of categories
-        fields = self.field_helper.get_fields_from_categories(category_ids)
+        fields.extend(self.field_helper.get_fields_from_categories(category_ids))
+
+        # keep unique only
+        fields = list(set(fields))
 
         # filter fields by value type
         if value_types != 'all':
@@ -48,7 +63,7 @@ class DatabaseHelper():
 
         # filter fields by title
         if title_substring is not None:
-            fields = self.field_helper.filter_by_title(fields, title_substring, keep=keep_title_substring)
+            fields = self.field_helper.filter_by_title(fields, title_substring, keep=True)
 
         for title_substring_reject in title_substrings_reject:
             fields = self.field_helper.filter_by_title(fields, title_substring_reject, keep=False)

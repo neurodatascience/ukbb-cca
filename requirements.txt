@@ -21,6 +21,7 @@ deap==1.0.1+computecanada
 debugpy==1.5.1+computecanada
 decorator==5.1.1+computecanada
 defusedxml==0.7.1+computecanada
+dill==0.3.6+computecanada
 dnspython==2.2.0+computecanada
 ecdsa==0.17.0+computecanada
 entrypoints==0.4+computecanada

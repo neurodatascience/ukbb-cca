@@ -3,7 +3,7 @@
 FNAME_DISPATH_SCRIPT="dispatch_job.sh" # assumes all scripts are in same directory
 FNAME_CCA_SCRIPT="cca_sample_size.py"
 
-USAGE="Usage: $0 -t/--tag TAG -s/--sample-sizes MIN MAX TOTAL -b/--bootstrap-repetitions MIN MAX TOTAL --min MIN_SAMPLE_SIZE --max MAX_SAMPLE_SIZE [--match-val/--no-match-val] -p/--pcs N PC1 PC2 [...]"
+USAGE="Usage: $0 -t/--tag TAG --stratify/--no-stratify --null-model/--no-null-model --scipy-procrustes|--old-procrustes -s/--sample-sizes MIN MAX TOTAL -b/--bootstrap-repetitions MIN MAX TOTAL --min MIN_SAMPLE_SIZE --max MAX_SAMPLE_SIZE [--match-val/--no-match-val] -p/--pcs N PC1 PC2 [...]"
 
 # get path to slurm script directory
 if [ -z "${SLURM_JOB_ID}" ]
@@ -41,6 +41,18 @@ do
         -t|--tag)
             TAG="$2"
             shift 2
+            ;;
+        --stratify|--no-stratify)
+            STRATIFY="$1"
+            shift
+            ;;
+        --null-model|--no-null-model)
+            NULL_MODEL="$1"
+            shift
+            ;;
+        --scipy-procrustes|--old-procrustes)
+            SCIPY_PROCRUSTES="$1"
+            shift
             ;;
         --match-val)
             MATCH_VAL_STR='--match-val'
@@ -130,13 +142,18 @@ do
             then
                 DISPATCH_MEMORY="30G" #"20G"
                 DISPATCH_TIME="0:30:00"
+                # DISPATCH_MEMORY="5G"
+                # DISPATCH_TIME="0:15:00"
             elif [ $I_SAMPLE_SIZE -le 20 ]
             then
                 DISPATCH_MEMORY="30G"
-                DISPATCH_TIME="0:45:00"
+                DISPATCH_TIME="0:30:00" #"0:45:00"
+                # DISPATCH_MEMORY="5G"
+                # DISPATCH_TIME="0:15:00"
             else
                 DISPATCH_MEMORY="40G"
-                DISPATCH_TIME="0:55:00"
+                DISPATCH_TIME="0:30:00" #"1:30:00"
+                # DISPATCH_TIME="0:55:00"
             fi
         elif [ "${N_PCS}" = "300 300" ]
         then
@@ -152,6 +169,18 @@ do
                 DISPATCH_MEMORY="40G"
                 DISPATCH_TIME="1:10:00"
             fi
+        elif [ "${N_PCS}" = "5 5" ]
+        then
+            DISPATCH_MEMORY="10G"
+            DISPATCH_TIME="0:30:00"
+        elif [ "${N_PCS}" = "20 20" ]
+        then
+            DISPATCH_MEMORY="15G"
+            DISPATCH_TIME="0:30:00"
+        elif [ "${N_PCS}" = "50 50" ]
+        then
+            DISPATCH_MEMORY="30G"
+            DISPATCH_TIME="0:30:00"
         else
             echo "No memory/time settings for PCs=${N_PCS}. Using defaults"
             DISPATCH_MEMORY="40G"
@@ -161,8 +190,9 @@ do
         SUBDIRS_LOG="PCs_${N_PCS// /_}/${TAG}/i_sample_size_${I_SAMPLE_SIZE}"
         
         COMMAND="
-            ${FPATH_DISPATCH_SCRIPT} ${FPATH_CCA_SCRIPT} -m ${DISPATCH_MEMORY} \
-            -t ${DISPATCH_TIME} --tag ${TAG} -d ${SUBDIRS_LOG} ${N_SAMPLE_SIZES} \
+            ${FPATH_DISPATCH_SCRIPT} ${FPATH_CCA_SCRIPT} \
+            -m ${DISPATCH_MEMORY} -t ${DISPATCH_TIME} \
+            --tag ${TAG} ${STRATIFY} ${NULL_MODEL} ${SCIPY_PROCRUSTES} -d ${SUBDIRS_LOG} ${N_SAMPLE_SIZES} \
             ${N_BOOTSTRAP_REPETITIONS} ${I_SAMPLE_SIZE} ${I_BOOTSTRAP_REPETITION} \
             ${N_PCS} ${SAMPLE_SIZE_MIN_STR} ${SAMPLE_SIZE_MAX_STR} ${MATCH_VAL_STR} \
         "

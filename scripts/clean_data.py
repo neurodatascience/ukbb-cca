@@ -10,12 +10,12 @@ DOMAIN_DEMOGRAPHIC = 'demographic'
 DOMAINS = ['behavioural', 'brain', DOMAIN_DEMOGRAPHIC]
 DOMAINS_TO_SQUARE = [DOMAIN_DEMOGRAPHIC]
 DOMAINS_EXTRA = ['disease']
-HOLDOUTS = [] #[21003, 34] # TODO do we still need to hold out these?
-SQUARE_CONF = True
-THRESHOLD_NA = 0.5
-THRESHOLD_HIGH_FREQ = 0.95
-THRESHOLD_OUTLIERS = 100
-THRESHOLD_LARGE = 100000
+HOLDOUTS = [21003, 34] #[21003, 34]#[] # TODO do we still need to hold out these?
+SQUARE_CONF = False#False
+THRESHOLD_NA = None#0.5#None
+THRESHOLD_HIGH_FREQ = None#0.95#None
+THRESHOLD_OUTLIERS = None#100#None
+THRESHOLD_LARGE = None#10000#
 
 FNAME_PARAMS = 'clean_data'
 

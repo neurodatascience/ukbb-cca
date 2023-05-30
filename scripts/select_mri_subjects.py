@@ -18,7 +18,7 @@ def select_mri_subjects(fpath_raw, fpath_out, fpath_udis, dpath_schema,
     print_params(locals())
 
     db_helper = DatabaseHelper(dpath_schema, fpath_udis)
-    udis_brain = db_helper.get_udis_from_categories(categories, instances=instances)
+    udis_brain = db_helper.get_udis_from_categories_and_fields(categories, instances=instances)
 
     n_rows, n_cols = write_subset(
         fpath_raw, fpath_out, colnames=None, chunksize=chunksize,

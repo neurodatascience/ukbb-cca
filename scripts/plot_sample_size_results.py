@@ -11,6 +11,10 @@ from src.plotting import save_fig
 from src.utils import make_parent_dir, print_params
 
 DNAME_FIGS = 'figs'
+SUBDIRS_IGNORE = [
+    'summary', 'all-null', 'healthy-null', 
+    'hypertension-null', 'psychoactive-null',
+]
 
 @click.command()
 @click.argument('n_PCs_all', nargs=-1, required=True)
@@ -28,23 +32,62 @@ def plot_sample_size_results(n_pcs_all, dpath_cca, i_component):
         print(f'[ERROR] Directory not found: {dpath_PCs}')
         sys.exit(1)
 
-    subsets = sorted([p.name for p in dpath_PCs.iterdir()])
+    subsets = sorted([p.name for p in dpath_PCs.iterdir() if p.name not in SUBDIRS_IGNORE])
     print(f'Found {len(subsets)} subsets: {[str(subset) for subset in subsets]}')
 
     data_for_df = []
+    # data_for_df_null = []
     for subset in subsets:
 
         fpaths_results = [
             p 
-            for p in (dpath_PCs/subset).glob('**/*') 
+            for p in (dpath_PCs/subset).glob('**/*')
             if (p.is_file() and p.suffix == '.pkl')
         ]
 
         print(f'Found {len(fpaths_results)} result files for subset {subset}')
 
+        # # get null model results # cannot have for this plot
+        # subset_null = f'{subset}-null'
+        # fpaths_results_null = [
+        #     p 
+        #     for p in (dpath_PCs/subset_null).glob('**/*')
+        #     if (p.is_file() and p.suffix == '.pkl')
+        # ]
+        # if len(fpaths_results_null) > 0:
+        #     for fpath_results_null in fpaths_results_null:
+        #         try:
+        #             null_results = CcaResultsSampleSize.load_fpath(fpath_results_null)
+        #         except Exception as ex:
+        #             print(ex)
+        #             continue
+
+        #         for cca_type in null_results.method_names:
+        #             try:
+        #                 corr_learn = null_results[cca_type]['learn'].corrs[i_component]
+        #                 corr_val = null_results[cca_type]['val'].corrs[i_component]
+        #                 if 'repeated' in cca_type:
+        #                     if corr_learn < 0:
+        #                         corr_learn = -corr_learn
+        #                         corr_val = -corr_val
+        #                 data_for_df_null.append({
+        #                     'sample_size': null_results.sample_size,
+        #                     'i_bootstrap_repetition': null_results.i_bootstrap_repetition,
+        #                     'subset': subset,
+        #                     'cca_type': cca_type,
+        #                     'corr_learn': corr_learn,
+        #                     'corr_val': corr_val,
+        #                 })
+        #             except KeyError:
+        #                 continue
+
         for fpath_results in fpaths_results:
 
-            results = CcaResultsSampleSize.load_fpath(fpath_results)
+            try:
+                results = CcaResultsSampleSize.load_fpath(fpath_results)
+            except Exception as ex:
+                print(ex)
+                continue
 
             # # convert to new type
             # results = CcaResultsSampleSize.load_and_cast(fpath_results)

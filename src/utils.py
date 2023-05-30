@@ -1,5 +1,7 @@
 import warnings
-import pickle, json
+# import pickle, json
+import dill as pickle
+import json
 from pathlib import Path
 from typing import Union
 import pandas as pd

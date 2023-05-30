@@ -31,6 +31,7 @@ def create_default_dotenv(dpath_project, fname_dotenv, verbose):
 
     # results subdirectories
     constants['DPATH_CCA_SAMPLE_SIZE'] = constants['DPATH_RESULTS'] / 'cca_sample_size'
+    constants['DPATH_CCA_COMPARISONS'] = constants['DPATH_RESULTS'] / 'cca_comparisons'
     constants['DPATH_PREPROCESSING'] = constants['DPATH_RESULTS'] / 'preprocessing'
 
     # scripts subdirectories

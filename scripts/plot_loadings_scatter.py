@@ -1,0 +1,93 @@
+#!/usr/bin/env python
+import sys
+from pathlib import Path
+
+import click
+import matplotlib.pyplot as plt
+
+from src.base import NestedItems
+from src.cca import CcaResultsSampleSize
+from src.database_helpers import DatabaseHelper
+from src.plotting import save_fig, plot_loadings_scatter
+from src.utils import print_params
+
+DNAME_FIGS = 'figs'
+DNAME_SUMMARY = 'summary'
+
+AX_WIDTH = 12
+AX_HEIGHT_UNIT = 0.5
+
+SET_NAME = 'learn'
+
+@click.command()
+@click.argument('n_PCs_all', nargs=-1, required=True)
+@click.option('--dpath-cca', required=True, envvar='DPATH_CCA_SAMPLE_SIZE')
+@click.option('--subset', default='all')
+@click.option('--CA', 'i_component', default=1)
+@click.option('--n', 'n_loadings', default=10)
+@click.option('--dpath-schema', required=True, envvar='DPATH_SCHEMA')
+@click.option('--fpath-udis', required=True, envvar='FPATH_UDIS')
+def plot_loadings(n_pcs_all, dpath_cca, subset, i_component, n_loadings, dpath_schema, fpath_udis):
+
+    print_params(locals())
+    i_component = i_component - 1 # zero-indexing
+    db_helper = DatabaseHelper(dpath_schema, fpath_udis)
+
+    n_PCs_str = CcaResultsSampleSize.get_dname_PCs(n_pcs_all)
+    dpath_subset = Path(dpath_cca, n_PCs_str, subset)
+
+    if not dpath_subset.exists():
+        print(f'[ERROR] Directory not found: {dpath_subset}')
+        sys.exit(1)
+
+    dpath_figs = Path(dpath_cca, DNAME_FIGS, n_PCs_str, subset)
+    
+    fpath_summary = Path(dpath_cca, n_PCs_str, DNAME_SUMMARY, subset)
+    summary = NestedItems.load_fpath(fpath_summary)
+    print(f'Loaded results summary: {summary}')
+
+    dataset_names = summary.dataset_names
+    # udis_datasets = summary.udis_datasets
+    # labels = [db_helper.udis_to_text(udis.get_level_values(-1)) for udis in udis_datasets]
+
+    # one figure per sample size
+    for sample_size in summary.levels['sample_size']:
+
+        print(f'sample_size: {sample_size}')
+
+        cca_types = summary.levels['cca_type']
+
+        n_rows = len(cca_types)
+        n_cols = len(dataset_names)
+        fig, axes = plt.subplots(
+            nrows=n_rows, 
+            ncols=n_cols,
+            figsize=(n_cols*AX_WIDTH, n_rows*n_loadings*AX_HEIGHT_UNIT),
+            squeeze=False,
+            )
+
+        for i_row, cca_type in enumerate(cca_types):
+
+            print(f'cca_type: {cca_type}')
+
+            loadings = summary[sample_size, cca_type, SET_NAME, 'mean'].loadings
+            labels = [db_helper.udis_to_text(loading.index) for loading in loadings]
+            loadings_errs = summary[sample_size, cca_type, SET_NAME, 'std'].loadings
+            axes_row = axes[i_row]
+            
+            plot_loadings_scatter(
+                loadings=[loading.iloc[:, i_component] for loading in loadings],
+                labels=labels,
+                ax_titles=[
+                    f'{dataset_name.capitalize()} loadings ({cca_type}) ($\mathregular{{CA_{{{i_component+1}}}}}$)' 
+                    for dataset_name in dataset_names
+                ],
+                errs=[err.iloc[:, i_component] for err in loadings_errs],
+                axes=axes_row,
+            )
+
+        fpath_fig = dpath_figs / f'{subset}_{sample_size}-loadings'
+        save_fig(fig, fpath_fig)
+
+if __name__ == '__main__':
+    plot_loadings()

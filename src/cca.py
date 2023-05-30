@@ -1,15 +1,18 @@
 from __future__ import annotations
 import re
 import warnings
-from pathlib import Path
 from copy import deepcopy
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Callable, Iterable, Mapping, Union
 
 import numpy as np
+import pandas as pd
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import KFold
 from sklearn.base import clone
 
-from .base import _Base, _BaseData
+from .base import _Base, _BaseData, NestedItems
 from .data_processing import XyData
 from .ensemble_model import EnsembleCCA
 from .cca_utils import cca_score, cca_get_loadings
@@ -18,11 +21,53 @@ from .utils import add_suffix, load_pickle, select_rows
 LEARN_SET = 'learn'
 VAL_SET = 'val'
 
-class CcaResults():
+class CcaResults(_Base):
     def __init__(self, CAs, deconfs, normalize_loadings=True) -> None:
         self.CAs = CAs
         self.corrs = cca_score(CAs)
         self.loadings = cca_get_loadings(deconfs, CAs, normalize=normalize_loadings)
+
+    def loadings_to_df(self, udis):
+        self.loadings = self._apply_to_datasets(
+            self.loadings,
+            lambda view, i: pd.DataFrame(view, index=udis[i].droplevel()),
+            with_index=True,
+        )
+
+    @classmethod
+    def _apply_to_datasets(cls, views, func, with_index=False):
+        if with_index:
+            return [func(view, i) for i, view in enumerate(views)]
+        else:
+            return [func(view) for view in views]
+
+    @classmethod
+    def _multiply_datasets(cls, views, values):
+        return cls._apply_to_datasets(views, lambda x: x*values)
+
+    def multiply_corrs(self, values):
+        if len(values) != len(self.corrs):
+            raise ValueError(
+                f'Invalid values. Expected length {len(self.corrs)}'
+                f', got {len(values)}'
+            )
+        self.corrs *= values
+
+    def multiply_CAs(self, values):
+        self.CAs = self._multiply_datasets(self.CAs, values)
+        
+    def multiply_loadings(self, values):
+        self.loadings = self._multiply_datasets(self.loadings, values)
+
+    def __str__(self) -> str:
+        components = [
+            f'corrs={self.corrs.shape}'
+        ]
+        for name in ['CAs', 'loadings']:
+            components.append(
+                f'{name}={[x.shape for x in getattr(self, name)]}'
+            )
+        return self._str_helper(components=components)
 
 class CcaResultsSets(_BaseData):
 
@@ -54,6 +99,13 @@ class CcaResultsSets(_BaseData):
         self.set_names.append(set_name)
         self.__setattr__(set_name, results)
 
+    def __str__(self) -> str:
+        results_dict = {
+            set_name: self[set_name]
+            for set_name in self.set_names
+        }
+        return self._str_helper(components=[results_dict])
+
 class CcaResultsPipelines(_BaseData):
     def __init__(self, dpath=None, data: XyData = None, **kwargs) -> None:
         if data is not None:
@@ -84,9 +136,11 @@ class CcaResultsPipelines(_BaseData):
         return self.__getattribute__(pipeline_name)
 
     def set_fpath_sample_size(self, dpath_cca, n_PCs_all, tag, 
-        sample_size, i_bootstrap_repetition) -> CcaResultsPipelines:
+        sample_size, i_bootstrap_repetition, null_model=False) -> CcaResultsPipelines:
 
         sample_size_str = self.get_dname_sample_size(sample_size)
+        if null_model:
+            tag = f'{tag}-null_model'
         self.dpath = Path(dpath_cca) / self.get_dname_PCs(n_PCs_all) / tag / sample_size_str
         self.fname = add_suffix(sample_size_str, f'rep{i_bootstrap_repetition}')
 
@@ -104,6 +158,13 @@ class CcaResultsPipelines(_BaseData):
     @staticmethod
     def get_dname_sample_size(sample_size):
         return f'sample_size_{sample_size}'
+
+    def __str__(self) -> str:
+        results_dict = {
+            method_name: self[method_name]
+            for method_name in self.method_names
+        }
+        return self._str_helper(components=[results_dict])
 
 class CcaResultsSampleSize(CcaResultsPipelines):
 
@@ -135,6 +196,113 @@ class CcaResultsSampleSize(CcaResultsPipelines):
         results.i_bootstrap_repetition = int(i_bootstrap_repetition)
         return results
 
+    def __str__(self) -> str:
+        results_dict = {
+            method_name: self[method_name]
+            for method_name in self.method_names
+        }
+        return self._str_helper(
+            components=[results_dict], 
+            names=['sample_size', 'i_bootstrap_repetition'],
+        )
+
+class CcaResultsCombined(NestedItems[list[CcaResults]], _BaseData):
+
+    @staticmethod
+    def agg_func_helper(data, func_pd_str: str, func_np):
+        # if pandas dataframe
+        try:
+            df_concat = pd.concat(data)
+            df_grouped = df_concat.groupby(df_concat.index)
+            func_pd = getattr(df_grouped, func_pd_str)
+            return func_pd()
+        # else numpy array
+        except TypeError:
+            return func_np(data, axis=0)
+
+    agg_funcs_map = {
+        'mean': (lambda x: CcaResultsCombined.agg_func_helper(x, 'mean', np.nanmean)),
+        'std': (lambda x: CcaResultsCombined.agg_func_helper(x, 'std', np.nanstd)),
+        # 'mean': (lambda x: np.nanmean(x, axis=0)),
+        # 'std': (lambda x: np.nanstd(x, axis=0)),
+    }
+
+    @dataclass
+    class Summary():
+        CAs: list[np.array]
+        corrs: np.array
+        loadings: list[np.array]
+
+    def __init__(self, levels: list[str], data: _BaseData = None):
+        super().__init__(levels, factory=list)
+        if data is not None:
+            self.set_dataset_params(data)
+
+    @classmethod
+    def from_items(cls, items: Mapping, levels: Union[Iterable, Mapping[str, list], None] = None, data: _BaseData = None):
+        output = super().from_items(items, levels)
+        if data is not None:
+            output.set_dataset_params(data)
+        return output
+
+    def __getitem__(self, keys: tuple):
+        item = super().__getitem__(keys)
+        if isinstance(item, self.__class__):
+            item.set_dataset_params(self)
+        return item
+    
+    def set_dataset_params(self, data: _BaseData):
+        return super().set_dataset_params(
+            dataset_names=data.dataset_names,
+            conf_name=data.conf_name,
+            udis_datasets=data.udis_datasets,
+            udis_conf=data.udis_conf,
+            n_features_datasets=data.n_features_datasets,
+            n_features_conf=data.n_features_conf,
+            subjects=data.subjects,
+        )
+        
+    def append(self, keys: tuple, item):
+        self.levels.update_levels(keys)
+        self[keys].append(item)
+
+    def aggregate(self, agg_funcs: Union[Mapping[str, Callable[[list]], Any], None] = None):
+        
+        def cca_results_wrapper(func: Callable[[list[CcaResults]], Any]):
+            def _cca_results_wrapper(results: list[CcaResults]) -> CcaResultsCombined.Summary:
+                if len(results) < 1:
+                    raise RuntimeError('CcaResults list cannot be empty')
+
+                n_datasets = len(results[0].CAs)
+                corrs = [result.corrs for result in results]
+
+                CAs = [
+                    [result.CAs[i_dataset] for result in results]
+                    for i_dataset in range(n_datasets)
+                ]
+
+                loadings = [
+                    [result.loadings[i_dataset] for result in results]
+                    for i_dataset in range(n_datasets)
+                ]
+                
+                return CcaResultsCombined.Summary(
+                    CAs=[func(CA) for CA in CAs],
+                    corrs=func(corrs),
+                    loadings=[func(loading) for loading in loadings],
+                )
+                
+            return _cca_results_wrapper
+        
+        if agg_funcs is None:
+            agg_funcs = deepcopy(self.agg_funcs_map)
+
+        agg_funcs_wrapped: dict[str, Callable[[list[CcaResults]], CcaResultsCombined.Summary]] = {}
+        for func_name, func in agg_funcs.items():
+            agg_funcs_wrapped[func_name] = cca_results_wrapper(func)
+
+        return self.apply_funcs(agg_funcs_wrapped, data=self)
+
 class CcaAnalysis(_Base):
 
     def __init__(
@@ -144,6 +312,7 @@ class CcaAnalysis(_Base):
         seed = None,
         shuffle = False,
         debug=False,
+        null_model=False,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -153,6 +322,7 @@ class CcaAnalysis(_Base):
         self.seed = seed
         self.shuffle = shuffle
         self.debug = debug
+        self.null_model = null_model
 
         if not shuffle:
             self.random_state = None
@@ -197,6 +367,17 @@ class CcaAnalysis(_Base):
             X_test_preprocessed = X_test
             deconfs_train = select_rows(deconfs, i_train)
             deconfs_test = select_rows(deconfs, i_test)
+
+        if self.null_model:
+
+            if not isinstance(X_train_preprocessed, list):
+                raise RuntimeError(f'Expected X_train_preprocessed to be a list, got: {type(X_train_preprocessed)}')
+            else:
+                print(f'X_train_preprocessed (CcaAnalysis.without_cv): {[tmp.shape for tmp in X_train_preprocessed]}')
+
+            # randomly shuffle all views except the first one
+            for view in X_train_preprocessed[1:]:
+                self.random_state.shuffle(view)
 
         # print([np.sum(np.logical_not(np.isfinite(X))) for X in X_train_preprocessed])
 
@@ -261,10 +442,10 @@ class CcaAnalysis(_Base):
 
     def repeated_cv(self, data: XyData, i_learn, i_val, model: Pipeline, n_repetitions, n_folds, 
             preprocess_before_cv=False, rotate_CAs=True, rotate_deconfs=False, 
-            ensemble_method='nanmean'):
+            ensemble_method='nanmean', use_scipy_procrustes=False):
 
         def apply_ensemble_CCA(data_learn: XyData, data_val: XyData, rotate, model_transform):
-            ensemble_model = EnsembleCCA(fitted_models, rotate=rotate, model_transform=model_transform)
+            ensemble_model = EnsembleCCA(fitted_models, rotate=rotate, model_transform=model_transform, use_scipy_procrustes=use_scipy_procrustes)
             result_learn = ensemble_model.fit_transform(data_learn.X, apply_ensemble_method=True, ensemble_method=ensemble_method)
             result_val = ensemble_model.transform(data_val.X, apply_ensemble_method=True, ensemble_method=ensemble_method)
             return result_learn, result_val, ensemble_model

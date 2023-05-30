@@ -10,6 +10,7 @@ PREFIX_FNAME_CONFIG = 'select'
 CONFIGS = {
     'behavioural': {
         'categories': [100026], # [100026, 116]
+        'fields': [],
         'title_substring': None,
         'title_substrings_reject': [],
         'instances': [2],
@@ -17,6 +18,7 @@ CONFIGS = {
     },
     'brain': {
         'categories': [135], # [135, 134]
+        'fields': [],
         # 'title_substring': 'Mean FA', # dMRI measure
         'title_substring': None,
         'title_substrings_reject': ['L1', 'L2', 'L3'],#['L1', 'L2', 'L3'],
@@ -24,14 +26,19 @@ CONFIGS = {
         'keep_instance': 'all',
     },
     'demographic': {
-        'categories': [1001, 1002, 1006],
+        'categories': [1001, 1002, 100011], #[1001, 1002, 1006] #100011 blood pressure, 100007 arterial stiffness
+        'fields': [4194, 50, 21002, 21], # 4194 pulse rate, 50 standing height, 21002 weight, 21 weight method
         'title_substring': None,
-        'title_substrings_reject': [],
+        'title_substrings_reject': [
+            'Place of birth in UK',
+            'Time since interview start at which blood pressure screen(s) shown',
+        ],
         'instances': [0, 2],
         'keep_instance': 'max',
     },
     'disease': {
         'categories': [2002],
+        'fields': [],
         'title_substring': 'ICD10',
         'title_substrings_reject': [],
         'instances': [0, 1, 2],
@@ -65,7 +72,7 @@ def select_categories(domain, fpath_data, dpath_processed, fpath_udis, dpath_sch
 
     db_helper = DatabaseHelper(dpath_schema, fpath_udis)
 
-    udis = db_helper.get_udis_from_categories(categories, value_types=value_types, 
+    udis = db_helper.get_udis_from_categories_and_fields(categories, value_types=value_types, 
         title_substring=title_substring, title_substrings_reject=title_substrings_reject,
         instances=instances, keep_instance=keep_instance)
 

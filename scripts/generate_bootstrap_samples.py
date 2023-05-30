@@ -16,6 +16,7 @@ MAX_N_PCS = 300
 @click.argument('n-sample-sizes', type=int)
 @click.option('--dpath-data', required=True, envvar='DPATH_PROCESSED')
 @click.option('--subset')
+@click.option('--stratify/--no-stratify', default=False)
 @click.option('--min', 'sample_size_min', type=int)
 @click.option('--max', 'sample_size_max', type=int)
 @click.option('--upper-bound-fraction', default=UPPER_BOUND_FRACTION)
@@ -29,6 +30,7 @@ def generate_bootstrap_samples(
     n_sample_sizes,
     dpath_data,
     subset,
+    stratify,
     sample_size_min, 
     sample_size_max, 
     upper_bound_fraction,
@@ -58,6 +60,7 @@ def generate_bootstrap_samples(
         n_sample_sizes=n_sample_sizes,
         tag=subset,
         subset_fn=subset_fn,
+        stratify=stratify,
         sample_size_min=sample_size_min,
         sample_size_max=sample_size_max,
         upper_bound_fraction=upper_bound_fraction,
