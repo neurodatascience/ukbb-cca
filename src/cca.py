@@ -209,16 +209,24 @@ class CcaResultsSampleSize(CcaResultsPipelines):
 class CcaResultsCombined(NestedItems[list[CcaResults]], _BaseData):
 
     @staticmethod
-    def agg_func_helper(data, func_pd_str: str, func_np):
+    def agg_func_helper(data, func_pd_str: str, func_np, kwargs_pd=None, kwargs_np=None):
+        
+        if kwargs_pd is None:
+            kwargs_pd = {}
+        if kwargs_np is None:
+            kwargs_np = {}
+
         # if pandas dataframe
         try:
             df_concat = pd.concat(data)
             df_grouped = df_concat.groupby(df_concat.index)
             func_pd = getattr(df_grouped, func_pd_str)
-            return func_pd()
+            return func_pd(**kwargs_pd)
         # else numpy array
         except TypeError:
-            return func_np(data, axis=0)
+            if not 'axis' in kwargs_np:
+                kwargs_np['axis'] = 0
+            return func_np(data, **kwargs_np)
 
     agg_funcs_map = {
         'mean': (lambda x: CcaResultsCombined.agg_func_helper(x, 'mean', np.nanmean)),

@@ -78,9 +78,9 @@ def plot_corrs(corrs, labels, colors=None, errs=None, err_measure='error',
     if bootstrap_corrs is not None:
         rbga_black = (0, 0, 0, 1)
         rbga_grey = (0.5, 0.5, 0.5, 0.3)
-        bootstrap_ci = np.quantile(bootstrap_corrs[:n_CAs_to_plot], [bootstrap_alpha, 1-bootstrap_alpha], axis=1)
+        # bootstrap_ci = np.quantile(bootstrap_corrs[:n_CAs_to_plot], [bootstrap_alpha, 1-bootstrap_alpha], axis=1)
         ax.fill_between(
-            x, bootstrap_ci[0], bootstrap_ci[1], 
+            x, bootstrap_corrs[0], bootstrap_corrs[1], 
             edgecolor=rbga_black, facecolor=rbga_grey,
             label=f'Bootstrapped null distribution\n({int(bootstrap_alpha*100)}th-{int((1-bootstrap_alpha)*100)}th percentiles)',
         )
