@@ -18,6 +18,7 @@ AX_WIDTH = 12
 AX_HEIGHT_UNIT = 0.5
 
 SET_NAME = 'learn'
+BOOTSTRAP_ALPHA = 0.05
 
 @click.command()
 @click.argument('n_PCs_all', nargs=-1, required=True)
@@ -45,6 +46,14 @@ def plot_loadings(n_pcs_all, dpath_cca, subset, i_component, n_loadings, dpath_s
     fpath_summary = Path(dpath_cca, n_PCs_str, DNAME_SUMMARY, subset)
     summary = NestedItems.load_fpath(fpath_summary)
     print(f'Loaded results summary: {summary}')
+
+    fpath_summary_null = Path(dpath_cca, n_PCs_str, DNAME_SUMMARY, f'{subset}-null_model')
+    try:
+        summary_null = NestedItems.load_fpath(fpath_summary_null)
+        print(f'Loaded null model summary: {fpath_summary_null}')
+    except FileNotFoundError:
+        summary_null = None
+        print(f'Did not find null model summary: {fpath_summary_null}')
 
     dataset_names = summary.dataset_names
     # udis_datasets = summary.udis_datasets
@@ -74,9 +83,18 @@ def plot_loadings(n_pcs_all, dpath_cca, subset, i_component, n_loadings, dpath_s
             labels = [db_helper.udis_to_text(loading.index) for loading in loadings]
             loadings_errs = summary[sample_size, cca_type, SET_NAME, 'std'].loadings
             axes_row = axes[i_row]
+
+            try:
+                loadings_null_low = summary_null[sample_size, cca_type, SET_NAME, f'quantile_{BOOTSTRAP_ALPHA}'].loadings
+                loadings_null_high = summary_null[sample_size, cca_type, SET_NAME, f'quantile_{1-BOOTSTRAP_ALPHA}'].loadings
+            except Exception as ex:
+                loadings_null_low = None
+                loadings_null_high = None
             
             plot_loadings_scatter(
                 loadings=[loading.iloc[:, i_component] for loading in loadings],
+                loadings_null_low=[loading.iloc[:, i_component] for loading in loadings_null_low],
+                loadings_null_high=[loading.iloc[:, i_component] for loading in loadings_null_high],
                 labels=labels,
                 ax_titles=[
                     f'{dataset_name.capitalize()} loadings ({cca_type}) ($\mathregular{{CA_{{{i_component+1}}}}}$)' 

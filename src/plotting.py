@@ -6,6 +6,9 @@ from matplotlib.figure import Figure
 
 from src.utils import make_parent_dir
 
+RBGA_BLACK = (0, 0, 0, 1)
+RBGA_GREY = (0.5, 0.5, 0.5, 0.3)
+
 def save_fig(fig: Figure, fpath, dpi=300, bbox_inches='tight', ext='.png', verbose=True):
     fpath = Path(fpath).with_suffix(ext)
     make_parent_dir(fpath)
@@ -76,12 +79,10 @@ def plot_corrs(corrs, labels, colors=None, errs=None, err_measure='error',
 
     # bootstrap confidence interval
     if bootstrap_corrs is not None:
-        rbga_black = (0, 0, 0, 1)
-        rbga_grey = (0.5, 0.5, 0.5, 0.3)
         # bootstrap_ci = np.quantile(bootstrap_corrs[:n_CAs_to_plot], [bootstrap_alpha, 1-bootstrap_alpha], axis=1)
         ax.fill_between(
             x, bootstrap_corrs[0], bootstrap_corrs[1], 
-            edgecolor=rbga_black, facecolor=rbga_grey,
+            edgecolor=RBGA_BLACK, facecolor=RBGA_GREY,
             label=f'Bootstrapped null distribution\n({int(bootstrap_alpha*100)}th-{int((1-bootstrap_alpha)*100)}th percentiles)',
         )
 
@@ -194,7 +195,7 @@ def plot_scatter(x_data, y_data, c_data, x_label=None, y_label=None, ax_titles=N
         else:
             text_bottom_right = ''
 
-        ax.errorbar(x, y, yerr=y_errs[i_set], xerr=x_errs[i_set], fmt='None', ecolor='black', zorder=-1)
+        ax.errorbar(x, y, yerr=y_errs[i_set], xerr=x_errs[i_set], fmt='None', ecolor='black', zorder=0)
 
         sc = ax.scatter(x, y, c=c,
             vmin=vmin, vmax=vmax,
@@ -202,6 +203,7 @@ def plot_scatter(x_data, y_data, c_data, x_label=None, y_label=None, ax_titles=N
             linewidths=0.3,
             edgecolors='black',
             alpha=alpha,
+            zorder=1,
         )
 
         ax.set_xlabel(x_label)
@@ -258,7 +260,6 @@ def plot_bar(x_data, y_data, c_data, x_label=None, y_label=None, ax_titles=None,
 
         ax.set_title(ax_title)
 
-
 def plot_CAs(x_data, y_data, c_data, x_label=None, y_label=None, ax_titles=None, texts_upper_left=None, texts_bottom_right=None, cbar_label=None, alpha=1, axes=None, x_errs=None, y_errs=None):
 
     return plot_scatter(
@@ -278,7 +279,7 @@ def plot_CAs(x_data, y_data, c_data, x_label=None, y_label=None, ax_titles=None,
         with_colorbar=True,
     )
 
-def plot_loadings(plot_type, loadings, labels, ax_titles=None, n_loadings=10, colours=None, errs=None, ax_width=10, ax_height_unit=0.5, axes=None):
+def plot_loadings(plot_type, loadings, labels, loadings_null_low=None, loadings_null_high=None, ax_titles=None, n_loadings=10, colours=None, errs=None, ax_width=10, ax_height_unit=0.5, axes=None, alpha_band=0.5):
     
     n_datasets = len(loadings)
     n_loadings = [min(n_loadings, len(l)) for l in loadings]
@@ -286,7 +287,7 @@ def plot_loadings(plot_type, loadings, labels, ax_titles=None, n_loadings=10, co
     if colours is None:
         colours = [None for _ in range(n_datasets)]
     if errs is None:
-        errs = [None for _ in range(n_datasets)]    
+        errs = [None for _ in range(n_datasets)]
 
     # get top/bottom loadings
     idx_loadings_selected = []
@@ -310,6 +311,7 @@ def plot_loadings(plot_type, loadings, labels, ax_titles=None, n_loadings=10, co
     c_data = [colour[idx] if colour is not None else None for (colour, idx) in zip(colours, idx_loadings_selected)]
 
     if plot_type == 'scatter':
+
         plot_scatter(
             x_data=x_data,
             y_data=y_data,
@@ -318,6 +320,21 @@ def plot_loadings(plot_type, loadings, labels, ax_titles=None, n_loadings=10, co
             axes=axes,
             ax_titles=ax_titles,
         )
+
+        # plot null loadings
+        if not (loadings_null_low is None or loadings_null_high is None):
+            for i_dataset in range(n_datasets):
+                ax = axes[i_dataset]
+                for i_loading, y_value in enumerate(y_data[i_dataset]):
+
+                    idx = x_data[i_dataset].index[i_loading]
+                    try:
+                        loading_low = loadings_null_low[i_dataset].loc[idx]
+                        loading_high = loadings_null_high[i_dataset].loc[idx]
+                    except KeyError:
+                        continue
+                    ax.fill_betweenx(y=[y_value-0.25, y_value+0.25], x1=loading_low, x2=loading_high, edgecolor=RBGA_BLACK, facecolor=RBGA_GREY, alpha=alpha_band, zorder=-1)
+
     elif plot_type == 'bar':
         plot_bar(
             x_data=x_data,
@@ -337,9 +354,10 @@ def plot_loadings(plot_type, loadings, labels, ax_titles=None, n_loadings=10, co
 
     return fig
 
-def plot_loadings_scatter(loadings, labels, ax_titles=None, n_loadings=10, colours=None, errs=None, ax_width=10, ax_height_unit=0.5, axes=None):
+def plot_loadings_scatter(loadings, labels, loadings_null_low=None, loadings_null_high=None, labels_null=None, ax_titles=None, n_loadings=10, colours=None, errs=None, ax_width=10, ax_height_unit=0.5, axes=None):
     return plot_loadings(
         'scatter', loadings=loadings, labels=labels, ax_titles=ax_titles, 
+        loadings_null_low=loadings_null_low, loadings_null_high=loadings_null_high,
         n_loadings=n_loadings, colours=colours, errs=errs, ax_width=ax_width, 
         ax_height_unit=ax_height_unit, axes=axes)
 
