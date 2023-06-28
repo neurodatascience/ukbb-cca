@@ -6,6 +6,9 @@ from src.utils import print_params
 YEAR_STEP = 5
 ALTERNATIVE_DATASET_NAME = 'demographic'
 
+# only needed to stratify groups -- can skip
+# ./scripts/dispatch_job.sh scripts/generate_age_groups.py -m 2G -t 0:10:00
+
 @click.command()
 @click.option('--dpath-data', required=True, envvar='DPATH_PROCESSED')
 @click.option('--alt-dataset', default=ALTERNATIVE_DATASET_NAME)

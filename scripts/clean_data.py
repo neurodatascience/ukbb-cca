@@ -10,7 +10,10 @@ DOMAIN_DEMOGRAPHIC = 'demographic'
 DOMAINS = ['behavioural', 'brain', DOMAIN_DEMOGRAPHIC]
 DOMAINS_TO_SQUARE = [DOMAIN_DEMOGRAPHIC]
 DOMAINS_EXTRA = ['disease']
-HOLDOUTS = [21003, 34] #[21003, 34]#[] # TODO do we still need to hold out these?
+
+# set HOLDOUTS to [] to keep age info
+# set everything else as False/None (will be done with sklearn-style models later)
+HOLDOUTS = [] #[21003, 34]#[] # TODO do we still need to hold out these?
 SQUARE_CONF = False#False
 THRESHOLD_NA = None#0.5#None
 THRESHOLD_HIGH_FREQ = None#0.95#None

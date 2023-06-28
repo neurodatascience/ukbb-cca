@@ -1,49 +1,71 @@
 # CCA sample size analysis pipeline
 # assumes working directory is the root directory of the project
 
-./scripts/create_default_dotenv.py . # creates file with environment variables for paths, etc.
+##
+## Environment setup 
+##
 
+# create file with environment variables for paths, etc.
+./scripts/create_default_dotenv.py .
+
+##
+## Data preprocessing
+##
+
+# get list of all available UDIs
 ./scripts/dispatch_job.sh scripts/process_UDIs.py
+
+# select subjects with MRI data
 ./scripts/dispatch_job.sh scripts/select_mri_subjects.py -m 10G -t 1:30:00
 
+# filter out subjects who withdrew from study
 ./scripts/dispatch_job.sh scripts/remove_withdrawn_subjects.py -m 20G -t 0:30:00
 
+# split/subset data into relevant datasets
 ./scripts/dispatch_job.sh scripts/select_categories.py -m 7G -t 0:10:00 demographic
 ./scripts/dispatch_job.sh scripts/select_categories.py -m 7G -t 0:10:00 brain
 ./scripts/dispatch_job.sh scripts/select_categories.py -m 7G -t 0:10:00 behavioural
 ./scripts/dispatch_job.sh scripts/select_categories.py -m 7G -t 0:10:00 disease
 
+# drop subjects with too much missing data
 ./scripts/dispatch_job.sh scripts/clean_data.py -m 5G -t 0:10:00
-./scripts/dispatch_job.sh scripts/generate_age_groups.py -m 2G -t 0:10:00
+
+##
+## Prepare data for analysis
+##
+
+# combine datasets/metadata into a pickle file
 ./scripts/dispatch_job.sh scripts/build_dataset.py -m 4G -t 0:10:00
 
-./scripts/dispatch_job.sh scripts/generate_bootstrap_samples.py -m 2G -t 0:10:00 100 30 --max-n-pcs 100 --no-stratify --subset all          # 30
-./scripts/dispatch_job.sh scripts/generate_bootstrap_samples.py -m 2G -t 0:10:00 100 30 --max-n-pcs 100 --no-stratify --subset healthy      # 19
-./scripts/dispatch_job.sh scripts/generate_bootstrap_samples.py -m 2G -t 0:10:00 100 30 --max-n-pcs 100 --no-stratify --subset hypertension # 20
-./scripts/dispatch_job.sh scripts/generate_bootstrap_samples.py -m 2G -t 0:10:00 100 30 --max-n-pcs 100 --no-stratify --subset psychoactive # 17
+# generate indices for bootstrap samples
+./scripts/dispatch_job.sh scripts/generate_bootstrap_samples.py -m 4G -t 0:10:00 1000 30  --max-n-pcs 20 --no-stratify --subset all          # 30
+./scripts/dispatch_job.sh scripts/generate_bootstrap_samples.py -m 2G -t 0:10:00 1000 30  --max-n-pcs 20 --no-stratify --subset healthy      # 22
+./scripts/dispatch_job.sh scripts/generate_bootstrap_samples.py -m 2G -t 0:10:00 1000 30  --max-n-pcs 20 --no-stratify --subset hypertension # 22
+./scripts/dispatch_job.sh scripts/generate_bootstrap_samples.py -m 2G -t 0:10:00 1000 30  --max-n-pcs 20 --no-stratify --subset psychoactive # 20
 
-# --match-val
-./scripts/dispatch_job.sh scripts/generate_bootstrap_samples.py -t 0:10:00 100 15 --max-n-pcs 100 --max 250 --subset all         
-./scripts/dispatch_job.sh scripts/generate_bootstrap_samples.py -t 0:10:00 100 15 --max-n-pcs 100 --max 250 --subset healthy     
-./scripts/dispatch_job.sh scripts/generate_bootstrap_samples.py -t 0:10:00 100 15 --max-n-pcs 100 --max 250 --subset hypertension
-./scripts/dispatch_job.sh scripts/generate_bootstrap_samples.py -t 0:10:00 100 15 --max-n-pcs 100 --max 250 --subset psychoactive
+##
+## Run main sample size analysis
+##
 
 # args: -s/--sample-sizes MIN MAX TOTAL -b/--bootstrap-repetitions MIN MAX TOTAL -p/--pcs N PC1 PC2 [...] [--max MAX_SAMPLES --min MIN_SAMPLES]
-./scripts/dispatch_job.sh scripts/run_sample_size_analysis.sh -m 100M -t 1:00:00 --shell --tag all -s 1 1 30 -b 1 30 100 --max 250 --min 125 -p 2 100 100
-./scripts/dispatch_job.sh scripts/run_sample_size_analysis.sh -m 100M -t 1:00:00 --shell --tag all -s 1 1 15 -b 1 30 100 --max 250 --min 125 -p 2 100 100
-scripts/run_sample_size_analysis.sh --tag psychoactive --no-stratify -s 1 17 30 -b 1 30 100 -p 2 100 100 &
-scripts/run_sample_size_analysis.sh --tag all --no-stratify --scipy-procrustes --min 125 -s 1 30 30 -b 21 30 100 -p 2 20 20 &
+#./scripts/dispatch_job.sh scripts/run_sample_size_analysis.sh -m 100M -t 1:00:00 --shell --tag all -s 1 1 30 -b 1 30 100 --max 250 --min 125 -p 2 100 100
+#./scripts/dispatch_job.sh scripts/run_sample_size_analysis.sh -m 100M -t 1:00:00 --shell --tag all -s 1 1 15 -b 1 30 100 --max 250 --min 125 -p 2 100 100
+./scripts/run_sample_size_analysis.sh --tag psychoactive --no-stratify -s 1 17 30 -b 1 30 100 -p 2 100 100 &
+./scripts/run_sample_size_analysis.sh --tag all --no-stratify --scipy-procrustes --min 25 -s 1 30 30 -b 1 30 1000 -p 2 20 20 &
 
 # boostrapped null model
 scripts/run_sample_size_analysis.sh --tag all --no-stratify --null-model -s 30 30 30 -b 1 30 100 -p 2 100 100 &
+scripts/run_sample_size_analysis.sh --tag healthy --no-stratify --null-model --scipy-procrustes --min 125 -s 1 19 30 -b 51 100 100 -p 2 20 20 &
+
+##
+## Plotting
+##
 
 ./scripts/dispatch_job.sh scripts/plot_sample_size_results.py 20 20 -m 2G -t 1:00:00
-./scripts/dispatch_job.sh scripts/aggregate_sample_size_results.py 100 100 --subset healthy -m 100G -t 0:20:00
-./scripts/dispatch_job.sh scripts/aggregate_sample_size_results.py 20 20 --subset healthy -m 40G -t 0:20:00
-./scripts/dispatch_job.sh scripts/aggregate_sample_size_results.py 5 5 --subset psychoactive -m 20G -t 0:20:00
-./scripts/dispatch_job.sh scripts/aggregate_sample_size_results.py 100 100 --subset all-null_model -m 20G -t 0:20:00
+./scripts/dispatch_job.sh scripts/aggregate_sample_size_results.py 100 100 --subset hypertension -m 100G -t 0:20:00
+./scripts/dispatch_job.sh scripts/aggregate_sample_size_results.py 20 20 --subset all -m 100G -t 0:40:00
 
-./scripts/dispatch_job.sh scripts/plot_loadings_scatter.py 100 100 --subset all -m 10G -t 0:20:00
-./scripts/dispatch_job.sh scripts/plot_loadings_heatmaps.py 100 100  --subset all -m 10G -t 0:20:00
+./scripts/dispatch_job.sh scripts/plot_loadings_scatter.py 20 20 --subset all -m 10G -t 0:20:00
+./scripts/dispatch_job.sh scripts/plot_loadings_heatmaps.py 20 20 --subset all -m 10G -t 0:20:00
 
 ./scripts/dispatch_job.sh scripts/plot_loadings_diff.py 100 100 --tag1 'add_age_no_stratify' --cca-suffix2 'subtract_age_no_stratify'  --subset psychoactive -m 15G -t 0:20:00

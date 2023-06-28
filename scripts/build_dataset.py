@@ -12,8 +12,8 @@ CONF_NAME = 'demographic'
 @click.option('--dataset-name', 'dataset_names', multiple=True)
 @click.option('--extra-dataset-name', 'extra_dataset_names', multiple=True)
 @click.option('--conf-name', default=CONF_NAME)
-@click.option('--udi-holdout', default=UDI_AGE)
-@click.option('--group-name', default=PREFIX_AGE_GROUP)
+@click.option('--udi-holdout', default=None)#UDI_AGE)
+@click.option('--group-name', default=None)#PREFIX_AGE_GROUP)
 @click.option('--verbose/--quiet', default=True)
 def build_dataset(dpath_data, dataset_names, extra_dataset_names, conf_name, 
                   udi_holdout, group_name, verbose):

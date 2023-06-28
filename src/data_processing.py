@@ -405,7 +405,7 @@ def get_age_groups_from_holdouts(dpath, udi_age=UDI_AGE, year_step=5, plot=False
     print(f'\tMedian: {df_holdout[udi_age].median()}')
     print('----------------------')
 
-    age_groups = df_holdout[udi_age].map(lambda age: age // year_step)
+    age_groups = df_holdout[udi_age].squeeze().map(lambda age: age // year_step)
     age_groups.name = PREFIX_AGE_GROUP
     group_ids = set(age_groups) # unique
 
