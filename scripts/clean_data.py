@@ -13,7 +13,7 @@ DOMAINS_EXTRA = ['disease']
 
 # set HOLDOUTS to [] to keep age info
 # set everything else as False/None (will be done with sklearn-style models later)
-HOLDOUTS = [] #[21003, 34]#[] # TODO do we still need to hold out these?
+HOLDOUTS = [21003, 34] # NOTE: [] for subtract_age, [21003, 34] for add_age
 SQUARE_CONF = False#False
 THRESHOLD_NA = None#0.5#None
 THRESHOLD_HIGH_FREQ = None#0.95#None
