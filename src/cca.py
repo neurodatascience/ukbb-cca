@@ -390,7 +390,27 @@ class CcaAnalysis(_Base):
         # print([np.sum(np.logical_not(np.isfinite(X))) for X in X_train_preprocessed])
 
         cca = model['cca']
-        cca.fit(X_train_preprocessed)
+
+        try:
+            cca.fit(X_train_preprocessed)
+        except Exception as exception:
+            if self.debug:
+                import dill as pickle
+                with open('debug.pkl', 'wb') as file_debug:
+                    pickle.dump({
+                        'data': data,
+                        'i_train': i_train,
+                        'i_test': i_test,
+                        'model': model,
+                        'preprocess': preprocess,
+                        'deconfs': deconfs,
+                        'return_fitted_model': return_fitted_model,
+                        'X_train_preprocessed': X_train_preprocessed,
+                        'X_test_preprocessed': X_test_preprocessed,
+                        'deconfs_train': deconfs_train,
+                        'deconfs_test': deconfs_test,
+                    }, file_debug)
+            raise exception
 
         if return_fitted_model:
             return model
@@ -497,9 +517,21 @@ class CcaAnalysis(_Base):
                     i_test_all.extend(new_i_test)
 
                 # try again if non-convergence error
-                except np.linalg.LinAlgError as error:
-                    print(f'LinAlgError: {error}')
+                except np.linalg.LinAlgError as exception:
+                    print(f'LinAlgError: {exception}')
                     continue
+
+                except Exception as exception:
+
+                    # this error happens in the CCA zoo model (eigh function)
+                    # the input data does not seem to contain infs or NaNs
+                    # so ignore and try more models
+                    if isinstance(exception, ValueError) and str(exception) == 'array must not contain infs or NaNs':
+                        continue
+
+                    # otherwise throw the error
+                    else:
+                        raise exception
 
         # ensemble model
         CAs_learn, CAs_val, ensemble_model = apply_ensemble_CCA(
