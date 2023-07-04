@@ -168,7 +168,7 @@ def aggregate_sample_size_results(n_pcs_all, dpath_cca, subset, i_component, is_
                 kwargs_np={'q': quantile},
             )
         )
-        for quantile in [BOOTSTRAP_ALPHA, 1 - BOOTSTRAP_ALPHA]
+        for quantile in [BOOTSTRAP_ALPHA/2, 1 - BOOTSTRAP_ALPHA/2]
     })
 
     print(results_summary)
@@ -232,7 +232,7 @@ def aggregate_sample_size_results(n_pcs_all, dpath_cca, subset, i_component, is_
                 try:
                     bootstrap_corrs = [
                         results_summary_null[sample_size][cca_type]['val'][f'quantile_{quantile}'].corrs
-                        for quantile in [BOOTSTRAP_ALPHA, 1 - BOOTSTRAP_ALPHA]
+                        for quantile in [BOOTSTRAP_ALPHA/2, 1 - BOOTSTRAP_ALPHA/2]
                     ]
                 except Exception:
                     bootstrap_corrs = None

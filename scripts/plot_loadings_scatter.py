@@ -85,8 +85,8 @@ def plot_loadings(n_pcs_all, dpath_cca, subset, i_component, n_loadings, dpath_s
             axes_row = axes[i_row]
 
             try:
-                loadings_null_low = summary_null[sample_size, cca_type, SET_NAME, f'quantile_{BOOTSTRAP_ALPHA}'].loadings
-                loadings_null_high = summary_null[sample_size, cca_type, SET_NAME, f'quantile_{1-BOOTSTRAP_ALPHA}'].loadings
+                loadings_null_low = summary_null[sample_size, cca_type, SET_NAME, f'quantile_{BOOTSTRAP_ALPHA/2}'].loadings
+                loadings_null_high = summary_null[sample_size, cca_type, SET_NAME, f'quantile_{1-BOOTSTRAP_ALPHA/2}'].loadings
             except Exception as ex:
                 loadings_null_low = None
                 loadings_null_high = None

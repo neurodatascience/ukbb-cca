@@ -22,7 +22,7 @@ DNAME_SUMMARY = 'summary'
 AX_WIDTH_UNIT = 1.5
 AX_HEIGHT = 20
 
-BOOTSTRAP_ALPHA = 0.1 # TODO change to 0.05
+BOOTSTRAP_ALPHA = 0.05
 
 MASK_COLOR_LEVEL = 0.5 # 0 is white, 1 is black
 MASK_ALPHA = 0.5 # transparency of black layer for masked regions
