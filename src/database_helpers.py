@@ -77,8 +77,11 @@ class DatabaseHelper():
 
         return udis
 
-    def get_categories_from_udis(self, udis):
-        return self.df_merged.loc[udis, 'main_category'].drop_duplicates().tolist()
+    def get_categories_from_udis(self, udis, drop_duplicates=True):
+        categories = self.df_merged.loc[udis, 'main_category']
+        if drop_duplicates:
+            categories = categories.drop_duplicates()
+        return categories.tolist()
 
     def filter_udis_by_category(self, udis, category_ids, keep=True):
 

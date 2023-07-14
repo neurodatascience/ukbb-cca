@@ -110,7 +110,42 @@ def find_cols_with_large(df: pd.DataFrame, threshold=None) -> list:
     is_large = (df > threshold).any(axis='index')
     return df.columns[is_large].tolist()
 
-def one_hot_encode(df: pd.DataFrame, multiindex_names: list[str]) -> pd.DataFrame:
+def average_fields(df: pd.DataFrame, fields: list[str], multiindex_names: list[str], db_helper: DatabaseHelper) -> pd.DataFrame:
+    
+    dfs_averaged = {}
+    udis_averaged = set()
+    for field in fields:
+        udis_to_average = db_helper.filter_udis_by_field(df.columns, [field])
+
+        if len(udis_to_average) == 0:
+            continue
+
+        instances = {udi.split('-')[-1].split('.')[0] for udi in udis_to_average}
+        array_indices = sorted([udi.split('.')[-1] for udi in udis_to_average])
+
+        if len(instances) == 1:
+            instance = instances.pop()
+        else:
+            raise NotImplementedError(f'Multiple instances found for field {field}: {instances}')
+        new_udi = f'{field}-{instance}.{array_indices[0]}' # use smallest available
+
+        s_mean = df[udis_to_average].mean(axis='columns')
+        s_std = df[udis_to_average].std(axis='columns')
+        dfs_averaged[new_udi] = pd.concat(
+            [s_mean, s_std],
+            axis='columns',
+            keys=[f'{new_udi}_mean{len(udis_to_average)}', f'{new_udi}_std{len(udis_to_average)}'],
+        )
+
+        udis_averaged.update(udis_to_average)
+
+    if len(dfs_averaged) == 0:
+        df_averaged = None
+    else:
+        df_averaged = pd.concat(dfs_averaged, axis='columns', names=multiindex_names)
+    return df_averaged, udis_averaged
+
+def one_hot_encode(df: pd.DataFrame, multiindex_names: list[str], keep=None) -> pd.DataFrame:
 
     def fn_rename(colname):
         components = colname.split('.')
@@ -124,7 +159,12 @@ def one_hot_encode(df: pd.DataFrame, multiindex_names: list[str]) -> pd.DataFram
     for colname_original in df.columns:
 
         df_encoded = pd.get_dummies(df[colname_original], prefix=colname_original, prefix_sep='_')
-        dfs_encoded[colname_original] = df_encoded.rename(columns=fn_rename)
+        df_encoded = df_encoded.rename(columns=fn_rename)
+
+        if (keep is not None) and (colname_original in keep):
+            df_encoded = df_encoded[[keep[colname_original]]]
+        
+        dfs_encoded[colname_original] = df_encoded
 
     return pd.concat(dfs_encoded, axis='columns', names=multiindex_names)
 
@@ -188,6 +228,8 @@ def clean_datasets(
     holdout_fields: list[int] = None,
     square_conf: bool = True,
     domains_to_square: list[str] = None,
+    fields_to_average: list[str] = None,
+    one_hot_encoded_udis_keep: dict[str, ] = None, # TODO
     threshold_na=0.5,
     threshold_high_freq=0.95,
     threshold_outliers=100,
@@ -234,13 +276,21 @@ def clean_datasets(
             dfs_holdout.append(df_holdout) # to save later
             df_data = df_data.drop(columns=holdout_udis)
 
+        # replace some columns by their mean/standard deviation value
+        if fields_to_average is not None and len(fields_to_average) > 0:
+            df_averaged, udis_averaged = average_fields(df_data, fields_to_average, MULTIINDEX_NAMES, db_helper)
+
+            # drop columns that were averaged
+            print(f'\t\tDropping {len(udis_averaged)} columns that were averaged')
+            df_data = df_data.drop(columns=udis_averaged)
+
         # one-hot encode categorical variables
         udis = df_data.columns
         categorical_udis = db_helper.filter_udis_by_value_type(udis, 'categorical')
         if len(categorical_udis) > 0:
 
             print(f'\tOne-hot encoding {len(categorical_udis)} categorical UDIs')
-            df_encoded = one_hot_encode(df_data.loc[:, categorical_udis], MULTIINDEX_NAMES) # returns multiindexed df
+            df_encoded = one_hot_encode(df_data.loc[:, categorical_udis], MULTIINDEX_NAMES, keep=one_hot_encoded_udis_keep) # returns multiindexed df
 
             # drop original categorical columns
             df_data = df_data.drop(columns=categorical_udis)
@@ -253,7 +303,7 @@ def clean_datasets(
             names=MULTIINDEX_NAMES,
         )
         
-        df_data = pd.concat([df_data, df_encoded], axis='columns')
+        df_data = pd.concat([df_data, df_encoded, df_averaged], axis='columns')
         print(f'\t\tShape after one-hot encoding: {df_data.shape}')
 
         # square confounders

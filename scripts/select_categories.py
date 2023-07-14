@@ -12,7 +12,45 @@ CONFIGS = {
         'categories': [100026], # [100026, 116]
         'fields': [],
         'title_substring': None,
-        'title_substrings_reject': [],
+        'title_substrings_reject': [
+            # reaction time
+            'Index for card',
+            # numeric memory
+            'Completion status of numeric memory test',
+            'Round of numeric memory test',
+            'Number of digits to be memorised/recalled',
+            'Target number to be',
+            'Number entered by participant',
+            'Time number displayed for',
+            'Digits entered correctly',
+            'Time first key touched',
+            'Time elapsed',
+            'Keystroke history',
+            # fluid intelligence
+            'Attempted fluid intelligence (FI) test',
+            # trail making
+            # matrix pattern completion
+            'Item selected for each puzzle',
+            # symbol digit substitution
+            'Values entered',
+            'Values wanted',
+            'First code array presented',
+            # tower rearranging
+            'Value entered',
+            # prospective memory
+            'Test completion status',
+            'PM: initial answer',
+            'PM: final answer',
+            'Final attempt correct',
+            'History of attempts',
+            'Duration screen displayed',
+            'Time when initial screen shown',
+            'Time screen exited',
+            # pairs matching
+            'Number of columns displayed in round',
+            'Number of rows displayed in round',
+            'Screen layout',
+        ],
         'instances': [2],
         'keep_instance': 'all',
     },
