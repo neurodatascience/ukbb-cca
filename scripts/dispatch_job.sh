@@ -13,7 +13,7 @@ JOB_ID_SYMBOL="%j"
 # input validation
 if [ $# -lt 1 ]
 then
-        echo "Usage: $0 FPATH_COMMAND [ARG1 ARG2 ...] [-m/--mem MEMORY] [-t/--time TIMELIMIT] [-d/--dir SUBDIRS_LOG] [--shell]"
+        echo "Usage: $0 FPATH_COMMAND [ARG1 ARG2 ...] [-m/--mem MEMORY] [-t/--time TIMELIMIT] [-d/--dir SUBDIRS_LOG] [--dependency JOB_ID] [--shell]"
         exit 1
 fi
 
@@ -47,6 +47,11 @@ do
                         shift # past argument
                         shift # past value
                         ;;
+                --dependency)
+                        DEPENDENCY="$2"
+                        shift # past argument
+                        shift # past value
+                        ;;
                 --shell)
                         COMMAND_EXT=".sh"
                         USE_TEMPLATE=false
@@ -72,6 +77,12 @@ fi
 if [ -z "${DISPATCH_TIMELIMIT}" ]
 then
         DISPATCH_TIMELIMIT="${DEFAULT_TIMELIMIT}"
+fi
+
+# get dependency flag string
+if [ ! -z "${DEPENDENCY}" ]
+then
+        FLAG_DEPENDENCY="--dependency=afterok:${DEPENDENCY}"
 fi
 
 # get path to slurm script directory
@@ -114,7 +125,7 @@ then
         echo -e "id\tdate\tscript\targs\tmemory\ttime\tlog" > $FPATH_DISPATCH_LOG
 fi
 
-COMMAND="sbatch --parsable --output=${FPATH_OUT} --mem=${DISPATCH_MEMORY} --time=${DISPATCH_TIMELIMIT}"
+COMMAND="sbatch --parsable --job-name=${BASENAME_COMMAND} --output=${FPATH_OUT} --mem=${DISPATCH_MEMORY} --time=${DISPATCH_TIMELIMIT} ${FLAG_DEPENDENCY}"
 if [ $USE_TEMPLATE = true ]
 then
         COMMAND="${COMMAND} ${FPATH_TEMPLATE}"
