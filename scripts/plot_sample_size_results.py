@@ -11,9 +11,12 @@ from src.plotting import save_fig
 from src.utils import make_parent_dir, print_params
 
 DNAME_FIGS = 'figs'
-SUBDIRS_IGNORE = [
-    'summary', 'all-null', 'healthy-null', 
-    'hypertension-null', 'psychoactive-null',
+SUBDIRS_IGNORE = ['summary']
+SUBDIRS_IGNORE_PLOTTING = [
+    'all-null_model',
+    'healthy-null_model',
+    'hypertension-null_model',
+    'psychoactive-null_model',
 ]
 
 @click.command()
@@ -118,7 +121,7 @@ def plot_sample_size_results(n_pcs_all, dpath_cca, i_component):
     ).reset_index(drop=True)
     
     fig = sns.relplot(
-        data=df_results, x='corr_val', y='corr_learn',
+        data=df_results.loc[~df_results['subset'].isin(SUBDIRS_IGNORE_PLOTTING)], x='corr_val', y='corr_learn',
         col='cca_type', row='subset', hue='sample_size',
         palette='flare_r',
         kind='scatter', s=100, linewidth=0,
