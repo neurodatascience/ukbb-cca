@@ -173,6 +173,22 @@ do
         then
             DISPATCH_MEMORY="10G"
             DISPATCH_TIME="0:30:00"
+        elif [ "${N_PCS}" = "5 10" ]
+        then
+            DISPATCH_MEMORY="10G"
+            DISPATCH_TIME="0:30:00"
+        elif [ "${N_PCS}" = "5 20" ]
+        then
+            DISPATCH_MEMORY="15G"
+            DISPATCH_TIME="0:30:00"
+        elif [ "${N_PCS}" = "10 10" ]
+        then
+            DISPATCH_MEMORY="15G"
+            DISPATCH_TIME="0:30:00"
+        elif [ "${N_PCS}" = "10 20" ]
+        then
+            DISPATCH_MEMORY="15G"
+            DISPATCH_TIME="0:30:00"
         elif [ "${N_PCS}" = "20 20" ]
         then
             DISPATCH_MEMORY="15G"
