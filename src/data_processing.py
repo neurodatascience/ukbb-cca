@@ -283,6 +283,8 @@ def clean_datasets(
             # drop columns that were averaged
             print(f'\t\tDropping {len(udis_averaged)} columns that were averaged')
             df_data = df_data.drop(columns=udis_averaged)
+        else:
+            df_averaged = None
 
         # one-hot encode categorical variables
         udis = df_data.columns
