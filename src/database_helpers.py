@@ -26,8 +26,13 @@ class DatabaseHelper():
     def parse_udis(self, udis):
         return [udi.split('_')[0] for udi in udis]
 
-    def udis_to_text(self, udis, encoded=True):
-        output = self.get_info(self.parse_udis(udis), colnames='title_field')
+    def udis_to_text(self, udis, encoded=True, prepend_category=False):
+        udis_parsed = self.parse_udis(udis)
+        output = self.get_info(udis_parsed, colnames='title_field')
+        if prepend_category:
+            category_ids = self.get_categories_from_udis(udis_parsed, drop_duplicates=False)
+            for i_category, category_id in enumerate(category_ids):
+                output[i_category] = f'[{self.get_category_title(category_id)}] {output[i_category]}'
         if encoded:
             for i_udi, udi in enumerate(udis):
                 suffix = udi.split('_')[-1]

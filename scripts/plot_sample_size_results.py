@@ -122,7 +122,7 @@ def plot_sample_size_results(n_pcs_all, dpath_cca, i_component):
     
     fig = sns.relplot(
         data=df_results.loc[~df_results['subset'].isin(SUBDIRS_IGNORE_PLOTTING)], x='corr_val', y='corr_learn',
-        col='cca_type', row='subset', hue='sample_size',
+        col='subset', row='cca_type', hue='sample_size',
         palette='flare_r',
         kind='scatter', s=100, linewidth=0,
     )

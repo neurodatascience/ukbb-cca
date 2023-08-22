@@ -61,11 +61,12 @@ class CcaResults(_Base):
 
     def __str__(self) -> str:
         components = [
-            f'corrs={self.corrs.shape}'
+            f'corrs={self.corrs.shape if self.corrs is not None else None}'
         ]
         for name in ['CAs', 'loadings']:
+            attr = getattr(self, name)
             components.append(
-                f'{name}={[x.shape for x in getattr(self, name)]}'
+                f'{name}={[x.shape for x in attr] if attr is not None else None}'
             )
         return self._str_helper(components=components)
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import pickle
 import sys
 from pathlib import Path
 
@@ -38,7 +39,8 @@ SET_NAME = 'learn'
 @click.option('--CA', 'i_component', default=1)
 @click.option('--dpath-schema', required=True, envvar='DPATH_SCHEMA')
 @click.option('--fpath-udis', required=True, envvar='FPATH_UDIS')
-def plot_loadings_heatmaps(n_pcs_all, dpath_cca, subset, i_component, dpath_schema, fpath_udis):
+@click.option('--largest-null/--no-largest-null', 'use_largest_null_model', default=True)
+def plot_loadings_heatmaps(n_pcs_all, dpath_cca, subset, i_component, dpath_schema, fpath_udis, use_largest_null_model):
 
     print_params(locals())
     i_component = i_component - 1 # zero-indexing
@@ -51,7 +53,8 @@ def plot_loadings_heatmaps(n_pcs_all, dpath_cca, subset, i_component, dpath_sche
         print(f'[ERROR] Directory not found: {dpath_subset}')
         sys.exit(1)
 
-    dpath_figs = Path(dpath_cca, DNAME_FIGS, n_PCs_str, subset)
+    dpath_figs = Path(dpath_cca, DNAME_FIGS)
+    dpath_figs_heatmaps = Path(dpath_figs, n_PCs_str, subset)
     
     fpath_summary = Path(dpath_cca, n_PCs_str, DNAME_SUMMARY, subset)
     summary = NestedItems.load_fpath(fpath_summary)
@@ -68,6 +71,7 @@ def plot_loadings_heatmaps(n_pcs_all, dpath_cca, subset, i_component, dpath_sche
     dataset_names = summary.dataset_names
     cca_types = summary.levels['cca_type']
     sample_sizes = sorted([int(s) for s in summary.levels['sample_size']])
+    largest_sample_size = sample_sizes[-1]
 
     n_rows = len(cca_types)
     n_cols = len(dataset_names)
@@ -96,14 +100,21 @@ def plot_loadings_heatmaps(n_pcs_all, dpath_cca, subset, i_component, dpath_sche
             data_for_df_mag = []
             data_for_df_rank = []
             data_for_df_mask = []
+            data_for_df_std = [] # TODO
             for sample_size in reversed(sample_sizes):
 
                 loadings = summary[sample_size, cca_type, SET_NAME, 'mean'].loadings[i_col].iloc[:, i_component]
+                loadings_std = summary[sample_size, cca_type, SET_NAME, 'std'].loadings[i_col].iloc[:, i_component]
+
+                if use_largest_null_model:
+                    sample_size_null_model = largest_sample_size
+                else:
+                    sample_size_null_model = sample_size
 
                 if summary_null is not None:
                     try:
-                        loadings_null_low = summary_null[sample_size, cca_type, SET_NAME, f'quantile_{BOOTSTRAP_ALPHA/2}'].loadings[i_col].iloc[:, i_component]
-                        loadings_null_high = summary_null[sample_size, cca_type, SET_NAME, f'quantile_{1-BOOTSTRAP_ALPHA/2}'].loadings[i_col].iloc[:, i_component]
+                        loadings_null_low = summary_null[sample_size_null_model, cca_type, SET_NAME, f'quantile_{BOOTSTRAP_ALPHA/2}'].loadings[i_col].iloc[:, i_component]
+                        loadings_null_high = summary_null[sample_size_null_model, cca_type, SET_NAME, f'quantile_{1-BOOTSTRAP_ALPHA/2}'].loadings[i_col].iloc[:, i_component]
                         
                         # the null model loadings might have different variables than the normal loadings
                         # so we align them by label with pd.concat before computing the mask
@@ -115,7 +126,18 @@ def plot_loadings_heatmaps(n_pcs_all, dpath_cca, subset, i_component, dpath_sche
                             },
                             axis='columns',
                         )
+                        
+                        # if null loading has no variance, pretend it is missing
+                        df_tmp.loc[df_tmp['low'] == df_tmp['high'], ['low', 'high']] = np.nan
+
+                        # impute missing values in mask
+                        for col in ['low', 'high']:
+                            df_tmp[col] = df_tmp[col].replace(np.nan, df_tmp[col].mean())
+
+                        # print(df_tmp)
                         mask = (df_tmp['loadings'] > df_tmp['low']) & (df_tmp['loadings'] < df_tmp['high'])
+                        # print(mask)
+                        # return
 
                     except Exception as ex:
                         print(ex)
@@ -130,18 +152,35 @@ def plot_loadings_heatmaps(n_pcs_all, dpath_cca, subset, i_component, dpath_sche
 
                 data_mask = pd.Series(mask, name=sample_size)
 
+                data_std = loadings_std
+                data_std.name = sample_size
+
                 data_for_df_mag.append(data_mag)
                 data_for_df_rank.append(data_rank)
                 data_for_df_mask.append(data_mask)
+                data_for_df_std.append(data_std)
 
             df_mag = pd.concat(data_for_df_mag, axis='columns').sort_values(sample_sizes[-1], ascending=False)
             df_rank = pd.concat(data_for_df_rank, axis='columns').sort_values(sample_sizes[-1], ascending=False)
-            df_mask: pd.DataFrame = pd.concat(data_for_df_mask, axis='columns').loc[df_mag.index]
+            df_mask: pd.DataFrame = pd.concat(data_for_df_mask, axis='columns').loc[df_mag.index].fillna(False)
+            df_std = pd.concat(data_for_df_std, axis='columns').loc[df_mag.index]
+
+            # re-order based on significance
+            df_mask_pos = df_mask.loc[df_mag[sample_sizes[-1]] >= 0]
+            df_mask_neg = df_mask.loc[(df_mag[sample_sizes[-1]] < 0) | (df_mag[sample_sizes[-1]].isna())]
+            df_mask_pos_sorted = df_mask_pos.sort_values(sample_sizes[-1], ascending=True, kind='stable')
+            df_mask_neg_sorted = df_mask_neg.sort_values(sample_sizes[-1], ascending=False, kind='stable')
+            index_sorted = df_mask_pos_sorted.index.tolist() + df_mask_neg_sorted.index.tolist()
+            df_mag = df_mag.loc[index_sorted]
+            df_rank = df_rank.loc[index_sorted]
+            df_mask = df_mask.loc[index_sorted]
+            df_std = df_std.loc[index_sorted]
 
             # human-readable labels
-            df_mag.index = db_helper.udis_to_text(df_mag.index)
-            df_rank.index = db_helper.udis_to_text(df_rank.index)
-            df_mask.index = db_helper.udis_to_text(df_mask.index)
+            df_mag.index = db_helper.udis_to_text(df_mag.index, encoded=True, prepend_category=True)
+            df_rank.index = db_helper.udis_to_text(df_rank.index, encoded=True, prepend_category=True)
+            df_mask.index = db_helper.udis_to_text(df_mask.index, encoded=True, prepend_category=True)
+            df_std.index = db_helper.udis_to_text(df_std.index, encoded=True, prepend_category=True)
 
             sns.heatmap(df_mag, ax=ax_mag)
             sns.heatmap(df_rank, ax=ax_rank)
@@ -153,13 +192,18 @@ def plot_loadings_heatmaps(n_pcs_all, dpath_cca, subset, i_component, dpath_sche
             ax_mag.set_title(f'{dataset_name.capitalize()} ({cca_type})')
             ax_rank.set_title(f'{dataset_name.capitalize()} ({cca_type})')
 
+            to_save = {'mag': df_mag, 'rank': df_rank, 'mask': df_mask, 'std': df_std}
+            fpath_out = dpath_figs / f'loadings-{subset}-{cca_type}-{SET_NAME}-{dataset_name}-CA{i_component+1}.pkl'
+            with fpath_out.open('wb') as file_out:
+                pickle.dump(to_save, file_out)
+
     fig_mag.tight_layout()
     fig_rank.tight_layout()
 
-    fpath_fig_mag = dpath_figs / f'{subset}-loadings_heatmap_mag'
+    fpath_fig_mag = dpath_figs_heatmaps / f'{subset}-loadings_heatmap_mag'
     save_fig(fig_mag, fpath_fig_mag)
 
-    fpath_fig_rank = dpath_figs / f'{subset}-loadings_heatmap_rank'
+    fpath_fig_rank = dpath_figs_heatmaps / f'{subset}-loadings_heatmap_rank'
     save_fig(fig_rank, fpath_fig_rank)
 
 def add_mask_to_heatmap(df_mask: pd.DataFrame, ax: plt.Axes):

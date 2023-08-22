@@ -144,8 +144,9 @@ class BootstrapSamples(_Samples):
             # split dataset into in/out-sample sets
             i_samples_in = resample(
                 i_samples, 
-                n_samples=self.sample_size_max, 
                 replace=False, 
+                n_samples=self.sample_size_max, 
+                random_state=self.random_state,
                 stratify=groups.iloc[i_samples] if groups is not None else None)
             i_samples_out = np.array(list(set(i_samples) - set(i_samples_in)))
             # if groups is not None:
@@ -165,13 +166,25 @@ class BootstrapSamples(_Samples):
 
                 # sample with replacement
                 groups_in = data.group.iloc[i_samples_in] if groups is not None else None
-                i_samples_learn = resample(i_samples_in, n_samples=sample_size, replace=True, stratify=groups_in)
+                i_samples_learn = resample(
+                    i_samples_in,
+                    replace=True,
+                    n_samples=sample_size,
+                    random_state=self.random_state,
+                    stratify=groups_in,
+                )
                 # i_samples_learn = self.rng.choice(i_samples_in, size=sample_size, replace=True)
                 i_samples_learn_all[i_bootstrap_repetition][sample_size] = i_samples_learn
 
                 if self.match_val_set_size:
                     groups_out = data.group.iloc[i_samples_out] if groups is not None else None
-                    i_samples_val = resample(i_samples_out, n_samples=sample_size, replace=True, stratify=groups_out)
+                    i_samples_val = resample(
+                        i_samples_out,
+                        replace=True,
+                        n_samples=sample_size,
+                        random_state=self.random_state,
+                        stratify=groups_out,
+                    )
                     # i_samples_val = self.rng.choice(i_samples_out, size=sample_size, replace=True)
                     i_samples_val_all[i_bootstrap_repetition][sample_size] = i_samples_val
 

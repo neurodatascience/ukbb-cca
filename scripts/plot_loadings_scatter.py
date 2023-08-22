@@ -28,7 +28,8 @@ BOOTSTRAP_ALPHA = 0.05
 @click.option('--n', 'n_loadings', default=10)
 @click.option('--dpath-schema', required=True, envvar='DPATH_SCHEMA')
 @click.option('--fpath-udis', required=True, envvar='FPATH_UDIS')
-def plot_loadings(n_pcs_all, dpath_cca, subset, i_component, n_loadings, dpath_schema, fpath_udis):
+@click.option('--largest-null/--no-largest-null', 'use_largest_null_model', default=True)
+def plot_loadings(n_pcs_all, dpath_cca, subset, i_component, n_loadings, dpath_schema, fpath_udis, use_largest_null_model):
 
     print_params(locals())
     i_component = i_component - 1 # zero-indexing
@@ -59,6 +60,8 @@ def plot_loadings(n_pcs_all, dpath_cca, subset, i_component, n_loadings, dpath_s
     # udis_datasets = summary.udis_datasets
     # labels = [db_helper.udis_to_text(udis.get_level_values(-1)) for udis in udis_datasets]
 
+    largest_sample_size = sorted(summary.levels['sample_size'])[-1]
+
     # one figure per sample size
     for sample_size in summary.levels['sample_size']:
 
@@ -74,6 +77,11 @@ def plot_loadings(n_pcs_all, dpath_cca, subset, i_component, n_loadings, dpath_s
             figsize=(n_cols*AX_WIDTH, n_rows*n_loadings*AX_HEIGHT_UNIT),
             squeeze=False,
             )
+        
+        if use_largest_null_model:
+            sample_size_null_model = largest_sample_size
+        else:
+            sample_size_null_model = sample_size
 
         for i_row, cca_type in enumerate(cca_types):
 
@@ -85,16 +93,19 @@ def plot_loadings(n_pcs_all, dpath_cca, subset, i_component, n_loadings, dpath_s
             axes_row = axes[i_row]
 
             try:
-                loadings_null_low = summary_null[sample_size, cca_type, SET_NAME, f'quantile_{BOOTSTRAP_ALPHA/2}'].loadings
-                loadings_null_high = summary_null[sample_size, cca_type, SET_NAME, f'quantile_{1-BOOTSTRAP_ALPHA/2}'].loadings
-            except Exception as ex:
+                loadings_null_low = summary_null[sample_size_null_model, cca_type, SET_NAME, f'quantile_{BOOTSTRAP_ALPHA/2}'].loadings
+                loadings_null_high = summary_null[sample_size_null_model, cca_type, SET_NAME, f'quantile_{1-BOOTSTRAP_ALPHA/2}'].loadings
+
+                loadings_null_low = [loading.iloc[:, i_component] for loading in loadings_null_low]
+                loadings_null_high = [loading.iloc[:, i_component] for loading in loadings_null_high]
+            except Exception:
                 loadings_null_low = None
                 loadings_null_high = None
             
             plot_loadings_scatter(
                 loadings=[loading.iloc[:, i_component] for loading in loadings],
-                loadings_null_low=[loading.iloc[:, i_component] for loading in loadings_null_low],
-                loadings_null_high=[loading.iloc[:, i_component] for loading in loadings_null_high],
+                loadings_null_low=loadings_null_low,
+                loadings_null_high=loadings_null_high,
                 labels=labels,
                 ax_titles=[
                     f'{dataset_name.capitalize()} loadings ({cca_type}) ($\mathregular{{CA_{{{i_component+1}}}}}$)' 
@@ -102,6 +113,7 @@ def plot_loadings(n_pcs_all, dpath_cca, subset, i_component, n_loadings, dpath_s
                 ],
                 errs=[err.iloc[:, i_component] for err in loadings_errs],
                 axes=axes_row,
+                n_loadings=n_loadings,
             )
 
         fpath_fig = dpath_figs / f'{subset}_{sample_size}-loadings'
