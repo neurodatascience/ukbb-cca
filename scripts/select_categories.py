@@ -100,6 +100,7 @@ def select_categories(domain, fpath_data, dpath_processed, fpath_udis, dpath_sch
         raise ValueError(f'Invalid domain "{domain}". Accepted domains are: {CONFIGS.keys()}')
 
     categories = config['categories']
+    fields = config['fields']
     title_substring = config['title_substring']
     title_substrings_reject = config['title_substrings_reject']
     instances = config['instances']
@@ -110,7 +111,7 @@ def select_categories(domain, fpath_data, dpath_processed, fpath_udis, dpath_sch
 
     db_helper = DatabaseHelper(dpath_schema, fpath_udis)
 
-    udis = db_helper.get_udis_from_categories_and_fields(categories, value_types=value_types, 
+    udis = db_helper.get_udis_from_categories_and_fields(categories, fields=fields, value_types=value_types, 
         title_substring=title_substring, title_substrings_reject=title_substrings_reject,
         instances=instances, keep_instance=keep_instance)
 
