@@ -30,6 +30,7 @@ class BootstrapSamples(_Samples):
         tag,
         n_bootstrap_repetitions,
         n_sample_sizes,
+        replace=True,
         upper_bound_fraction=0.5,
         match_val_set_size=False,
         sample_size_min=None,
@@ -60,6 +61,7 @@ class BootstrapSamples(_Samples):
         self.n_folds = n_folds
         self.subset_fn = subset_fn
         self.stratify = stratify
+        self.replace = replace
 
         self.sample_sizes = None
         self.i_samples_learn_all = None
@@ -164,11 +166,11 @@ class BootstrapSamples(_Samples):
 
             for sample_size in sample_sizes:
 
-                # sample with replacement
+                # sample
                 groups_in = data.group.iloc[i_samples_in] if groups is not None else None
                 i_samples_learn = resample(
                     i_samples_in,
-                    replace=True,
+                    replace=self.replace,
                     n_samples=sample_size,
                     random_state=self.random_state,
                     stratify=groups_in,
@@ -180,7 +182,7 @@ class BootstrapSamples(_Samples):
                     groups_out = data.group.iloc[i_samples_out] if groups is not None else None
                     i_samples_val = resample(
                         i_samples_out,
-                        replace=True,
+                        replace=self.replace,
                         n_samples=sample_size,
                         random_state=self.random_state,
                         stratify=groups_out,

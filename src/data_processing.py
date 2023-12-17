@@ -268,11 +268,12 @@ def clean_datasets(
             print(f'\tExtracting {len(holdout_udis)} holdout variables')
             df_holdout = df_data.loc[:, holdout_udis]
 
-            # remove any subject with missing holdout data
-            n_missing = df_holdout.isna().sum(axis='columns')
-            subjects_with_missing = n_missing.loc[n_missing > 0].index
-            print(f'\t\tRemoving {len(subjects_with_missing)} subjects with no holdout data')
-            subjects_to_drop.update(subjects_with_missing)
+            # # remove any subject with missing holdout data
+            # n_missing = df_holdout.isna().sum(axis='columns')
+            # subjects_with_missing = n_missing.loc[n_missing > 0].index
+            # print(f'\t\tRemoving {len(subjects_with_missing)} subjects with no holdout data')
+            # subjects_to_drop.update(subjects_with_missing)
+            
             dfs_holdout.append(df_holdout) # to save later
             df_data = df_data.drop(columns=holdout_udis)
 

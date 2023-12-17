@@ -10,12 +10,14 @@ UPPER_BOUND_FRACTION = 0.5
 N_FOLDS = 5
 SEED = 3791
 MAX_N_PCS = 300
+REPLACE = False
 
 @click.command()
 @click.argument('n-bootstrap-repetitions', type=int)
 @click.argument('n-sample-sizes', type=int)
 @click.option('--dpath-data', required=True, envvar='DPATH_PROCESSED')
 @click.option('--subset')
+@click.option('--replace', default=REPLACE)
 @click.option('--stratify/--no-stratify', default=False)
 @click.option('--min', 'sample_size_min', type=int)
 @click.option('--max', 'sample_size_max', type=int)
@@ -30,6 +32,7 @@ def generate_bootstrap_samples(
     n_sample_sizes,
     dpath_data,
     subset,
+    replace,
     stratify,
     sample_size_min, 
     sample_size_max, 
@@ -59,6 +62,7 @@ def generate_bootstrap_samples(
         n_bootstrap_repetitions=n_bootstrap_repetitions,
         n_sample_sizes=n_sample_sizes,
         tag=subset,
+        replace=replace,
         subset_fn=subset_fn,
         stratify=stratify,
         sample_size_min=sample_size_min,
