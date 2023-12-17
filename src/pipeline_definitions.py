@@ -2,11 +2,13 @@ from sklearn.pipeline import Pipeline
 from src import PreprocessingPipeline, PipelineXY, PipelineList, UkbbSquarer
 
 from sklearn.feature_selection import VarianceThreshold
-from sklearn.impute import SimpleImputer
+from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import SimpleImputer, IterativeImputer
 from sklearn.preprocessing import QuantileTransformer
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, RobustScaler
 from sklearn.decomposition import PCA
 from . import NanDeconfounder, NanPCA
+from . import FilteringQuantileTransformer
 from . import FeatureSelectorMissing, FeatureSelectorHighFreq, FeatureSelectorOutlier
 from .sklearn_cca import SklearnCCA
 
@@ -18,7 +20,9 @@ def process_verbosity(verbosity):
 def build_data_pipeline(verbosity=0, **kwargs):
     steps = [
         # ('inv_norm', QuantileTransformer(output_distribution='normal')),
-        ('scaler', StandardScaler()),
+        ('inv_norm', FilteringQuantileTransformer(output_distribution='normal')),
+        # ('scaler', StandardScaler()),
+        ('scaler', RobustScaler()),
         ('deconfounder', NanDeconfounder()),
         ('pca', NanPCA()),
     ]
@@ -35,9 +39,12 @@ def build_data_pipeline(verbosity=0, **kwargs):
 
 def build_conf_pipeline(verbosity=0, **kwargs):
     steps = [
-        ('imputer', SimpleImputer(strategy='median')),
+        # ('imputer', SimpleImputer(strategy='median')),
+        ('imputer', IterativeImputer()),
         # ('inv_norm', QuantileTransformer(output_distribution='normal')),
-        ('scaler', StandardScaler()),
+        ('inv_norm', FilteringQuantileTransformer(output_distribution='normal')),
+        # ('scaler', StandardScaler()),
+        ('scaler', RobustScaler()),
         ('squarer', UkbbSquarer()),
         # ('pca', NanPCA()),
     ]
@@ -53,10 +60,8 @@ def build_conf_pipeline(verbosity=0, **kwargs):
     pipeline.set_params(**kwargs)
     return pipeline
 
-def build_cca_pipeline(dataset_names=None, conf_name='conf', n_PCs_all=None, n_CAs=1, verbosity=0, kwargs_conf=None):
+def build_cca_pipeline(dataset_names, conf_name='conf', n_PCs_all=None, n_CAs=1, verbosity=0, kwargs_conf=None):
 
-    if dataset_names is None:
-        dataset_names = [f'data{i+1}' for i in range(len(dataset_names))]
     if n_PCs_all is None:
         n_PCs_all = [1 for _ in range(len(dataset_names))]
     if kwargs_conf is None:
