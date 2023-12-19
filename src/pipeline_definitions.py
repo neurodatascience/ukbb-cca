@@ -40,7 +40,7 @@ def build_data_pipeline(verbosity=0, **kwargs):
 def build_conf_pipeline(verbosity=0, **kwargs):
     steps = [
         # ('imputer', SimpleImputer(strategy='median')),
-        ('imputer', IterativeImputer()),
+        ('imputer', IterativeImputer(max_iter=100)),
         # ('inv_norm', QuantileTransformer(output_distribution='normal')),
         ('inv_norm', FilteringQuantileTransformer(output_distribution='normal')),
         # ('scaler', StandardScaler()),

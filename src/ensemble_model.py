@@ -6,7 +6,7 @@ from sklearn.utils.validation import check_is_fitted
 
 class EnsembleCCA(BaseEstimator, TransformerMixin):
 
-    def __init__(self, models_orig, rotate=True, model_transform=None, use_scipy_procrustes=False):
+    def __init__(self, models_orig, rotate=True, model_transform=None, use_scipy_procrustes=False, procrustes_reference=None):
 
         self.n_models = len(models_orig)
         # self.models_orig = models_orig
@@ -16,6 +16,7 @@ class EnsembleCCA(BaseEstimator, TransformerMixin):
             self.models = models_orig
         self.rotate = rotate
         self.use_scipy_procrustes = use_scipy_procrustes
+        self.procrustes_reference = procrustes_reference
 
     def fit(self, X, y=None):
         '''Fit the rotation matrices.'''
@@ -34,12 +35,14 @@ class EnsembleCCA(BaseEstimator, TransformerMixin):
                 n_datasets = len(X_transformed)
                 Qs = [[] for _ in range(n_datasets)]
                 X_transformed_all = [[] for _ in range(n_datasets)]
-                X_transformed_ref = X_transformed
+
+                if self.procrustes_reference is None:
+                    self.procrustes_reference = X_transformed
 
             for i_dataset in range(n_datasets):
                 X_transformed_all[i_dataset].append(X_transformed[i_dataset])
                 if self.rotate:
-                    Q = self._find_rotation_matrix(X_transformed[i_dataset], X_transformed_ref[i_dataset])
+                    Q = self._find_rotation_matrix(X_transformed[i_dataset], self.procrustes_reference[i_dataset])
                     Qs[i_dataset].append(Q)
 
         for i_dataset in range(n_datasets):
@@ -80,7 +83,7 @@ class EnsembleCCA(BaseEstimator, TransformerMixin):
     def fit_transform(self, X, y=None, apply_ensemble_method=False, ensemble_method='mean'):
         X_transformed_all = self._fit(X)
         X_transformed_all = self.transform(
-            X_transformed_all, pretransformed=True, 
+            X_transformed_all, pretransformed=True,
             apply_ensemble_method=apply_ensemble_method,
             ensemble_method=ensemble_method,
         )

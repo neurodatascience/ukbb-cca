@@ -384,8 +384,11 @@ class CcaAnalysis(_Base):
             else:
                 print(f'X_train_preprocessed (CcaAnalysis.without_cv): {[tmp.shape for tmp in X_train_preprocessed]}')
 
-            # randomly shuffle all views except the first one
-            for view in X_train_preprocessed[1:]:
+            # # randomly shuffle all views except the first one
+            # for view in X_train_preprocessed[1:]:
+            #     self.random_state.shuffle(view)
+                
+            for view in X_train_preprocessed[:-1]:
                 self.random_state.shuffle(view)
 
         # print([np.sum(np.logical_not(np.isfinite(X))) for X in X_train_preprocessed])
@@ -471,10 +474,10 @@ class CcaAnalysis(_Base):
 
     def repeated_cv(self, data: XyData, i_learn, i_val, model: Pipeline, n_repetitions, n_folds, 
             preprocess_before_cv=False, rotate_CAs=True, rotate_deconfs=False, 
-            ensemble_method='nanmean', use_scipy_procrustes=False):
+            ensemble_method='nanmean', use_scipy_procrustes=False, procrustes_reference: CcaResultsSets = None):
 
-        def apply_ensemble_CCA(data_learn: XyData, data_val: XyData, rotate, model_transform):
-            ensemble_model = EnsembleCCA(fitted_models, rotate=rotate, model_transform=model_transform, use_scipy_procrustes=use_scipy_procrustes)
+        def apply_ensemble_CCA(data_learn: XyData, data_val: XyData, rotate, model_transform, procrustes_reference=None):
+            ensemble_model = EnsembleCCA(fitted_models, rotate=rotate, model_transform=model_transform, use_scipy_procrustes=use_scipy_procrustes, procrustes_reference=procrustes_reference)
             result_learn = ensemble_model.fit_transform(data_learn.X, apply_ensemble_method=True, ensemble_method=ensemble_method)
             result_val = ensemble_model.transform(data_val.X, apply_ensemble_method=True, ensemble_method=ensemble_method)
             return result_learn, result_val, ensemble_model
@@ -537,6 +540,7 @@ class CcaAnalysis(_Base):
         # ensemble model
         CAs_learn, CAs_val, ensemble_model = apply_ensemble_CCA(
             data_learn, data_val, rotate=rotate_CAs, model_transform=self.model_transform_cca,
+            procrustes_reference=procrustes_reference[LEARN_SET].CAs if procrustes_reference is not None else None,
         )
         if (deconfs_learn is None) and (deconfs_val is None):
             if preprocess_before_cv:
