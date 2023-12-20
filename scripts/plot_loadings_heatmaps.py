@@ -113,9 +113,11 @@ def plot_loadings_heatmaps(n_pcs_all, dpath_cca, subset, i_component, dpath_sche
 
                 if summary_null is not None:
                     try:
+                        # print(f'{sample_size_null_model}\t{cca_type}\t{SET_NAME}\t{BOOTSTRAP_ALPHA/2}')
                         loadings_null_low = summary_null[sample_size_null_model, cca_type, SET_NAME, f'quantile_{BOOTSTRAP_ALPHA/2}'].loadings[i_col].iloc[:, i_component]
+                        # print(f'{sample_size_null_model}\t{cca_type}\t{SET_NAME}\t{1-BOOTSTRAP_ALPHA/2}')
                         loadings_null_high = summary_null[sample_size_null_model, cca_type, SET_NAME, f'quantile_{1-BOOTSTRAP_ALPHA/2}'].loadings[i_col].iloc[:, i_component]
-                        
+
                         # the null model loadings might have different variables than the normal loadings
                         # so we align them by label with pd.concat before computing the mask
                         df_tmp = pd.concat(
@@ -140,7 +142,9 @@ def plot_loadings_heatmaps(n_pcs_all, dpath_cca, subset, i_component, dpath_sche
                         # return
 
                     except Exception as ex:
-                        print(ex)
+                        raise ex
+                else:
+                    mask = pd.Series(np.zeros_like(loadings, dtype=bool), index=loadings.index)
 
                 data_mag = loadings
                 data_mag.name = sample_size
@@ -165,12 +169,13 @@ def plot_loadings_heatmaps(n_pcs_all, dpath_cca, subset, i_component, dpath_sche
             df_mask: pd.DataFrame = pd.concat(data_for_df_mask, axis='columns').loc[df_mag.index].fillna(False)
             df_std = pd.concat(data_for_df_std, axis='columns').loc[df_mag.index]
 
-            # re-order based on significance
-            df_mask_pos = df_mask.loc[df_mag[sample_sizes[-1]] >= 0]
-            df_mask_neg = df_mask.loc[(df_mag[sample_sizes[-1]] < 0) | (df_mag[sample_sizes[-1]].isna())]
-            df_mask_pos_sorted = df_mask_pos.sort_values(sample_sizes[-1], ascending=True, kind='stable')
-            df_mask_neg_sorted = df_mask_neg.sort_values(sample_sizes[-1], ascending=False, kind='stable')
-            index_sorted = df_mask_pos_sorted.index.tolist() + df_mask_neg_sorted.index.tolist()
+            # # re-order based on significance
+            # df_mask_pos = df_mask.loc[df_mag[sample_sizes[-1]] >= 0]
+            # df_mask_neg = df_mask.loc[(df_mag[sample_sizes[-1]] < 0) | (df_mag[sample_sizes[-1]].isna())]
+            # df_mask_pos_sorted = df_mask_pos.sort_values(sample_sizes[-1], ascending=True, kind='stable')
+            # df_mask_neg_sorted = df_mask_neg.sort_values(sample_sizes[-1], ascending=False, kind='stable')
+            # index_sorted = df_mask_pos_sorted.index.tolist() + df_mask_neg_sorted.index.tolist()
+            index_sorted = df_mag[sample_sizes[-1]].sort_values(ascending=True).index.tolist()
             df_mag = df_mag.loc[index_sorted]
             df_rank = df_rank.loc[index_sorted]
             df_mask = df_mask.loc[index_sorted]
@@ -196,6 +201,7 @@ def plot_loadings_heatmaps(n_pcs_all, dpath_cca, subset, i_component, dpath_sche
             fpath_out = dpath_figs / f'loadings-{subset}-{cca_type}-{SET_NAME}-{dataset_name}-CA{i_component+1}.pkl'
             with fpath_out.open('wb') as file_out:
                 pickle.dump(to_save, file_out)
+            print(f'Heatmap plot data saved to: {fpath_out}')
 
     fig_mag.tight_layout()
     fig_rank.tight_layout()
