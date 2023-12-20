@@ -161,31 +161,6 @@ def cca_sample_size(n_sample_sizes, n_bootstrap_repetitions, i_sample_size,
     
     data = select_features(data, i_learn=i_learn, high_freq_threshold=(1 - (1/cv_n_folds)))
     
-    # build pipeline/model
-    db_helper = DatabaseHelper(dpath_schema, fpath_udis)
-    expected_udis_conf = data.X[data.conf_name].columns # updated
-    cca_pipeline = build_cca_pipeline(
-        dataset_names=data.dataset_names,
-        conf_name=data.conf_name,
-        n_PCs_all=n_pcs_all,
-        n_CAs=n_CAs,
-        verbosity=1,
-        kwargs_conf={
-            'squarer__db_helper': db_helper,
-            'squarer__expected_udis': expected_udis_conf,
-            'inv_norm__db_helper': db_helper,
-            'inv_norm__expected_udis': expected_udis_conf,
-        }
-    )
-    for dataset_name in data.dataset_names:
-        cca_pipeline['preprocessor'].data_pipelines.set_params(**{
-            f'{dataset_name}__inv_norm__db_helper': db_helper,
-            f'{dataset_name}__inv_norm__expected_udis': data.X[dataset_name].columns,
-        })
-    print('------------------------------------------------------------------')
-    print(cca_pipeline)
-    print('------------------------------------------------------------------')
-
     # initialize results
     cca_results = CcaResultsSampleSize(
         sample_size=sample_size,
@@ -206,6 +181,34 @@ def cca_sample_size(n_sample_sizes, n_bootstrap_repetitions, i_sample_size,
         debug=debug,
         null_model=null_model,
     )
+
+    # build pipeline/model
+    db_helper = DatabaseHelper(dpath_schema, fpath_udis)
+    expected_udis_conf = data.X[data.conf_name].columns # updated
+    cca_pipeline = build_cca_pipeline(
+        dataset_names=data.dataset_names,
+        conf_name=data.conf_name,
+        n_PCs_all=n_pcs_all,
+        n_CAs=n_CAs,
+        verbosity=1,
+        kwargs_conf={
+            'squarer__db_helper': db_helper,
+            'squarer__expected_udis': expected_udis_conf,
+            'inv_norm__db_helper': db_helper,
+            'inv_norm__expected_udis': expected_udis_conf,
+        },
+        null_model=null_model,
+        null_model_random_state=cca_methods.random_state,
+    )
+    for dataset_name in data.dataset_names:
+        cca_pipeline['preprocessor'].data_pipelines.set_params(**{
+            f'{dataset_name}__inv_norm__db_helper': db_helper,
+            f'{dataset_name}__inv_norm__expected_udis': data.X[dataset_name].columns,
+        })
+    print('------------------------------------------------------------------')
+    print(cca_pipeline)
+    print('------------------------------------------------------------------')
+
     cca_results['without_cv'] = cca_methods.without_cv(
         data, i_learn, i_val, cca_pipeline, preprocess=True,
     )

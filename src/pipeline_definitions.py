@@ -7,7 +7,7 @@ from sklearn.impute import SimpleImputer, IterativeImputer
 from sklearn.preprocessing import QuantileTransformer
 from sklearn.preprocessing import StandardScaler, RobustScaler
 from sklearn.decomposition import PCA
-from . import NanDeconfounder, NanPCA
+from . import NanDeconfounder, NanPCA, NullCCA
 from . import FilteringQuantileTransformer
 from . import FeatureSelectorMissing, FeatureSelectorHighFreq, FeatureSelectorOutlier
 from .sklearn_cca import SklearnCCA
@@ -60,7 +60,7 @@ def build_conf_pipeline(verbosity=0, **kwargs):
     pipeline.set_params(**kwargs)
     return pipeline
 
-def build_cca_pipeline(dataset_names, conf_name='conf', n_PCs_all=None, n_CAs=1, verbosity=0, kwargs_conf=None):
+def build_cca_pipeline(dataset_names, conf_name='conf', n_PCs_all=None, n_CAs=1, verbosity=0, kwargs_conf=None, null_model=False, null_model_random_state=None):
 
     if n_PCs_all is None:
         n_PCs_all = [1 for _ in range(len(dataset_names))]
@@ -68,6 +68,15 @@ def build_cca_pipeline(dataset_names, conf_name='conf', n_PCs_all=None, n_CAs=1,
         kwargs_conf = {}
 
     data_pipelines = [build_data_pipeline(verbosity=verbosity-2) for _ in dataset_names]
+
+    if null_model:
+        cca_model = NullCCA(
+            base_model=CCA(),
+            n_views=len(dataset_names),
+            random_state=null_model_random_state,
+        )
+    else:
+        cca_model = CCA()
 
     steps = [
         ('preprocessor', PreprocessingPipeline(
@@ -77,7 +86,7 @@ def build_cca_pipeline(dataset_names, conf_name='conf', n_PCs_all=None, n_CAs=1,
             conf_pipeline=build_conf_pipeline(verbosity=verbosity-2, **kwargs_conf),
             verbose=process_verbosity(verbosity-1),
         )),
-        ('cca', CCA()),
+        ('cca', cca_model),
         # ('cca', SklearnCCA()),
     ]
     pipeline = Pipeline(steps, verbose=process_verbosity(verbosity))
