@@ -29,7 +29,7 @@ CA_Y_INDEX = 0 # behavioural
 
 BOOTSTRAP_ALPHA = 0.05
 BOOTSTRAP_QUANTILES = [0.025, 0.975, 0.05, 0.95]
-N_TEST = 30
+N_TEST = 400
 
 RE_SAMPLE_SIZE = 'sample_size_(\d+)'
 
@@ -62,9 +62,9 @@ def aggregate_sample_size_results(n_pcs_all, dpath_cca, subset, i_component, is_
     fpaths_results_null = find_fpaths_results(dpath_PCs/f'{subset}-null_model', is_test=is_test)
     print(f'Found {len(fpaths_results_null)} result files for corresponding null model')
 
+    results_combined = combine_results(fpaths_results, n_components_expected=n_components_expected, flip=True)
+    results_combined_null = combine_results(fpaths_results_null, n_components_expected=n_components_expected, flip=False)
 
-    results_combined = combine_results(fpaths_results, n_components_expected=n_components_expected)
-    results_combined_null = combine_results(fpaths_results_null, n_components_expected=n_components_expected)
 
     # aggregate results
     results_summary = results_combined.aggregate()
@@ -86,6 +86,12 @@ def aggregate_sample_size_results(n_pcs_all, dpath_cca, subset, i_component, is_
 
     print(f'results_summary: {results_summary}')
     print(f'results_summary_null: {results_summary_null}')
+
+    # dpath_out = '.'
+    # results_summary.fname = 'results_summary.pkl'
+    # results_summary.save(dpath=dpath_out)
+    # import sys
+    # sys.exit()
 
     dpath_out = Path(dpath_cca, n_PCs_str, DNAME_OUT)
     results_summary.fname = f'{subset}.pkl'
@@ -212,7 +218,7 @@ def find_fpaths_results(dpath, is_test=False):
 
     # TODO check if order is really necessary
     func_sort = (lambda x: int(re.match(RE_SAMPLE_SIZE, x.name).group(1)))
-    fpaths = sorted(fpaths, key=func_sort)
+    fpaths = sorted(fpaths, key=func_sort, reverse=True) # largest to smallest sample size (important for flipping)
 
     # if testing, don't use all the results
     if is_test:
@@ -221,7 +227,7 @@ def find_fpaths_results(dpath, is_test=False):
     return fpaths
 
 
-def combine_results(fpaths_results, n_components_expected=None, verbose=True):
+def combine_results(fpaths_results, n_components_expected=None, flip=True, verbose=True):
 
     results_combined = None
     top_loading_indices_all = {}
@@ -268,10 +274,13 @@ def combine_results(fpaths_results, n_components_expected=None, verbose=True):
                 # print(f'\tRecomputing top_loading_indices: {top_loading_indices}')
                 # signs = np.sign(u[max_abs_cols, range(u.shape[1])])
                 
-            # figure out which ICs need to be flipped
+            # figure out which CAs need to be flipped
             signs = np.sign(loadings_dataset[top_loading_indices, range(loadings_dataset.shape[1])])
             # print(f'\tMaximum values are: {loadings_dataset[top_loading_indices, range(loadings_dataset.shape[1])]}')
             # print(f'\tsigns: {signs}')
+
+            if not flip:
+                signs = np.ones_like(signs)
             
             for set_name in results[cca_type].set_names:
                 try:
