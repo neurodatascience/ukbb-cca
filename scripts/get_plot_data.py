@@ -25,7 +25,7 @@ VALID_RESULT_TYPES = ['summary'] + CCA_RESULT_TYPES
 @click.option('--subset', default='all')
 @click.option('--set-name', default='learn')
 @click.option('--cca-type', default='repeated_cv')
-@click.option('--sample_size')
+@click.option('--sample-size', type=int)
 @click.option('--what', 'requested_result_types', default=['summary'], multiple=True, type=click.Choice(VALID_RESULT_TYPES))
 @click.option('--dpath-schema', required=True, envvar='DPATH_SCHEMA')
 @click.option('--fpath-udis', required=True, envvar='FPATH_UDIS')
@@ -82,7 +82,6 @@ def get_plot_data(n_pcs_all, dpath_cca, i_component, subset, set_name, cca_type,
             results_combined = combine_results(fpaths_results, n_components_expected=min([int(n) for n in n_pcs_all]), verbose=False)
             print(results_combined)
 
-            data = {} # to save as pickle
             for i_dataset, dataset_name in enumerate(results_combined.dataset_names):
                 data_for_df = []
                 for result in results_combined[(sample_size, cca_type, set_name)]:
@@ -104,8 +103,6 @@ def get_plot_data(n_pcs_all, dpath_cca, i_component, subset, set_name, cca_type,
                 fpath_out = dpath_out / f'{"-".join([requested_result_type, subset, str(sample_size), cca_type, set_name, f"CA{i_component+1}", dataset_name])}.csv'
                 df.to_csv(fpath_out, index=False, header=True)
                 print(f'Saved to {fpath_out}')
-
-                # data[f'df_{dataset_name}'] = df
 
 if __name__ == '__main__':
     get_plot_data()

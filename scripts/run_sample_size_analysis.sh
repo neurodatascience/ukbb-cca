@@ -192,7 +192,7 @@ do
         elif [ "${N_PCS}" = "20 20" ]
         then
             DISPATCH_MEMORY="15G"
-            DISPATCH_TIME="0:30:00"
+            DISPATCH_TIME="0:40:00"
         elif [ "${N_PCS}" = "50 50" ]
         then
             DISPATCH_MEMORY="30G"
