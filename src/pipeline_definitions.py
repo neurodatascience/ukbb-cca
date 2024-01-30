@@ -60,7 +60,7 @@ def build_conf_pipeline(verbosity=0, **kwargs):
     pipeline.set_params(**kwargs)
     return pipeline
 
-def build_cca_pipeline(dataset_names, conf_name='conf', n_PCs_all=None, n_CAs=1, verbosity=0, kwargs_conf=None, null_model=False, null_model_random_state=None):
+def build_cca_pipeline(dataset_names, conf_name='conf', n_PCs_all=None, n_CAs=1, verbosity=0, kwargs_conf=None, null_model=False, null_model_random_state=None, use_specialized_null_cca=True):
 
     if n_PCs_all is None:
         n_PCs_all = [1 for _ in range(len(dataset_names))]
@@ -69,7 +69,7 @@ def build_cca_pipeline(dataset_names, conf_name='conf', n_PCs_all=None, n_CAs=1,
 
     data_pipelines = [build_data_pipeline(verbosity=verbosity-2) for _ in dataset_names]
 
-    if null_model:
+    if use_specialized_null_cca and null_model:
         cca_model = NullCCA(
             base_model=CCA(),
             n_views=len(dataset_names),

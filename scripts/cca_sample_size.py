@@ -16,6 +16,7 @@ DEBUG = False
 
 # CCA settings
 NORMALIZE_LOADINGS = True
+USE_SPECIALIZED_NULL_CCA = True
 
 # for repeated CV
 CV_N_REPETITIONS = 10
@@ -180,6 +181,7 @@ def cca_sample_size(n_sample_sizes, n_bootstrap_repetitions, i_sample_size,
         shuffle=cv_shuffle,
         debug=debug,
         null_model=null_model,
+        shuffle_if_null=(not USE_SPECIALIZED_NULL_CCA),
     )
 
     # build pipeline/model
@@ -199,6 +201,7 @@ def cca_sample_size(n_sample_sizes, n_bootstrap_repetitions, i_sample_size,
         },
         null_model=null_model,
         null_model_random_state=cca_methods.random_state,
+        use_specialized_null_cca=USE_SPECIALIZED_NULL_CCA,
     )
     for dataset_name in data.dataset_names:
         cca_pipeline['preprocessor'].data_pipelines.set_params(**{

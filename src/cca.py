@@ -322,6 +322,7 @@ class CcaAnalysis(_Base):
         shuffle = False,
         debug=False,
         null_model=False,
+        shuffle_if_null=False,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -332,6 +333,7 @@ class CcaAnalysis(_Base):
         self.shuffle = shuffle
         self.debug = debug
         self.null_model = null_model
+        self.shuffle_if_null = shuffle_if_null
 
         if not shuffle:
             self.random_state = None
@@ -377,34 +379,21 @@ class CcaAnalysis(_Base):
             deconfs_train = select_rows(deconfs, i_train)
             deconfs_test = select_rows(deconfs, i_test)
 
-        # if self.null_model:
+        if self.null_model and self.shuffle_if_null:
 
-            # if not isinstance(X_train_preprocessed, list):
-            #     raise RuntimeError(f'Expected X_train_preprocessed to be a list, got: {type(X_train_preprocessed)}')
-            # else:
-            #     print(f'X_train_preprocessed (CcaAnalysis.without_cv): {[tmp.shape for tmp in X_train_preprocessed]}')
+            if not isinstance(X_train_preprocessed, list):
+                raise RuntimeError(f'Expected X_train_preprocessed to be a list, got: {type(X_train_preprocessed)}')
+            else:
+                print(f'X_train_preprocessed (CcaAnalysis.without_cv): {[tmp.shape for tmp in X_train_preprocessed]}')
+
+            # randomly shuffle all views
+            for view in X_train_preprocessed:
+                self.random_state.shuffle(view)
 
             # # randomly shuffle all views except the first one
             # for view in X_train_preprocessed[1:]:
             #     self.random_state.shuffle(view)
-                
-            # for view in X_train_preprocessed[:-1]:
-            #     self.random_state.shuffle(view)
             
-            # # null_cca_models = [clone(model['cca']) for _ in X_train_preprocessed]
-            # model['cca'] = [clone(model['cca']) for _ in X_train_preprocessed]
-            # null_cca_models = model['cca']
-            
-            # random_idx = self.random_state.permutation(len(X_train_preprocessed[0]))
-            # X_train_preprocessed_shuffled = [
-            #     select_rows(view, random_idx)
-            #     for view in X_train_preprocessed
-            # ]
-            # for i_view, null_cca_model in enumerate(null_cca_models):
-            #     X_train_preprocessed_tmp = X_train_preprocessed_shuffled[:]  # shallow copy
-            #     X_train_preprocessed_tmp[i_view] = X_train_preprocessed[i_view]  # keep one view unshuffled
-            #     null_cca_model.fit(X_train_preprocessed_tmp)
-
         # print([np.sum(np.logical_not(np.isfinite(X))) for X in X_train_preprocessed])
         # else:
         cca = model['cca']
@@ -439,13 +428,6 @@ class CcaAnalysis(_Base):
                 [X_train_preprocessed, X_test_preprocessed],
                 [deconfs_train, deconfs_test],
             ):
-                
-                # if null_cca_model:
-                #     CAs = []
-                #     for i_view, null_cca_model in enumerate(null_cca_models):
-                #         CAs.append(null_cca_model.transform(X_preprocessed)[i_view])
-                # else:
-                #     CAs = cca.transform(X_preprocessed)
 
                 results[set_name] = CcaResults(
                     CAs=cca.transform(X_preprocessed),
