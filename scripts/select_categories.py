@@ -46,6 +46,7 @@ CONFIGS = {
             'Duration screen displayed',
             'Time when initial screen shown',
             'Time screen exited',
+            'Time to answer',
             # pairs matching
             'Number of columns displayed in round',
             'Number of rows displayed in round',
@@ -64,8 +65,8 @@ CONFIGS = {
         'keep_instance': 'all',
     },
     'demographic': {
-        'categories': [1001, 1002, 100011], #[1001, 1002, 1006] #100011 blood pressure, 100007 arterial stiffness
-        'fields': [4194, 50, 21002, 21], # 4194 pulse rate, 50 standing height, 21002 weight, 21 weight method
+        'categories': [1001, 100011], #[1001, 1002, 1006] #100011 blood pressure, 100007 arterial stiffness
+        'fields': [4194, 50, 21002, 21, 1707], # 4194 pulse rate, 50 standing height, 21002 weight, 21 weight method, 1707 handedness
         'title_substring': None,
         'title_substrings_reject': [
             'Place of birth in UK',
