@@ -7,7 +7,7 @@ from sklearn.impute import SimpleImputer, IterativeImputer
 from sklearn.preprocessing import QuantileTransformer
 from sklearn.preprocessing import StandardScaler, RobustScaler
 from sklearn.decomposition import PCA
-from . import NanDeconfounder, NanPCA, NullCCA
+from . import NanDeconfounder, NanPCA#, NullCCA
 from . import FilteringQuantileTransformer
 from . import FeatureSelectorMissing, FeatureSelectorHighFreq, FeatureSelectorOutlier
 from .sklearn_cca import SklearnCCA
@@ -69,14 +69,14 @@ def build_cca_pipeline(dataset_names, conf_name='conf', n_PCs_all=None, n_CAs=1,
 
     data_pipelines = [build_data_pipeline(verbosity=verbosity-2) for _ in dataset_names]
 
-    if use_specialized_null_cca and null_model:
-        cca_model = NullCCA(
-            base_model=CCA(),
-            n_views=len(dataset_names),
-            random_state=null_model_random_state,
-        )
-    else:
-        cca_model = CCA()
+    # if use_specialized_null_cca and null_model:
+    #     cca_model = NullCCA(
+    #         base_model=CCA(),
+    #         n_views=len(dataset_names),
+    #         random_state=null_model_random_state,
+    #     )
+    # else:
+    cca_model = CCA()
 
     steps = [
         ('preprocessor', PreprocessingPipeline(

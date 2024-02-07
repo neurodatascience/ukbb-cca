@@ -322,7 +322,7 @@ class CcaAnalysis(_Base):
         shuffle = False,
         debug=False,
         null_model=False,
-        shuffle_if_null=False,
+        # shuffle_if_null=False,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -333,7 +333,7 @@ class CcaAnalysis(_Base):
         self.shuffle = shuffle
         self.debug = debug
         self.null_model = null_model
-        self.shuffle_if_null = shuffle_if_null
+        # self.shuffle_if_null = shuffle_if_null
 
         if not shuffle:
             self.random_state = None
@@ -345,13 +345,28 @@ class CcaAnalysis(_Base):
         self.cache_repeated_cv_deconfs_val = None
         self.cache_repeated_cv_subjects = None
 
-    def without_cv(self, data: XyData, i_train, i_test, model: Pipeline, preprocess=True, deconfs=None, return_fitted_model=False):
+    def get_i_shuffled_all(self, X: pd.DataFrame, n_datasets: int):
+        i_shuffled_all = [np.arange(len(X))]
+        for _ in range(n_datasets - 1):
+            i_shuffled_all.append(
+                self.random_state.choice(np.arange(len(X)), size=len(X), replace=False),
+            )
+        return i_shuffled_all
+
+    def without_cv(self, data: XyData, i_train, i_test, model: Pipeline, preprocess=True, deconfs=None, return_fitted_model=False, i_shuffled_all=None):
 
         model = clone(model)
 
         X = data.X
         X_train = select_rows(X, i_train)
         X_test = select_rows(X, i_test)
+
+        if self.null_model:
+            if (not preprocess) and (i_shuffled_all is None):
+                raise RuntimeError(f'i_shuffled_all must be given for the null model if preprocess=False')
+            i_shuffled_all = self.get_i_shuffled_all(X_train, n_datasets=len(self.dataset_names))
+        else:
+            i_shuffled_all = None
 
         if preprocess:
 
@@ -364,35 +379,39 @@ class CcaAnalysis(_Base):
             #     warnings.warn(f'constant columns: {list(constant_cols)}')
 
             preprocessor = model['preprocessor']
-            X_train_preprocessed = preprocessor.fit_transform(X_train)
+            X_train_preprocessed = preprocessor.fit_transform(X_train, i_shuffled_all=i_shuffled_all)
             X_test_preprocessed = preprocessor.transform(X_test)
 
             deconfounder = self.model_transform_deconfounder(model)
-            deconfs_train = deconfounder.transform(X_train)
+            deconfs_train = deconfounder.transform(X_train, i_shuffled_all=i_shuffled_all)
             deconfs_test = deconfounder.transform(X_test)
 
         else:
             if deconfs is None:
                 raise RuntimeError(f'deconfs must be given if preprocess=False')
+            if self.null_model:
+                raise NotImplementedError('null models not supported if preprocess=False')
             X_train_preprocessed = X_train
             X_test_preprocessed = X_test
             deconfs_train = select_rows(deconfs, i_train)
             deconfs_test = select_rows(deconfs, i_test)
 
-        if self.null_model and self.shuffle_if_null:
+        # if self.null_model and self.shuffle_if_null:
 
-            if not isinstance(X_train_preprocessed, list):
-                raise RuntimeError(f'Expected X_train_preprocessed to be a list, got: {type(X_train_preprocessed)}')
-            else:
-                print(f'X_train_preprocessed (CcaAnalysis.without_cv): {[tmp.shape for tmp in X_train_preprocessed]}')
+        #     if not isinstance(X_train_preprocessed, list):
+        #         raise RuntimeError(f'Expected X_train_preprocessed to be a list, got: {type(X_train_preprocessed)}')
+        #     else:
+        #         print(f'X_train_preprocessed (CcaAnalysis.without_cv): {[tmp.shape for tmp in X_train_preprocessed]}')
 
-            # randomly shuffle all views
-            for view in X_train_preprocessed:
-                self.random_state.shuffle(view)
+        #     # # randomly shuffle all views
+        #     # need to shuffle the deconfounded data as well
+        #     # for view in X_train_preprocessed:
+        #     #     self.random_state.shuffle(view)
 
-            # # randomly shuffle all views except the first one
-            # for view in X_train_preprocessed[1:]:
-            #     self.random_state.shuffle(view)
+        #     # randomly shuffle all views except the first one
+        #     # need to shuffle the deconfounded data as well
+        #     for view in X_train_preprocessed[1:]:
+        #         self.random_state.shuffle(view)
             
         # print([np.sum(np.logical_not(np.isfinite(X))) for X in X_train_preprocessed])
         # else:
@@ -452,8 +471,8 @@ class CcaAnalysis(_Base):
             if self.debug:
                 results.model = model
             return results
-        
-    def cv(self, data: XyData, model: Pipeline, n_folds, preprocess=True, deconfs=None):
+
+    def cv(self, data: XyData, model: Pipeline, n_folds, preprocess=True, deconfs=None, i_shuffled_all=None):
 
         model = clone(model)
 
@@ -467,7 +486,10 @@ class CcaAnalysis(_Base):
 
             fitted_model = self.without_cv(
                 data, i_train, i_test, model,
-                preprocess=preprocess, deconfs=deconfs, return_fitted_model=True)
+                preprocess=preprocess, deconfs=deconfs,
+                return_fitted_model=True,
+                i_shuffled_all=i_shuffled_all,
+            )
             fitted_models.append(fitted_model)
 
             if self.debug:
@@ -490,11 +512,16 @@ class CcaAnalysis(_Base):
 
         # TODO untested
         if preprocess_before_cv:
+            if self.null_model:
+                raise NotImplementedError('preprocess_before_cv not implemented for null model')
+                
             preprocessor = model['preprocessor']
-            data.X = preprocessor.fit_transform(data.X) # preprocessed data
+            data.X = preprocessor.fit_transform(data.X, i_shuffled_all=i_shuffled_all) # preprocessed data
             deconfounder = self.model_transform_deconfounder(model)
             deconfs = deconfounder.transform(data.X) # keep deconfs for computing loadings later
             model = model.set_params(preprocessor='passthrough')
+        else:
+            i_shuffled_all = None
 
         data_learn = data.subset(i_learn)
         data_val = data.subset(i_val)
@@ -519,7 +546,9 @@ class CcaAnalysis(_Base):
                 try:
                     new_models, new_i_train, new_i_test = self.cv(
                         data_learn, model, n_folds, 
-                        preprocess=(not preprocess_before_cv))
+                        preprocess=(not preprocess_before_cv),
+                        i_shuffled_all=i_shuffled_all,
+                    )
                     fitted_models.extend(new_models)
                     i_train_all.extend(new_i_train)
                     i_test_all.extend(new_i_test)
