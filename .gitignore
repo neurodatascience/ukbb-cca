@@ -8,6 +8,7 @@ logs
 data
 *.csv
 *.png
+*.tar.gz
 notes.txt
 
 # binary result files
