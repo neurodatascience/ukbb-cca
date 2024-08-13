@@ -1,6 +1,5 @@
 from __future__ import annotations
 import re
-import warnings
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,6 +19,25 @@ from .utils import add_suffix, load_pickle, select_rows
 
 LEARN_SET = 'learn'
 VAL_SET = 'val'
+
+class BootstrapSplitter(_Base):
+    """Not really a splitter since it does not give test indices..."""
+
+    def __init__(self, n_split, random_state=None):
+
+        if random_state is None:
+            random_state = np.random.RandomState()
+
+        self.n_split = n_split
+        self.random_state = random_state
+
+    def split(self, X, y=None):
+        if (y is not None) and (len(X) != len(y)):
+            raise ValueError(f'X and y must have the same length, got {len(X)} and {len(y)}')
+        indices = np.arange(len(X))
+        for _ in range(self.n_split):
+            i_train = self.random_state.choice(indices, size=len(indices), replace=True)
+            yield i_train, i_train[:0]
 
 class CcaResults(_Base):
     def __init__(self, CAs, deconfs, normalize_loadings=True) -> None:
@@ -335,10 +353,10 @@ class CcaAnalysis(_Base):
         self.null_model = null_model
         # self.shuffle_if_null = shuffle_if_null
 
-        if not shuffle:
-            self.random_state = None
-        else:
-            self.random_state = np.random.RandomState(seed)
+        # if not shuffle:
+        #     self.random_state = None
+        # else:
+        self.random_state = np.random.RandomState(seed)
 
         self.cache_repeated_cv_models = None
         self.cache_repeated_cv_deconfs_learn = None
@@ -380,11 +398,16 @@ class CcaAnalysis(_Base):
 
             preprocessor = model['preprocessor']
             X_train_preprocessed = preprocessor.fit_transform(X_train, i_shuffled_all=i_shuffled_all)
-            X_test_preprocessed = preprocessor.transform(X_test)
 
             deconfounder = self.model_transform_deconfounder(model)
             deconfs_train = deconfounder.transform(X_train, i_shuffled_all=i_shuffled_all)
-            deconfs_test = deconfounder.transform(X_test)
+
+            if len(X_test) != 0:
+                X_test_preprocessed = preprocessor.transform(X_test)
+                deconfs_test = deconfounder.transform(X_test)
+            else:
+                X_test_preprocessed = None
+                deconfs_test = None
 
         else:
             if deconfs is None:
@@ -472,17 +495,20 @@ class CcaAnalysis(_Base):
                 results.model = model
             return results
 
-    def cv(self, data: XyData, model: Pipeline, n_folds, preprocess=True, deconfs=None, i_shuffled_all=None):
+    def cv(self, data: XyData, model: Pipeline, n_folds=1, preprocess=True, deconfs=None, i_shuffled_all=None):
 
         model = clone(model)
 
         n_subjects = len(data.subjects)
-        cv_splitter = KFold(n_splits=n_folds, shuffle=self.shuffle, random_state=self.random_state)
+        # splitter = KFold(n_splits=n_folds, shuffle=self.shuffle, random_state=self.random_state)
+        splitter = BootstrapSplitter(n_folds, random_state=self.random_state)
         
         fitted_models = []
         i_train_all = []
         i_test_all = []
-        for i_train, i_test in cv_splitter.split(np.arange(n_subjects)):
+        for i_train, i_test in splitter.split(np.arange(n_subjects)):
+
+            # print(len(i_train), len(set(i_train)), len(i_test))
 
             fitted_model = self.without_cv(
                 data, i_train, i_test, model,
@@ -569,6 +595,8 @@ class CcaAnalysis(_Base):
                     # otherwise throw the error
                     else:
                         raise exception
+                    
+        print(f'len(fitted_models): {len(fitted_models)}')
 
         # ensemble model
         CAs_learn, CAs_val, ensemble_model = apply_ensemble_CCA(
