@@ -7,6 +7,7 @@ from pathlib import Path
 import click
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from src.base import NestedItems
 from src.cca import CcaResultsSampleSize, CcaResultsCombined
@@ -15,6 +16,10 @@ from src.utils import print_params
 
 DNAME_FIGS = 'figs'
 DNAME_OUT = 'summary'
+FNAME_LABELS = 'rep_labels.csv'
+
+COL_LABEL = 'label'
+COL_I_REP = 'i_rep'
 
 # HIGH_VAL_CORR_THRESHOLD = 0.9
 # DROP_HIGH_VAL_CORR = ['without_cv']
@@ -32,6 +37,7 @@ BOOTSTRAP_QUANTILES = [0.025, 0.975, 0.05, 0.95]
 N_TEST = 400
 
 RE_SAMPLE_SIZE = 'sample_size_(\d+)'
+RE_REP = 'rep(\d+)'
 
 @click.command()
 @click.argument('n_PCs_all', nargs=-1, required=True)
@@ -40,7 +46,8 @@ RE_SAMPLE_SIZE = 'sample_size_(\d+)'
 @click.option('--CA', 'i_component', default=1)
 @click.option('--test/--no-test', 'is_test', default=False)
 @click.option('--largest-null/--no-largest-null', 'use_largest_null_model', default=True) # for plotting
-def aggregate_sample_size_results(n_pcs_all, dpath_cca, subset, i_component, is_test, use_largest_null_model):
+@click.option('--rep-label', default=None, type=int)
+def aggregate_sample_size_results(n_pcs_all, dpath_cca, subset, i_component, is_test, use_largest_null_model, rep_label):
 
     print_params(locals())
     
@@ -54,17 +61,20 @@ def aggregate_sample_size_results(n_pcs_all, dpath_cca, subset, i_component, is_
         print(f'[ERROR] Directory not found: {dpath_PCs}')
         sys.exit(1)
 
-    dpath_figs = Path(dpath_cca, DNAME_FIGS, n_PCs_str, subset)
-
-    fpaths_results = find_fpaths_results(dpath_PCs/subset, is_test=is_test)
+    fpaths_results = find_fpaths_results(dpath_PCs/subset, is_test=is_test, rep_label=rep_label)
     print(f'Found {len(fpaths_results)} result files for subset {subset}')
 
     fpaths_results_null = find_fpaths_results(dpath_PCs/f'{subset}-null_model', is_test=is_test)
     print(f'Found {len(fpaths_results_null)} result files for corresponding null model')
 
+    # update subset if using a subset of the repetitions
+    if rep_label is not None:
+        subset = f'{subset}{rep_label}'
+
+    dpath_figs = Path(dpath_cca, DNAME_FIGS, n_PCs_str, subset)
+
     results_combined = combine_results(fpaths_results, n_components_expected=n_components_expected, flip=True)
     results_combined_null = combine_results(fpaths_results_null, n_components_expected=n_components_expected, flip=False)
-
 
     # aggregate results
     results_summary = results_combined.aggregate()
@@ -210,21 +220,47 @@ def aggregate_sample_size_results(n_pcs_all, dpath_cca, subset, i_component, is_
     # results_summary_null.save(dpath=dpath_out_null)
 
 
-def find_fpaths_results(dpath, is_test=False):
+def find_fpaths_results(dpath, is_test=False, return_i_reps=False, rep_label=None):
+
+    # for temporary dataframe
+    col_fpath = 'fpath'
+    col_sample_size = 'sample_size'
+    col_i_rep = 'i_repetition'
+
     fpaths = [
         p for p in Path(dpath).glob('**/*')
         if (p.is_file() and p.suffix == '.pkl')
     ]
 
-    # TODO check if order is really necessary
-    func_sort = (lambda x: int(re.match(RE_SAMPLE_SIZE, x.name).group(1)))
-    fpaths = sorted(fpaths, key=func_sort, reverse=True) # largest to smallest sample size (important for flipping)
+    df = pd.DataFrame({col_fpath: fpaths})
+    df[col_sample_size] = df[col_fpath].apply(lambda x: int(re.match(RE_SAMPLE_SIZE, x.name).group(1)))
+    df[col_i_rep] = df[col_fpath].apply(lambda x: int(re.search(RE_REP, x.name).group(1)))
+    df = df.sort_values(by=[col_sample_size, col_i_rep], ascending=[False, True])
+
+    if rep_label is not None:
+        fpaths_labels = [
+            p for p in Path(dpath).glob(f'**/{FNAME_LABELS}')
+        ]
+        if len(fpaths_labels) > 1:
+            raise RuntimeError(f'Found more than one {FNAME_LABELS} file: {fpaths_labels}')
+        elif len(fpaths_labels) == 0:
+            raise RuntimeError(f'Did not find {FNAME_LABELS} file in {dpath}')
+        fpath_label = fpaths_labels[0]
+        df_rep_labels = pd.read_csv(fpath_label)
+        i_reps_keep = df_rep_labels.loc[df_rep_labels[COL_LABEL] == rep_label, COL_I_REP]
+        df = df.loc[df[col_i_rep].isin(i_reps_keep)]
+
+    fpaths = df[col_fpath].tolist()
+    i_reps = df[col_i_rep].tolist()
 
     # if testing, don't use all the results
     if is_test:
         fpaths = fpaths[:N_TEST]
 
-    return fpaths
+    if return_i_reps:
+        return fpaths, i_reps
+    else:
+        return fpaths
 
 
 def combine_results(fpaths_results, n_components_expected=None, flip=True, verbose=True):
@@ -239,7 +275,7 @@ def combine_results(fpaths_results, n_components_expected=None, flip=True, verbo
         try:
             results = CcaResultsSampleSize.load_fpath(fpath_results)
         except Exception as ex:
-            print(ex)
+            print(f'ERROR loading results: {ex}')
             continue
 
         if results_combined is None:

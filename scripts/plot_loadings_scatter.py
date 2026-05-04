@@ -36,12 +36,6 @@ def plot_loadings(n_pcs_all, dpath_cca, subset, i_component, n_loadings, dpath_s
     db_helper = DatabaseHelper(dpath_schema, fpath_udis)
 
     n_PCs_str = CcaResultsSampleSize.get_dname_PCs(n_pcs_all)
-    dpath_subset = Path(dpath_cca, n_PCs_str, subset)
-
-    if not dpath_subset.exists():
-        print(f'[ERROR] Directory not found: {dpath_subset}')
-        sys.exit(1)
-
     dpath_figs = Path(dpath_cca, DNAME_FIGS, n_PCs_str, subset)
     
     fpath_summary = Path(dpath_cca, n_PCs_str, DNAME_SUMMARY, subset)

@@ -20,24 +20,24 @@ from .utils import add_suffix, load_pickle, select_rows
 LEARN_SET = 'learn'
 VAL_SET = 'val'
 
-class BootstrapSplitter(_Base):
-    """Not really a splitter since it does not give test indices..."""
+# class BootstrapSplitter(_Base):
+#     """Not really a splitter since it does not give test indices..."""
 
-    def __init__(self, n_split, random_state=None):
+#     def __init__(self, n_split, random_state=None):
 
-        if random_state is None:
-            random_state = np.random.RandomState()
+#         if random_state is None:
+#             random_state = np.random.RandomState()
 
-        self.n_split = n_split
-        self.random_state = random_state
+#         self.n_split = n_split
+#         self.random_state = random_state
 
-    def split(self, X, y=None):
-        if (y is not None) and (len(X) != len(y)):
-            raise ValueError(f'X and y must have the same length, got {len(X)} and {len(y)}')
-        indices = np.arange(len(X))
-        for _ in range(self.n_split):
-            i_train = self.random_state.choice(indices, size=len(indices), replace=True)
-            yield i_train, i_train[:0]
+#     def split(self, X, y=None):
+#         if (y is not None) and (len(X) != len(y)):
+#             raise ValueError(f'X and y must have the same length, got {len(X)} and {len(y)}')
+#         indices = np.arange(len(X))
+#         for _ in range(self.n_split):
+#             i_train = self.random_state.choice(indices, size=len(indices), replace=True)
+#             yield i_train, i_train[:0]
 
 class CcaResults(_Base):
     def __init__(self, CAs, deconfs, normalize_loadings=True) -> None:
@@ -500,8 +500,8 @@ class CcaAnalysis(_Base):
         model = clone(model)
 
         n_subjects = len(data.subjects)
-        # splitter = KFold(n_splits=n_folds, shuffle=self.shuffle, random_state=self.random_state)
-        splitter = BootstrapSplitter(n_folds, random_state=self.random_state)
+        splitter = KFold(n_splits=n_folds, shuffle=self.shuffle, random_state=self.random_state)
+        # splitter = BootstrapSplitter(n_folds, random_state=self.random_state)
         
         fitted_models = []
         i_train_all = []

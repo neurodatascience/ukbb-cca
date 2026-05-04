@@ -8,6 +8,7 @@ logs
 data
 *.csv
 *.png
+*.svg
 *.tar.gz
 notes.txt
 

@@ -132,9 +132,9 @@ fi
 echo '========== START =========='
 echo `date`
 
-for (( I_SAMPLE_SIZE=${I_SAMPLE_SIZE_MIN}; I_SAMPLE_SIZE <= ${I_SAMPLE_SIZE_MAX}; I_SAMPLE_SIZE += 1 ))
+for (( I_BOOTSTRAP_REPETITION=${I_BOOTSTRAP_REPETITION_MIN}; I_BOOTSTRAP_REPETITION <= ${I_BOOTSTRAP_REPETITION_MAX}; I_BOOTSTRAP_REPETITION += 1 ))
 do
-    for (( I_BOOTSTRAP_REPETITION=${I_BOOTSTRAP_REPETITION_MIN}; I_BOOTSTRAP_REPETITION <= ${I_BOOTSTRAP_REPETITION_MAX}; I_BOOTSTRAP_REPETITION += 1 ))
+    for (( I_SAMPLE_SIZE=${I_SAMPLE_SIZE_MIN}; I_SAMPLE_SIZE <= ${I_SAMPLE_SIZE_MAX}; I_SAMPLE_SIZE += 1 ))
     do
         if [ "${N_PCS}" = "100 100" ]
         then
@@ -171,11 +171,15 @@ do
             fi
         elif [ "${N_PCS}" = "5 5" ]
         then
-            DISPATCH_MEMORY="10G"
+            DISPATCH_MEMORY="15G"
+            DISPATCH_TIME="0:30:00"
+        elif [ "${N_PCS}" = "2 2" ]
+        then
+            DISPATCH_MEMORY="15G"
             DISPATCH_TIME="0:30:00"
         elif [ "${N_PCS}" = "5 10" ]
         then
-            DISPATCH_MEMORY="10G"
+            DISPATCH_MEMORY="15G"
             DISPATCH_TIME="0:30:00"
         elif [ "${N_PCS}" = "5 20" ]
         then
@@ -191,16 +195,47 @@ do
             DISPATCH_TIME="0:30:00"
         elif [ "${N_PCS}" = "20 20" ]
         then
-            DISPATCH_MEMORY="15G"
             DISPATCH_TIME="0:40:00"
+            if [ $I_SAMPLE_SIZE -le 22 ]
+            then
+                DISPATCH_MEMORY="20G"
+            else
+                DISPATCH_MEMORY="32G"
+            fi
+        elif [ "${N_PCS}" = "9 20" ]
+        then
+            DISPATCH_TIME="0:30:00"
+            DISPATCH_MEMORY="20G"
+        elif [ "${N_PCS}" = "18 53" ]
+        then
+            DISPATCH_TIME="0:30:00"
+            if [ $I_SAMPLE_SIZE -le 22 ]
+            then
+                DISPATCH_MEMORY="20G"
+                # DISPATCH_MEMORY="32G"
+            else
+                DISPATCH_MEMORY="32G"
+            fi
+        elif [ "${N_PCS}" = "13 32" ]
+        then
+            DISPATCH_TIME="0:30:00"
+            if [ $I_SAMPLE_SIZE -le 22 ]
+            then
+                DISPATCH_MEMORY="20G"
+                # DISPATCH_MEMORY="32G"
+            else
+                DISPATCH_MEMORY="32G"
+            fi
         elif [ "${N_PCS}" = "50 50" ]
         then
             DISPATCH_MEMORY="30G"
             DISPATCH_TIME="0:30:00"
         else
             echo "No memory/time settings for PCs=${N_PCS}. Using defaults"
-            DISPATCH_MEMORY="40G"
-            DISPATCH_TIME="0:45:00"
+            # DISPATCH_MEMORY="40G"
+            # DISPATCH_TIME="0:45:00"
+            DISPATCH_MEMORY="20G"
+            DISPATCH_TIME="0:30:00"
         fi
 
         SUBDIRS_LOG="PCs_${N_PCS// /_}/${TAG}/i_sample_size_${I_SAMPLE_SIZE}"

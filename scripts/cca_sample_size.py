@@ -19,14 +19,14 @@ NORMALIZE_LOADINGS = True
 # USE_SPECIALIZED_NULL_CCA = False
 
 # for repeated CV
-CV_N_REPETITIONS = 200
-CV_N_FOLDS = 1
+CV_N_REPETITIONS = 20
+CV_N_FOLDS = 5
 CV_SEED = 3791
 CV_SHUFFLE = True
 
 # for feature selection
 THRESHOLD_MISSING = 0.5
-THRESHOLD_HIGH_FREQ_CONF = 0.8#1
+# THRESHOLD_HIGH_FREQ_CONF = 0.8#1
 
 def select_features(data: XyData, i_learn, high_freq_threshold=0.8):
     data = deepcopy(data)
@@ -160,8 +160,8 @@ def cca_sample_size(n_sample_sizes, n_bootstrap_repetitions, i_sample_size,
         # this warnings occurs when n_samples < 1000 (default n_quantiles in sklearn QuantileTransformer)
         warnings.filterwarnings('ignore', '.*n_quantiles is set to n_samples')
     
-    data = select_features(data, i_learn=i_learn, high_freq_threshold=THRESHOLD_HIGH_FREQ_CONF)
-    # data = select_features(data, i_learn=i_learn, high_freq_threshold=(1 - (1/cv_n_folds)))
+    # data = select_features(data, i_learn=i_learn, high_freq_threshold=THRESHOLD_HIGH_FREQ_CONF)
+    data = select_features(data, i_learn=i_learn, high_freq_threshold=(1 - (1/cv_n_folds)))
     
     # initialize results
     cca_results = CcaResultsSampleSize(

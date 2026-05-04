@@ -47,12 +47,6 @@ def plot_loadings_heatmaps(n_pcs_all, dpath_cca, subset, i_component, dpath_sche
     db_helper = DatabaseHelper(dpath_schema, fpath_udis)
 
     n_PCs_str = CcaResultsSampleSize.get_dname_PCs(n_pcs_all)
-    dpath_subset = Path(dpath_cca, n_PCs_str, subset)
-
-    if not dpath_subset.exists():
-        print(f'[ERROR] Directory not found: {dpath_subset}')
-        sys.exit(1)
-
     dpath_figs = Path(dpath_cca, DNAME_FIGS)
     dpath_figs_heatmaps = Path(dpath_figs, n_PCs_str, subset)
     

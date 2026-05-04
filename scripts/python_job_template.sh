@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --account=def-jbpoline
+#SBATCH --account=rrg-jbpoline
 
 if [ -z "${FPATH_COMMAND}" ]
 then
@@ -10,7 +10,7 @@ fi
 COMMAND="python -u ${FPATH_COMMAND} ${ARGS}"
 
 # to load/install
-MODULES=( "python/3.9.6" )
+MODULES=( "StdEnv/2020" "python/3.9.6" )
 # downloaded using "pip download --no-deps NAME"
 DOWNLOADED_PACKAGES=( \
     "tensorly-0.7.0-py3-none-any.whl" \
