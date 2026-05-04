@@ -1,0 +1,41 @@
+label,quantile_0.025,quantile_0.975
+[Symbol digit substitution] Number of symbol digit matches attempted,-0.47327761281602443,0.45258598472123523
+[Symbol digit substitution] Number of symbol digit matches made correctly,-0.46733475512518924,0.44942596518171224
+[Prospective memory] Prospective memory result (1),-0.33787820248708844,0.35642117900759257
+[Matrix pattern completion] Number of puzzles correctly solved,-0.47101275761046063,0.46651847015155484
+[Tower rearranging] Number of puzzles correct,-0.4688248480047561,0.4689347695073664
+[Tower rearranging] Number of puzzles attempted,-0.48541392527611227,0.4837958811553551
+[Fluid intelligence / reasoning] FI3 : word interpolation (4),-0.3498418013981675,0.33267576244525265
+[Fluid intelligence / reasoning] FI4 : positional arithmetic (6),-0.36177181165537103,0.3477535637461674
+[Fluid intelligence / reasoning] FI7 : synonym (3),-0.3577590703743256,0.3599068012936525
+[Numeric memory] Maximum digits remembered correctly,-0.4761330726580773,0.4690849861033593
+[Fluid intelligence / reasoning] FI6 : conditional arithmetic (69),-0.3523765602203342,0.3684503510615088
+[Matrix pattern completion] Number of puzzles viewed,-0.398063254933832,0.3766766353069608
+[Numeric memory] Number of rounds of numeric memory test performed,-0.45269257724664336,0.4570689526668721
+[Fluid intelligence / reasoning] Number of fluid intelligence questions attempted within time limit,-0.4236902631883007,0.44955343355606003
+[Pairs matching] Number of correct matches in round (mean3),-0.3719640191658584,0.38946605820762215
+[Pairs matching] Number of correct matches in round (std3),-0.4367314083058029,0.3964325873481874
+[Fluid intelligence / reasoning] Fluid intelligence score,-0.4259188072027849,0.419425656003597
+[Pairs matching] Number of incorrect matches in round (std3),-0.40999173030286723,0.42756024003455834
+[Fluid intelligence / reasoning] FI5 : family relationship calculation (4),-0.4407683587037294,0.395368604570445
+[Trail making] Duration to complete alphanumeric path (trail #2),-0.45449916156401776,0.4881070083854763
+[Matrix pattern completion] Duration spent answering each puzzle (std15),-0.4412863293896449,0.47028087242271516
+[Fluid intelligence / reasoning] FI8 : chained arithmetic (26),-0.3601691586681565,0.3573405332198948
+[Pairs matching] Number of incorrect matches in round (mean3),-0.43004167487572603,0.42718871808247955
+[Numeric memory] Time to complete test,-0.442677331541637,0.4543515458289596
+[Pairs matching] Time to complete round (std3),-0.464984516080087,0.4148887829823051
+[Pairs matching] Time to complete round (mean3),-0.43678353653218366,0.44092310235086357
+[Trail making] Total errors traversing numeric path (trail #1),-0.3427438986647188,0.29585714401260194
+[Matrix pattern completion] Duration spent answering each puzzle (mean15),-0.45524377917975034,0.4615184132776532
+[Reaction time] Duration to first press of snap-button in each round (std12),-0.42599272293557316,0.4332484097686921
+[Trail making] Total errors traversing alphanumeric path (trail #2),-0.3691552329181453,0.381461099730127
+[Prospective memory] Number of attempts,-0.4353682598374,0.42139656279371035
+[Numeric memory] Time last key touched (std16),-0.4620463457428681,0.46478548132230935
+[Trail making] Duration to complete numeric path (trail #1),-0.43497115709027556,0.43267689634037376
+[Numeric memory] Time last key touched (mean16),-0.4638187456118766,0.4556548297316427
+[Reaction time] Mean time to correctly identify matches,-0.4369273448065356,0.4221311345841771
+[Trail making] Interval between previous point and current one in alphanumeric path (trail #2) (std25),-0.45883122753400385,0.48164055389245297
+[Reaction time] Duration to first press of snap-button in each round (mean12),-0.4380687908494506,0.41784034172644585
+[Trail making] Interval between previous point and current one in numeric path (trail #1) (std25),-0.4704394592804723,0.3914628750744734
+[Trail making] Interval between previous point and current one in alphanumeric path (trail #2) (mean25),-0.45459402130546034,0.457395991687817
+[Trail making] Interval between previous point and current one in numeric path (trail #1) (mean25),-0.451951359990495,0.4163772433285364

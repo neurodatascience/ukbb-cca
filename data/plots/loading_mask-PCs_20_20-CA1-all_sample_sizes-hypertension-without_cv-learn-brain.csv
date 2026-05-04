@@ -1,0 +1,163 @@
+label,50,61,75,93,114,140,173,213,262,322,396,487,599,737,907,1116,1372,1688,2077,2555,3142,3865
+Weighted-mean MD in tract anterior thalamic radiation (right),True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean MD in tract anterior thalamic radiation (left),True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean MD in tract superior thalamic radiation (left),True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean MD in tract superior thalamic radiation (right),True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean MD in tract posterior thalamic radiation (left),True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean MD in tract superior longitudinal fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean MD in tract posterior thalamic radiation (right),True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean MD in tract superior longitudinal fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean MD in tract inferior fronto-occipital fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean MD in tract inferior fronto-occipital fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean MD in tract forceps minor,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean MD in tract inferior longitudinal fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False
+Weighted-mean MD in tract inferior longitudinal fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False
+Weighted-mean ISOVF in tract anterior thalamic radiation (left),True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False
+Weighted-mean ISOVF in tract posterior thalamic radiation (left),True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean MD in tract uncinate fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False
+Weighted-mean MD in tract corticospinal tract (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False
+Weighted-mean ISOVF in tract anterior thalamic radiation (right),True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False
+Weighted-mean MD in tract uncinate fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False
+Weighted-mean ISOVF in tract superior thalamic radiation (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False
+Weighted-mean MO in tract superior thalamic radiation (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False
+Weighted-mean MD in tract corticospinal tract (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False
+Weighted-mean ISOVF in tract posterior thalamic radiation (right),True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False
+Weighted-mean ISOVF in tract superior thalamic radiation (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False
+Weighted-mean MO in tract superior thalamic radiation (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False
+Weighted-mean MD in tract parahippocampal part of cingulum (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False
+Weighted-mean MD in tract middle cerebellar peduncle,True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False
+Weighted-mean ISOVF in tract middle cerebellar peduncle,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False
+Weighted-mean ISOVF in tract parahippocampal part of cingulum (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False
+Weighted-mean MD in tract parahippocampal part of cingulum (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract superior longitudinal fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MD in tract cingulate gyrus part of cingulum (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract superior longitudinal fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract parahippocampal part of cingulum (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MD in tract cingulate gyrus part of cingulum (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract inferior fronto-occipital fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract inferior longitudinal fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract corticospinal tract (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract inferior longitudinal fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract cingulate gyrus part of cingulum (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MD in tract medial lemniscus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract corticospinal tract (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract inferior fronto-occipital fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract cingulate gyrus part of cingulum (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract medial lemniscus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract middle cerebellar peduncle,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MD in tract medial lemniscus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract uncinate fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract uncinate fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract medial lemniscus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract parahippocampal part of cingulum (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MD in tract acoustic radiation (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract superior longitudinal fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract forceps minor,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract acoustic radiation (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract corticospinal tract (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract corticospinal tract (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract superior longitudinal fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MD in tract forceps major,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MD in tract acoustic radiation (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract uncinate fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract parahippocampal part of cingulum (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract medial lemniscus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract posterior thalamic radiation (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract medial lemniscus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract forceps major,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract uncinate fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract acoustic radiation (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract parahippocampal part of cingulum (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract medial lemniscus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract inferior fronto-occipital fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract inferior longitudinal fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean FA in tract medial lemniscus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ICVF in tract medial lemniscus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract medial lemniscus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean FA in tract acoustic radiation (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract parahippocampal part of cingulum (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean FA in tract middle cerebellar peduncle,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ICVF in tract medial lemniscus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean FA in tract medial lemniscus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract inferior longitudinal fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract anterior thalamic radiation (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract anterior thalamic radiation (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract posterior thalamic radiation (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract forceps major,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean FA in tract superior thalamic radiation (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean FA in tract corticospinal tract (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean FA in tract superior thalamic radiation (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract forceps minor,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean FA in tract corticospinal tract (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ICVF in tract middle cerebellar peduncle,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract inferior fronto-occipital fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean FA in tract parahippocampal part of cingulum (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract acoustic radiation (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ICVF in tract parahippocampal part of cingulum (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean FA in tract acoustic radiation (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract acoustic radiation (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract uncinate fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract uncinate fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract middle cerebellar peduncle,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract inferior longitudinal fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ICVF in tract parahippocampal part of cingulum (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract acoustic radiation (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract cingulate gyrus part of cingulum (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract inferior longitudinal fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ISOVF in tract cingulate gyrus part of cingulum (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean FA in tract parahippocampal part of cingulum (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean FA in tract forceps major,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract forceps major,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract superior longitudinal fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract posterior thalamic radiation (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract forceps minor,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract corticospinal tract (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract inferior fronto-occipital fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract superior longitudinal fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract corticospinal tract (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract anterior thalamic radiation (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean OD in tract acoustic radiation (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract inferior fronto-occipital fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ICVF in tract forceps major,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean FA in tract uncinate fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean MO in tract posterior thalamic radiation (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,True,False,False,False,False
+Weighted-mean FA in tract uncinate fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean FA in tract cingulate gyrus part of cingulum (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ICVF in tract corticospinal tract (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ICVF in tract acoustic radiation (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean FA in tract superior longitudinal fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+Weighted-mean ICVF in tract corticospinal tract (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,True,False,False
+Weighted-mean OD in tract anterior thalamic radiation (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,True,False,False,False,False,False
+Weighted-mean ICVF in tract acoustic radiation (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False
+Weighted-mean FA in tract cingulate gyrus part of cingulum (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False
+Weighted-mean MO in tract cingulate gyrus part of cingulum (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False
+Weighted-mean FA in tract anterior thalamic radiation (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False
+Weighted-mean FA in tract superior longitudinal fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False
+Weighted-mean ICVF in tract posterior thalamic radiation (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False
+Weighted-mean ICVF in tract inferior longitudinal fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False
+Weighted-mean FA in tract anterior thalamic radiation (left),True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False
+Weighted-mean ICVF in tract posterior thalamic radiation (left),True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False
+Weighted-mean FA in tract inferior fronto-occipital fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False
+Weighted-mean FA in tract inferior longitudinal fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False
+Weighted-mean ICVF in tract uncinate fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False
+Weighted-mean MO in tract cingulate gyrus part of cingulum (left),True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False
+Weighted-mean ICVF in tract inferior longitudinal fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False
+Weighted-mean ICVF in tract uncinate fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False
+Weighted-mean FA in tract inferior longitudinal fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False
+Weighted-mean FA in tract posterior thalamic radiation (right),True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean FA in tract forceps minor,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean ICVF in tract inferior fronto-occipital fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False
+Weighted-mean FA in tract inferior fronto-occipital fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean ICVF in tract forceps minor,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False
+Weighted-mean ICVF in tract inferior fronto-occipital fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False
+Weighted-mean ICVF in tract cingulate gyrus part of cingulum (right),True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False
+Weighted-mean ICVF in tract cingulate gyrus part of cingulum (left),True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False
+Weighted-mean ICVF in tract superior longitudinal fasciculus (right),True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False
+Weighted-mean OD in tract superior thalamic radiation (left),True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False
+Weighted-mean OD in tract superior thalamic radiation (right),True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False
+Weighted-mean FA in tract posterior thalamic radiation (left),True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean ICVF in tract superior longitudinal fasciculus (left),True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean ICVF in tract superior thalamic radiation (right),True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean ICVF in tract superior thalamic radiation (left),True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean ICVF in tract anterior thalamic radiation (left),True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False
+Weighted-mean ICVF in tract anterior thalamic radiation (right),True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False,False,False,False,False

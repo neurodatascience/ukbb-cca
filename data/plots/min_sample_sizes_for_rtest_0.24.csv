@@ -1,0 +1,37 @@
+subset,label,n_PCs,min_sample_size
+all,"90% Behavioural, 90% Brain",18_53,1116
+healthy,"90% Behavioural, 90% Brain",18_53,1372
+hypertension,"90% Behavioural, 90% Brain",18_53,1116
+psychoactive,"90% Behavioural, 90% Brain",18_53,737
+all,"70% Behavioural, 90% Brain",9_53,1116
+healthy,"70% Behavioural, 90% Brain",9_53,1688
+hypertension,"70% Behavioural, 90% Brain",9_53,1372
+psychoactive,"70% Behavioural, 90% Brain",9_53,907
+all,"80% Behavioural, 90% Brain",13_53,907
+healthy,"80% Behavioural, 90% Brain",13_53,1372
+hypertension,"80% Behavioural, 90% Brain",13_53,1372
+psychoactive,"80% Behavioural, 90% Brain",13_53,907
+all,"92% Behavioural, 71% Brain (main paper)",20_20,907
+healthy,"92% Behavioural, 71% Brain (main paper)",20_20,1372
+hypertension,"92% Behavioural, 71% Brain (main paper)",20_20,907
+psychoactive,"92% Behavioural, 71% Brain (main paper)",20_20,487
+all,"90% Behavioural, 80% Brain",18_32,907
+healthy,"90% Behavioural, 80% Brain",18_32,1372
+hypertension,"90% Behavioural, 80% Brain",18_32,907
+psychoactive,"90% Behavioural, 80% Brain",18_32,599
+all,"80% Behavioural, 70% Brain",13_20,907
+healthy,"80% Behavioural, 70% Brain",13_20,1372
+hypertension,"80% Behavioural, 70% Brain",13_20,1372
+psychoactive,"80% Behavioural, 70% Brain",13_20,737
+all,"70% Behavioural, 70% Brain",9_20,907
+healthy,"70% Behavioural, 70% Brain",9_20,2077
+hypertension,"70% Behavioural, 70% Brain",9_20,1372
+psychoactive,"70% Behavioural, 70% Brain",9_20,599
+all,"70% Behavioural, 80% Brain",9_32,907
+healthy,"70% Behavioural, 80% Brain",9_32,2077
+hypertension,"70% Behavioural, 80% Brain",9_32,1372
+psychoactive,"70% Behavioural, 80% Brain",9_32,737
+all,"80% Behavioural, 80% Brain",13_32,907
+healthy,"80% Behavioural, 80% Brain",13_32,1372
+hypertension,"80% Behavioural, 80% Brain",13_32,1372
+psychoactive,"80% Behavioural, 80% Brain",13_32,907

@@ -1,0 +1,9 @@
+{
+    "subset": "Cohort label. 'all' is the 'full' cohort in the paper. 'healthy', 'psychoactive' and 'hypertension' are defined in the paper.",
+    "sample_size": "The sample size used for the CCA analysis.",
+    "cca_type": "CCA model type. 'repeated_cv' corresponds to 'with cross-validation sampling' in the paper, and 'without_cv' corresponds to 'without cross-validation sampling' in the paper.",
+    "i_component": "CCA component number, 1-indexed.",
+    "set_name": "If 'learn', then the corresponding values in the 'quantile_' columns are train correlations r_train. If 'val', then the corresponding values in the 'quantile_' columns are the test correlations r_test.",
+    "quantile_0.025": "Correlation value at the 0.025 quantile across the repeated random samplings.",
+    "quantile_0.975": "Correlation value at the 0.975 quantile across the repeated random samplings."
+}

@@ -1,0 +1,39 @@
+label,quantile_0.025,quantile_0.975
+[Symbol digit substitution] Number of symbol digit matches attempted,-0.5026883420097432,0.4671596189830223
+[Symbol digit substitution] Number of symbol digit matches made correctly,-0.5133967726078847,0.47853202741769024
+[Matrix pattern completion] Number of puzzles correctly solved,-0.47205737886072524,0.4423279388259101
+[Tower rearranging] Number of puzzles attempted,-0.44970895731321436,0.4555549167243448
+[Tower rearranging] Number of puzzles correct,-0.48084283161358676,0.4780195912287719
+[Matrix pattern completion] Number of puzzles viewed,-0.38546275438420063,0.3769950424193295
+[Fluid intelligence / reasoning] Number of fluid intelligence questions attempted within time limit,-0.4658871715899734,0.43540614176594283
+[Numeric memory] Maximum digits remembered correctly,-0.43730477641667553,0.41097122926135005
+[Pairs matching] Number of correct matches in round (mean3),-0.390834825554442,0.38687876550306016
+[Fluid intelligence / reasoning] Fluid intelligence score,-0.42224581973310327,0.42801540265127147
+[Numeric memory] Number of rounds of numeric memory test performed,-0.445551162352045,0.4390647561318472
+[Fluid intelligence / reasoning] FI8 : chained arithmetic (26),-0.37231504720065545,0.3939644160977841
+[Fluid intelligence / reasoning] FI7 : synonym (3),-0.3532556268992347,0.34711871196931093
+[Fluid intelligence / reasoning] FI10 : arithmetic sequence recognition (95),-0.3662269330136889,0.3631963524047015
+[Pairs matching] Number of correct matches in round (std3),-0.3824576724813044,0.35292801328242546
+[Fluid intelligence / reasoning] FI9 : concept interpolation (4),-0.34590889160977956,0.3412811787331363
+[Fluid intelligence / reasoning] FI5 : family relationship calculation (4),-0.4138090568783832,0.4347273032426068
+[Fluid intelligence / reasoning] FI6 : conditional arithmetic (69),-0.3887903607134128,0.3994553752035793
+[Matrix pattern completion] Duration spent answering each puzzle (std15),-0.466694181224068,0.479369971504086
+[Trail making] Total errors traversing numeric path (trail #1),-0.32539152921848286,0.3217510865897495
+[Trail making] Total errors traversing alphanumeric path (trail #2),-0.37362659068621035,0.3675956076798541
+[Numeric memory] Time to complete test,-0.43121169524003,0.44997828336927187
+[Matrix pattern completion] Duration spent answering each puzzle (mean15),-0.44100266149775225,0.46819404265468423
+[Pairs matching] Number of incorrect matches in round (std3),-0.42062146157747643,0.4498710298398666
+[Pairs matching] Number of incorrect matches in round (mean3),-0.42399348189831954,0.43924278262662647
+[Trail making] Duration to complete alphanumeric path (trail #2),-0.46903559794925864,0.46264385440652933
+[Numeric memory] Time last key touched (std16),-0.4231151243980274,0.45252373747899033
+[Reaction time] Duration to first press of snap-button in each round (std12),-0.4309787561981976,0.4266560672059712
+[Pairs matching] Time to complete round (mean3),-0.4115852827564208,0.43549393067050113
+[Pairs matching] Time to complete round (std3),-0.4173673399173731,0.4357845259878984
+[Numeric memory] Time last key touched (mean16),-0.4324991519632559,0.4552211042966285
+[Trail making] Interval between previous point and current one in alphanumeric path (trail #2) (std25),-0.44302149017431935,0.4770713822890743
+[Trail making] Interval between previous point and current one in numeric path (trail #1) (std25),-0.41433777931114674,0.46442566494379484
+[Trail making] Duration to complete numeric path (trail #1),-0.43506748513274013,0.4792260858760845
+[Trail making] Interval between previous point and current one in alphanumeric path (trail #2) (mean25),-0.4404487907482643,0.4735221136724004
+[Trail making] Interval between previous point and current one in numeric path (trail #1) (mean25),-0.43254866945672443,0.4856004987492503
+[Reaction time] Duration to first press of snap-button in each round (mean12),-0.4224859249065409,0.4286199877354209
+[Reaction time] Mean time to correctly identify matches,-0.40805795124245414,0.4146366057787358

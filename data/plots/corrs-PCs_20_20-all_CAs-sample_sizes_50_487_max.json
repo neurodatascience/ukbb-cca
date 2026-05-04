@@ -1,0 +1,9 @@
+{
+    "subset": "Cohort label. 'all' is the 'full' cohort in the paper. 'healthy', 'psychoactive' and 'hypertension' are defined in the paper. Null models have the '_null_model' suffix.",
+    "sample_size": "The sample size used for the CCA analysis.",
+    "cca_type": "CCA model type. 'repeated_cv' corresponds to 'with cross-validation sampling' in the paper, and 'without_cv' corresponds to 'without cross-validation sampling' in the paper.",
+    "i_bootstrap_repetition": "Identifier for the repeated random sampling. Note: the name is misleading because the final sampling procedure was not bootstrapping but random sampling without replacement.",
+    "i_component": "CCA component number, 1-indexed.",
+    "set_name": "If 'learn', then the corresponding value in the 'corr' column is the train correlation r_train. If 'val', then the corresponding value in the 'corr' column is the test correlation r_test.",
+    "corr": "Correlation value."
+}

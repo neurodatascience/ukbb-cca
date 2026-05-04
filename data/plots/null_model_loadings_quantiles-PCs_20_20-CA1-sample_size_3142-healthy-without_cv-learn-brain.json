@@ -1,0 +1,5 @@
+{
+    "label": "Brain variable name.",
+    "quantile_0.025": "Loading value at the 0.025 quantile across the repeated random samplings.",
+    "quantile_0.975": "Loading value at the 0.975 quantile across the repeated random samplings."
+}

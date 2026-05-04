@@ -1,0 +1,41 @@
+label,50,61,75,93,114,140,173,213,262,322,396,487,599,737,907,1116,1372,1688,2077
+[Trail making] Interval between previous point and current one in numeric path (trail #1) (mean25),True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False
+[Trail making] Interval between previous point and current one in alphanumeric path (trail #2) (mean25),True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False
+[Trail making] Interval between previous point and current one in numeric path (trail #1) (std25),True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False
+[Reaction time] Duration to first press of snap-button in each round (mean12),True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False
+[Trail making] Interval between previous point and current one in alphanumeric path (trail #2) (std25),True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False
+[Reaction time] Mean time to correctly identify matches,True,True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False
+[Numeric memory] Time last key touched (mean16),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Trail making] Duration to complete numeric path (trail #1),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Numeric memory] Time last key touched (std16),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Prospective memory] Number of attempts,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Reaction time] Duration to first press of snap-button in each round (std12),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Trail making] Total errors traversing alphanumeric path (trail #2),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Matrix pattern completion] Duration spent answering each puzzle (mean15),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Trail making] Total errors traversing numeric path (trail #1),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Pairs matching] Time to complete round (mean3),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Pairs matching] Time to complete round (std3),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Numeric memory] Time to complete test,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Pairs matching] Number of incorrect matches in round (mean3),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Matrix pattern completion] Duration spent answering each puzzle (std15),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Trail making] Duration to complete alphanumeric path (trail #2),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Fluid intelligence / reasoning] FI8 : chained arithmetic (26),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Fluid intelligence / reasoning] FI5 : family relationship calculation (4),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Pairs matching] Number of incorrect matches in round (std3),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Fluid intelligence / reasoning] Fluid intelligence score,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Pairs matching] Number of correct matches in round (std3),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Pairs matching] Number of correct matches in round (mean3),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Fluid intelligence / reasoning] Number of fluid intelligence questions attempted within time limit,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Numeric memory] Number of rounds of numeric memory test performed,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Matrix pattern completion] Number of puzzles viewed,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Fluid intelligence / reasoning] FI6 : conditional arithmetic (69),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Numeric memory] Maximum digits remembered correctly,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Fluid intelligence / reasoning] FI4 : positional arithmetic (6),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Fluid intelligence / reasoning] FI7 : synonym (3),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Fluid intelligence / reasoning] FI3 : word interpolation (4),True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Tower rearranging] Number of puzzles attempted,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Tower rearranging] Number of puzzles correct,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Matrix pattern completion] Number of puzzles correctly solved,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True
+[Prospective memory] Prospective memory result (1),True,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False
+[Symbol digit substitution] Number of symbol digit matches made correctly,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False
+[Symbol digit substitution] Number of symbol digit matches attempted,True,True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False,False,False

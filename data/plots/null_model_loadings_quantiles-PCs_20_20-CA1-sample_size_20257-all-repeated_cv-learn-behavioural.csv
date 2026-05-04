@@ -1,0 +1,39 @@
+label,quantile_0.025,quantile_0.975
+[Symbol digit substitution] Number of symbol digit matches attempted,-0.4504441160599915,0.47601644733413956
+[Symbol digit substitution] Number of symbol digit matches made correctly,-0.44518779934740993,0.4665273660356534
+[Matrix pattern completion] Number of puzzles correctly solved,-0.4745209134932533,0.5060626406185117
+[Tower rearranging] Number of puzzles correct,-0.48686510105103864,0.4678909230364474
+[Tower rearranging] Number of puzzles attempted,-0.47811278703594645,0.4579233217647476
+[Pairs matching] Number of correct matches in round (mean3),-0.41346172245400875,0.38526530553090677
+[Matrix pattern completion] Number of puzzles viewed,-0.3772623203163258,0.37686834587832363
+[Prospective memory] Prospective memory result (1),-0.3033511401741914,0.3192248478761901
+[Numeric memory] Maximum digits remembered correctly,-0.42929490515584917,0.46628627408664947
+[Fluid intelligence / reasoning] Number of fluid intelligence questions attempted within time limit,-0.4224451136147575,0.42821430336486566
+[Numeric memory] Number of rounds of numeric memory test performed,-0.4602925769117592,0.48100627625694775
+[Fluid intelligence / reasoning] FI7 : synonym (3),-0.3661879234567756,0.36459248130810357
+[Fluid intelligence / reasoning] Fluid intelligence score,-0.42774723687416905,0.4201227034217437
+[Fluid intelligence / reasoning] FI8 : chained arithmetic (26),-0.3952591257251204,0.396735246841387
+[Fluid intelligence / reasoning] FI9 : concept interpolation (4),-0.2705808118750076,0.2764844638338194
+[Pairs matching] Number of correct matches in round (std3),-0.3971871244620318,0.4084855582844294
+[Fluid intelligence / reasoning] FI5 : family relationship calculation (4),-0.4050476919834179,0.4287047122823871
+[Fluid intelligence / reasoning] FI6 : conditional arithmetic (69),-0.363850351825558,0.403438931365552
+[Trail making] Total errors traversing numeric path (trail #1),-0.3267463378955269,0.3198664033353393
+[Matrix pattern completion] Duration spent answering each puzzle (std15),-0.4422563354857385,0.42590249418293447
+[Numeric memory] Time to complete test,-0.45102802531680014,0.44476588560278396
+[Pairs matching] Number of incorrect matches in round (std3),-0.4335080203676156,0.42630173016830636
+[Pairs matching] Number of incorrect matches in round (mean3),-0.4247714578075402,0.42756641932135986
+[Trail making] Total errors traversing alphanumeric path (trail #2),-0.3941725937111138,0.36873752990311676
+[Pairs matching] Time to complete round (mean3),-0.4250746097077683,0.4328147750965394
+[Trail making] Duration to complete alphanumeric path (trail #2),-0.46555667233492787,0.5073567875318039
+[Matrix pattern completion] Duration spent answering each puzzle (mean15),-0.44125215375032306,0.43040736965367166
+[Pairs matching] Time to complete round (std3),-0.45157046748311636,0.42694080695734415
+[Numeric memory] Time last key touched (std16),-0.4528841752865411,0.40276731558916395
+[Reaction time] Duration to first press of snap-button in each round (std12),-0.43248217764361935,0.435068105897037
+[Numeric memory] Time last key touched (mean16),-0.4731188350358441,0.4092187929766798
+[Trail making] Interval between previous point and current one in numeric path (trail #1) (std25),-0.4329724075932024,0.4173081917835434
+[Trail making] Duration to complete numeric path (trail #1),-0.4574585554537427,0.41978230754908813
+[Trail making] Interval between previous point and current one in alphanumeric path (trail #2) (std25),-0.4600663392870971,0.45474408138621486
+[Reaction time] Duration to first press of snap-button in each round (mean12),-0.4535217620477323,0.42061168867298904
+[Reaction time] Mean time to correctly identify matches,-0.4367319327573209,0.4207637959236753
+[Trail making] Interval between previous point and current one in numeric path (trail #1) (mean25),-0.46044913903433876,0.43148548761347355
+[Trail making] Interval between previous point and current one in alphanumeric path (trail #2) (mean25),-0.43405252393337684,0.45265688892857353

@@ -1,0 +1,5 @@
+{
+    "i_bootstrap_repetition": "Identifier for the repeated random sampling. Note: the name is misleading because the final sampling procedure was not bootstrapping but random sampling without replacement.",
+    "label": "Behavioural variable name prefixed by the task name.",
+    "loading": "Value of the loading."
+}

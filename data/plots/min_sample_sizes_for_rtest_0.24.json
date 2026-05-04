@@ -1,0 +1,6 @@
+{
+    "subset": "Cohort label. 'all' is the 'full' cohort in the paper. 'healthy', 'psychoactive' and 'hypertension' are defined in the paper.",
+    "label": "String indicating the approximate percentages of variance explained by the number of PCs.",
+    "n_PCs": "Number of PCs for the brain and behavioural datasets respectively, separated by an underscore.",
+    "min_sample_size": "Minimum sample size required to achieve a test correlation r_test of 0.24 for CA1."
+}
